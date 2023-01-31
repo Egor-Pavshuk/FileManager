@@ -4,11 +4,23 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:FileManager"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:Windows10version1809="http://schemas.microsoft.com/winfx/2006/xaml/presentation?IsApiContractPresent(Windows.Foundation.UniversalApiContract, 7)" 
+    xmlns:viewmodels="using:FileManager.ViewModels"
     mc:Ignorable="d"
+    d:DataContext="{d:DesignInstance Type=viewmodels:MainPageViewModel}"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
     <Grid>
+        <NavigationView PaneDisplayMode="LeftCompact" IsBackButtonVisible="Collapsed" IsPaneOpen="False" IsSettingsVisible="False" Header="Main page" SelectedItem="{Binding SelectedItem, Mode=TwoWay}" SelectionChanged="{x:Bind ViewModel.SelectionChanged}" x:Name="NavigationViewControl">
+            <NavigationView.MenuItems>
+                <NavigationViewItem AccessKey="0" Content="Home" Icon="Home" x:Name="A" />
+                <NavigationViewItem AccessKey="1" Content="Analize" Icon="Manage" x:Name="B" />
+            </NavigationView.MenuItems>
+            <Frame x:Name="MainContent" Content="{Binding CurrentContent}">
+                
+            </Frame>
+        </NavigationView>
 
     </Grid>
 </Page>

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FileManager.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -22,9 +23,11 @@ namespace FileManager
     /// </summary>
     public sealed partial class MainPage : Page
     {
+        public MainPageViewModel ViewModel { get; set; } = new MainPageViewModel();
         public MainPage()
         {
             this.InitializeComponent();
+            this.DataContext = ViewModel;
         }
     }
 }
