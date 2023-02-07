@@ -1,11 +1,6 @@
 ﻿using FileManager.Views;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 using Windows.UI.Xaml.Controls;
 
 namespace FileManager.ViewModels
@@ -24,7 +19,7 @@ namespace FileManager.ViewModels
         }
         public Page CurrentContent
         {
-            get => currentContent; 
+            get => currentContent;
             set
             {
                 if (currentContent != value)
@@ -34,9 +29,9 @@ namespace FileManager.ViewModels
                 }
             }
         }
-        public NavigationViewItem SelectedItem 
-        { 
-            get => selectedItem; 
+        public NavigationViewItem SelectedItem
+        {
+            get => selectedItem;
             set
             {
                 if (selectedItem != value)
@@ -44,7 +39,7 @@ namespace FileManager.ViewModels
                     selectedItem = value;
                     OnPropertyChanged();
                 }
-            } 
+            }
         }
         public MainPageViewModel()
         {
