@@ -76,19 +76,6 @@ namespace FileManager.ViewModels
             }
         }
 
-        //public List<StorageFile> Items
-        //{
-        //    get => items;
-        //    set
-        //    {
-        //        if (items != value)
-        //        {
-        //            items = value;
-        //            OnPropertyChanged();
-        //        }
-        //    }
-        //}
-
         public string CurrentPath
         {
             get => currentPath;
