@@ -122,6 +122,7 @@
     <Compile Include="Controlls\FileControl.xaml.cs">
       <DependentUpon>FileControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="ViewModels\Libraries\VideosLibraryViewModel.cs" />
     <Compile Include="Views\MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
@@ -132,8 +133,11 @@
     <Compile Include="ViewModels\FileControlViewModel.cs" />
     <Compile Include="ViewModels\Libraries\LibrariesBaseViewModel.cs" />
     <Compile Include="ViewModels\MainPageViewModel.cs" />
-    <Compile Include="Views\PicturesLibruaryPage.xaml.cs">
-      <DependentUpon>PicturesLibruaryPage.xaml</DependentUpon>
+    <Compile Include="Views\PicturesLibraryPage.xaml.cs">
+      <DependentUpon>PicturesLibraryPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\VideosLibraryPage.xaml.cs">
+      <DependentUpon>VideosLibraryPage.xaml</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>
@@ -166,7 +170,11 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Views\PicturesLibruaryPage.xaml">
+    <Page Include="Views\PicturesLibraryPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\VideosLibraryPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

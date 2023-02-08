@@ -8,7 +8,7 @@
     xmlns:models="using:FileManager.Models"
     xmlns:storage="using:Windows.Storage"
     xmlns:Custom="using:FileManager.Controlls"
-    x:Class="FileManager.Views.DirectoryFilesPage"
+    x:Class="FileManager.Views.PicturesLibraryPage"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 

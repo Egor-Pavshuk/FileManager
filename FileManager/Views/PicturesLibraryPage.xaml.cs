@@ -8,10 +8,10 @@ namespace FileManager.Views
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
-    public sealed partial class DirectoryFilesPage : Page
+    public sealed partial class PicturesLibraryPage : Page
     {
         public PicturesLibruaryViewModel ViewModel { get; set; } = new PicturesLibruaryViewModel();
-        public DirectoryFilesPage()
+        public PicturesLibraryPage()
         {
             this.InitializeComponent();
             this.DataContext = ViewModel;

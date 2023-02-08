@@ -8,6 +8,7 @@ namespace FileManager.ViewModels
     public class MainPageViewModel : INotifyPropertyChanged
     {
         private Page currentContent;
+        private string currentTitle;
         private NavigationViewItem selectedItem;
         public event PropertyChangedEventHandler PropertyChanged;
         public void OnPropertyChanged([CallerMemberName] string prop = "")
@@ -41,9 +42,22 @@ namespace FileManager.ViewModels
                 }
             }
         }
+        public string CurrentTitle
+        {
+            get => currentTitle;
+            set
+            {
+                if (currentTitle != value)
+                {
+                    currentTitle = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
         public MainPageViewModel()
         {
             currentContent = new Page();
+            CurrentTitle = "Main page";
         }
         public void SelectionChanged(object sender, NavigationViewSelectionChangedEventArgs e)
         {
@@ -51,10 +65,16 @@ namespace FileManager.ViewModels
             switch (selectedItem.AccessKey)
             {
                 case "0":
-                    CurrentContent = new DirectoryFilesPage();
+                    CurrentContent = new PicturesLibraryPage();
+                    CurrentTitle = "Images";
+                    break;
+                case "1":
+                    CurrentContent = new VideosLibraryPage();
+                    CurrentTitle = "Videos";
                     break;
                 default:
                     CurrentContent = new Page();
+                    CurrentTitle = "Main page";
                     break;
             }
         }

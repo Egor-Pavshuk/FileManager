@@ -12,10 +12,12 @@
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
     <Grid>
-        <NavigationView PaneDisplayMode="LeftCompact" IsBackButtonVisible="Collapsed" IsPaneOpen="False" IsSettingsVisible="False" Header="Main page" SelectedItem="{Binding SelectedItem, Mode=TwoWay}" SelectionChanged="{x:Bind ViewModel.SelectionChanged}" x:Name="NavigationViewControl">
+        <NavigationView PaneDisplayMode="LeftCompact" IsBackButtonVisible="Collapsed" IsPaneOpen="False" IsSettingsVisible="False" Header="{Binding CurrentTitle}" SelectedItem="{Binding SelectedItem, Mode=TwoWay}" SelectionChanged="{x:Bind ViewModel.SelectionChanged}" x:Name="NavigationViewControl">
             <NavigationView.MenuItems>
-                <NavigationViewItem AccessKey="0" Content="Home" Icon="Pictures" x:Name="Pictures" />
-                <NavigationViewItem AccessKey="1" Content="Analize" Icon="Manage" x:Name="Analize" />
+                <NavigationViewItem AccessKey="0" Content="Images" Icon="Pictures" x:Name="Pictures" />
+                <NavigationViewItem AccessKey="1" Content="Videos" Icon="Video" x:Name="Videos" />
+                <NavigationViewItem AccessKey="2" Content="Music" Icon="MusicInfo" x:Name="Music" />
+                <NavigationViewItem AccessKey="3" Content="Analize" Icon="Manage" x:Name="Analize" />
             </NavigationView.MenuItems>
             <Frame x:Name="MainContent" Content="{Binding CurrentContent}">
                 
