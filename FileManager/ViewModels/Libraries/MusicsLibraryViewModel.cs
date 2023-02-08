@@ -7,13 +7,15 @@ using Windows.UI.Xaml.Input;
 
 namespace FileManager.ViewModels.Libraries
 {
-    public class PicturesLibruaryViewModel : LibrariesBaseViewModel
+    public class MusicsLibraryViewModel : LibrariesBaseViewModel
     {
-        public PicturesLibruaryViewModel()
+        public MusicsLibraryViewModel()
         {
-            currentFolder = KnownFolders.PicturesLibrary;
+            currentFolder = KnownFolders.MusicLibrary;
             CurrentPath = currentFolder.Path;
             IsBackButtonAvailable = false;
+            IsDeleteButtonAvailable = false;
+            IsNewFolderButtonAvailable = false;
             _ = GetItemsAsync();
         }
         public override async void GetParent()
@@ -22,6 +24,8 @@ namespace FileManager.ViewModels.Libraries
             if (await newCurrentFolder.GetParentAsync() is null)
             {
                 IsBackButtonAvailable = false;
+                IsDeleteButtonAvailable = false;
+                IsNewFolderButtonAvailable = false;
             }
             currentFolder = newCurrentFolder;
             CurrentPath = newCurrentFolder.Path;
@@ -33,6 +37,8 @@ namespace FileManager.ViewModels.Libraries
         public override async void OpenFolder(object sender, DoubleTappedRoutedEventArgs e)
         {
             IsBackButtonAvailable = true;
+            IsDeleteButtonAvailable = true;
+            IsNewFolderButtonAvailable = true;
             var gridItems = sender as GridView;
             if (!(gridItems.SelectedItem is FileControlViewModel selectedItem))
             {
@@ -49,7 +55,7 @@ namespace FileManager.ViewModels.Libraries
 
         protected override async Task GetItemsAsync()
         {
-            if (currentFolder.IsEqual(KnownFolders.PicturesLibrary))
+            if (currentFolder.IsEqual(KnownFolders.MusicLibrary))
             {
                 StorageItems = await currentFolder.GetItemsAsync();
             }

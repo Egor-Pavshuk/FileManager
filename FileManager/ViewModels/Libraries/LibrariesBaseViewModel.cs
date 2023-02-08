@@ -11,6 +11,8 @@ namespace FileManager.ViewModels.Libraries
     public abstract class LibrariesBaseViewModel : INotifyPropertyChanged
     {
         private bool isBackButtonAvailable;
+        private bool isDeleteButtonAvailable;
+        private bool isNewFolderButtonAvailable;
         private FileControlViewModel selectedGridItem;
         private IReadOnlyList<IStorageItem> storageItems;
         private List<FileControlViewModel> storageFiles;
@@ -32,6 +34,30 @@ namespace FileManager.ViewModels.Libraries
                 if (isBackButtonAvailable != value)
                 {
                     isBackButtonAvailable = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+        public bool IsDeleteButtonAvailable
+        {
+            get => isDeleteButtonAvailable;
+            set
+            {
+                if (isDeleteButtonAvailable != value)
+                {
+                    isDeleteButtonAvailable = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+        public bool IsNewFolderButtonAvailable
+        {
+            get => isNewFolderButtonAvailable;
+            set
+            {
+                if (isNewFolderButtonAvailable != value)
+                {
+                    isNewFolderButtonAvailable = value;
                     OnPropertyChanged();
                 }
             }

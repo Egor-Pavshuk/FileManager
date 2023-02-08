@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.UI.Xaml.Controls;
@@ -9,11 +7,11 @@ using Windows.UI.Xaml.Input;
 
 namespace FileManager.ViewModels.Libraries
 {
-    public class VideosLibraryViewModel : LibrariesBaseViewModel
+    public class PicturesLibraryViewModel : LibrariesBaseViewModel
     {
-        public VideosLibraryViewModel()
+        public PicturesLibraryViewModel()
         {
-            currentFolder = KnownFolders.VideosLibrary;
+            currentFolder = KnownFolders.PicturesLibrary;
             CurrentPath = currentFolder.Path;
             IsBackButtonAvailable = false;
             IsDeleteButtonAvailable = false;
@@ -57,7 +55,7 @@ namespace FileManager.ViewModels.Libraries
 
         protected override async Task GetItemsAsync()
         {
-            if (currentFolder.IsEqual(KnownFolders.VideosLibrary))
+            if (currentFolder.IsEqual(KnownFolders.PicturesLibrary))
             {
                 StorageItems = await currentFolder.GetItemsAsync();
             }

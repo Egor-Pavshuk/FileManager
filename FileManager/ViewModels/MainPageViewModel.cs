@@ -72,6 +72,10 @@ namespace FileManager.ViewModels
                     CurrentContent = new VideosLibraryPage();
                     CurrentTitle = "Videos";
                     break;
+                case "2":
+                    CurrentContent = new VideosLibraryPage();
+                    CurrentTitle = "Music";
+                    break;
                 default:
                     CurrentContent = new Page();
                     CurrentTitle = "Main page";

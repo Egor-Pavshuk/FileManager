@@ -10,7 +10,7 @@ namespace FileManager.Views
     /// </summary>
     public sealed partial class PicturesLibraryPage : Page
     {
-        public PicturesLibruaryViewModel ViewModel { get; set; } = new PicturesLibruaryViewModel();
+        public PicturesLibraryViewModel ViewModel { get; set; } = new PicturesLibraryViewModel();
         public PicturesLibraryPage()
         {
             this.InitializeComponent();
