@@ -1,30 +1,34 @@
-﻿using System;
+﻿using FileManager.Commands;
+using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using Windows.Storage;
+using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 
 namespace FileManager.ViewModels.Libraries
 {
-    public abstract class LibrariesBaseViewModel : INotifyPropertyChanged
+    public class LibrariesBaseViewModel : INotifyPropertyChanged
     {
         private bool isBackButtonAvailable;
         private bool isDeleteButtonAvailable;
         private bool isNewFolderButtonAvailable;
         private FileControlViewModel selectedGridItem;
         private IReadOnlyList<IStorageItem> storageItems;
-        private List<FileControlViewModel> storageFiles;
+        private Collection<FileControlViewModel> storageFiles;
         private string currentPath;
+        private DoubleTappedEventHandler doubleClicked;
+        private ItemClickEventHandler itemClicked;
+        private ICommand getParentCommand;
         protected StorageFolder currentFolder;
         public event PropertyChangedEventHandler PropertyChanged;
         public void OnPropertyChanged([CallerMemberName] string prop = "")
         {
-            if (PropertyChanged != null)
-            {
-                PropertyChanged(this, new PropertyChangedEventArgs(prop));
-            }
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
         }
         public bool IsBackButtonAvailable
         {
@@ -86,7 +90,7 @@ namespace FileManager.ViewModels.Libraries
                 }
             }
         }
-        public List<FileControlViewModel> StorageFiles
+        public Collection<FileControlViewModel> StorageFiles
         {
             get => storageFiles;
             set
@@ -98,7 +102,6 @@ namespace FileManager.ViewModels.Libraries
                 }
             }
         }
-
         public string CurrentPath
         {
             get => currentPath;
@@ -111,9 +114,116 @@ namespace FileManager.ViewModels.Libraries
                 }
             }
         }
+        public DoubleTappedEventHandler DoubleClicked
+        {
+            get => doubleClicked;
+            set
+            {
+                if (doubleClicked != value)
+                {
+                    doubleClicked = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+        public ItemClickEventHandler ItemClicked
+        {
+            get => itemClicked;
+            set
+            {
+                if (itemClicked != value)
+                {
+                    itemClicked = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+        public ICommand GetParentCommand
+        {
+            get => getParentCommand;
+            set
+            {
+                if (getParentCommand != value)
+                {
+                    getParentCommand = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+        public LibrariesBaseViewModel()
+        {
+            if (Windows.System.Profile.AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Xbox")
+            {
+                ItemClicked = OpenFolderXbox;
+                DoubleClicked = (o, e) => { };
+            }
+            else
+            {
+                ItemClicked = (o, e) => { };
+                DoubleClicked = OpenFolderWindows;
+            }
+            GetParentCommand = new RelayCommand(GetParent);
+        }
 
-        public abstract void GetParent();
-        public abstract void OpenFolder(object sender, DoubleTappedRoutedEventArgs e);
+        private async void GetParent(object sender)
+        {
+            var newCurrentFolder = await currentFolder.GetParentAsync();
+            if (await newCurrentFolder.GetParentAsync() is null)
+            {
+                IsBackButtonAvailable = false;
+                IsDeleteButtonAvailable = false;
+                IsNewFolderButtonAvailable = false;
+            }
+            currentFolder = newCurrentFolder;
+            CurrentPath = newCurrentFolder.Path;
+
+            StorageItems = await newCurrentFolder.GetFoldersAsync();
+            await GetItemsAsync().ConfigureAwait(true);
+        }
+        private async void OpenFolderXbox(object sender, ItemClickEventArgs e)
+        {            
+            if (sender is null)
+            {
+                return;
+            }
+            IsBackButtonAvailable = true;
+            IsDeleteButtonAvailable = true;
+            IsNewFolderButtonAvailable = true;
+            var gridItems = sender as GridView;
+            if (!(gridItems.SelectedItem is FileControlViewModel selectedItem))
+            {
+                return;
+            }
+
+            CurrentPath = selectedItem.Path;
+            var newCurrentFolder = await StorageFolder.GetFolderFromPathAsync(CurrentPath);
+            currentFolder = newCurrentFolder;
+
+            StorageItems = await newCurrentFolder.GetFoldersAsync();
+            await GetItemsAsync().ConfigureAwait(true);
+        }
+        private async void OpenFolderWindows(object sender, DoubleTappedRoutedEventArgs e)
+        {
+            if (sender is null)
+            {
+                return;
+            }
+            IsBackButtonAvailable = true;
+            IsDeleteButtonAvailable = true;
+            IsNewFolderButtonAvailable = true;
+            var gridItems = sender as GridView;
+            if (!(gridItems.SelectedItem is FileControlViewModel selectedItem))
+            {
+                return;
+            }
+
+            CurrentPath = selectedItem.Path;
+            var newCurrentFolder = await StorageFolder.GetFolderFromPathAsync(CurrentPath);
+            currentFolder = newCurrentFolder;
+
+            StorageItems = await newCurrentFolder.GetFoldersAsync();
+            await GetItemsAsync().ConfigureAwait(true);
+        }
 
         protected virtual async Task GetItemsAsync()
         {
@@ -122,7 +232,7 @@ namespace FileManager.ViewModels.Libraries
                 StorageItems = await currentFolder.GetItemsAsync();
             }
 
-            List<FileControlViewModel> fileControls = new List<FileControlViewModel>();
+            Collection<FileControlViewModel> fileControls = new Collection<FileControlViewModel>();
             foreach (var item in StorageItems)
             {
                 var fileControl = new FileControlViewModel() { Image = "/Images/Folder.jpg", DisplayName = item.Name, Path = item.Path };

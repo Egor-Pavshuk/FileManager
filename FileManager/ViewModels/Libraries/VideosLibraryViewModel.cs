@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -20,41 +21,6 @@ namespace FileManager.ViewModels.Libraries
             IsNewFolderButtonAvailable = false;
             _ = GetItemsAsync();
         }
-        public override async void GetParent()
-        {
-            var newCurrentFolder = await currentFolder.GetParentAsync();
-            if (await newCurrentFolder.GetParentAsync() is null)
-            {
-                IsBackButtonAvailable = false;
-                IsDeleteButtonAvailable = false;
-                IsNewFolderButtonAvailable = false;
-            }
-            currentFolder = newCurrentFolder;
-            CurrentPath = newCurrentFolder.Path;
-
-            StorageItems = await newCurrentFolder.GetFoldersAsync();
-            await GetItemsAsync();
-        }
-
-        public override async void OpenFolder(object sender, DoubleTappedRoutedEventArgs e)
-        {
-            IsBackButtonAvailable = true;
-            IsDeleteButtonAvailable = true;
-            IsNewFolderButtonAvailable = true;
-            var gridItems = sender as GridView;
-            if (!(gridItems.SelectedItem is FileControlViewModel selectedItem))
-            {
-                return;
-            }
-
-            CurrentPath = selectedItem.Path;
-            var newCurrentFolder = await StorageFolder.GetFolderFromPathAsync(CurrentPath);
-            currentFolder = newCurrentFolder;
-
-            StorageItems = await newCurrentFolder.GetFoldersAsync();
-            await GetItemsAsync();
-        }
-
         protected override async Task GetItemsAsync()
         {
             if (currentFolder.IsEqual(KnownFolders.VideosLibrary))
@@ -62,7 +28,7 @@ namespace FileManager.ViewModels.Libraries
                 StorageItems = await currentFolder.GetItemsAsync();
             }
 
-            List<FileControlViewModel> fileControls = new List<FileControlViewModel>();
+            Collection<FileControlViewModel> fileControls = new Collection<FileControlViewModel>();
             foreach (var item in StorageItems)
             {
                 var fileControl = new FileControlViewModel() { Image = "/Images/Folder.jpg", DisplayName = item.Name, Path = item.Path };
