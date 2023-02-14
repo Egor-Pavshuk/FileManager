@@ -1,11 +1,8 @@
-﻿using FileManager.Commands;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using Windows.Storage;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Input;
 
 namespace FileManager.ViewModels.Libraries
 {
@@ -13,11 +10,10 @@ namespace FileManager.ViewModels.Libraries
     {
         public MusicsLibraryViewModel()
         {
-            currentFolder = KnownFolders.MusicLibrary;
+            defaultFolder = KnownFolders.MusicLibrary;
+            currentFolder = defaultFolder;
             CurrentPath = currentFolder.Path;
-            IsBackButtonAvailable = false;
-            IsDeleteButtonAvailable = false;
-            IsNewFolderButtonAvailable = false;
+
             _ = GetItemsAsync();
         }
 
@@ -31,14 +27,14 @@ namespace FileManager.ViewModels.Libraries
             Collection<FileControlViewModel> fileControls = new Collection<FileControlViewModel>();
             foreach (var item in StorageItems)
             {
-                var fileControl = new FileControlViewModel() { Image = "/Images/Folder.jpg", DisplayName = item.Name, Path = item.Path };
+                var fileControl = new FileControlViewModel() { Image = resourceLoader.GetString("folder"), DisplayName = item.Name, Path = item.Path, Type = "Folder" };
                 fileControls.Add(fileControl);
             }
 
             IReadOnlyList<StorageFile> storageFiles = await currentFolder.GetFilesAsync();
             foreach (var item in storageFiles)
             {
-                var viewModel = new FileControlViewModel() { Image = "/Images/File.png", DisplayName = item.Name, Path = item.Path };
+                var viewModel = new FileControlViewModel() { Image = resourceLoader.GetString("file"), DisplayName = item.Name, Path = item.Path, Type = "File" };
                 fileControls.Add(viewModel);
             }
             StorageFiles = fileControls;

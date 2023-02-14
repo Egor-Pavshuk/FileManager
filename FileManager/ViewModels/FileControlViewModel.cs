@@ -8,13 +8,11 @@ namespace FileManager.ViewModels
         private string image;
         private string displayName;
         private string path;
+        private string type;
         public event PropertyChangedEventHandler PropertyChanged;
         public void OnPropertyChanged([CallerMemberName] string prop = "")
         {
-            if (PropertyChanged != null)
-            {
-                PropertyChanged(this, new PropertyChangedEventArgs(prop));
-            }
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
         }
         public string Image
         {
@@ -48,6 +46,18 @@ namespace FileManager.ViewModels
                 if (path != value)
                 {
                     path = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+        public string Type
+        {
+            get { return type; }
+            set
+            {
+                if (type != value)
+                {
+                    type = value;
                     OnPropertyChanged();
                 }
             }

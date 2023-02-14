@@ -6,17 +6,23 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using Windows.ApplicationModel.Core;
+using Windows.ApplicationModel.Resources;
 using Windows.Storage;
+using Windows.UI;
+using Windows.UI.Core;
+using Windows.UI.ViewManagement;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 
 namespace FileManager.ViewModels.Libraries
 {
-    public class LibrariesBaseViewModel : INotifyPropertyChanged
+    public abstract class LibrariesBaseViewModel : INotifyPropertyChanged
     {
         private bool isBackButtonAvailable;
         private bool isDeleteButtonAvailable;
         private bool isNewFolderButtonAvailable;
+        private Color backgroundColor;
         private FileControlViewModel selectedGridItem;
         private IReadOnlyList<IStorageItem> storageItems;
         private Collection<FileControlViewModel> storageFiles;
@@ -24,7 +30,10 @@ namespace FileManager.ViewModels.Libraries
         private DoubleTappedEventHandler doubleClicked;
         private ItemClickEventHandler itemClicked;
         private ICommand getParentCommand;
+        protected StorageFolder defaultFolder;
         protected StorageFolder currentFolder;
+        protected ResourceLoader resourceLoader;
+        protected UISettings settings;
         public event PropertyChangedEventHandler PropertyChanged;
         public void OnPropertyChanged([CallerMemberName] string prop = "")
         {
@@ -150,7 +159,7 @@ namespace FileManager.ViewModels.Libraries
                 }
             }
         }
-        public LibrariesBaseViewModel()
+        protected LibrariesBaseViewModel()
         {
             if (Windows.System.Profile.AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Xbox")
             {
@@ -162,6 +171,12 @@ namespace FileManager.ViewModels.Libraries
                 ItemClicked = (o, e) => { };
                 DoubleClicked = OpenFolderWindows;
             }
+
+            settings = new UISettings();
+            backgroundColor = settings.GetColorValue(UIColorType.Background);
+            settings.ColorValuesChanged += ChangeColorMode;
+            ChangeColorMode(settings, this);
+
             GetParentCommand = new RelayCommand(GetParent);
         }
 
@@ -173,6 +188,10 @@ namespace FileManager.ViewModels.Libraries
                 IsBackButtonAvailable = false;
                 IsDeleteButtonAvailable = false;
                 IsNewFolderButtonAvailable = false;
+                currentFolder = defaultFolder;
+
+                await GetItemsAsync().ConfigureAwait(true);
+                return;
             }
             currentFolder = newCurrentFolder;
             CurrentPath = newCurrentFolder.Path;
@@ -181,7 +200,7 @@ namespace FileManager.ViewModels.Libraries
             await GetItemsAsync().ConfigureAwait(true);
         }
         private async void OpenFolderXbox(object sender, ItemClickEventArgs e)
-        {            
+        {
             if (sender is null)
             {
                 return;
@@ -190,7 +209,7 @@ namespace FileManager.ViewModels.Libraries
             IsDeleteButtonAvailable = true;
             IsNewFolderButtonAvailable = true;
             var gridItems = sender as GridView;
-            if (!(gridItems.SelectedItem is FileControlViewModel selectedItem))
+            if (!(gridItems.SelectedItem is FileControlViewModel selectedItem) || selectedItem.Type == "File")
             {
                 return;
             }
@@ -212,7 +231,7 @@ namespace FileManager.ViewModels.Libraries
             IsDeleteButtonAvailable = true;
             IsNewFolderButtonAvailable = true;
             var gridItems = sender as GridView;
-            if (!(gridItems.SelectedItem is FileControlViewModel selectedItem))
+            if (!(gridItems.SelectedItem is FileControlViewModel selectedItem) || selectedItem.Type == "File")
             {
                 return;
             }
@@ -225,27 +244,46 @@ namespace FileManager.ViewModels.Libraries
             await GetItemsAsync().ConfigureAwait(true);
         }
 
-        protected virtual async Task GetItemsAsync()
+        private void ChangeColorMode(UISettings settings, object sender)
         {
-            if (currentFolder.IsEqual(KnownFolders.PicturesLibrary))
+            var currentBackgroundColor = settings.GetColorValue(UIColorType.Background);
+            if (backgroundColor == currentBackgroundColor && storageFiles != null)
             {
-                StorageItems = await currentFolder.GetItemsAsync();
+                return;
             }
 
-            Collection<FileControlViewModel> fileControls = new Collection<FileControlViewModel>();
-            foreach (var item in StorageItems)
+            if (currentBackgroundColor == Colors.Black)
             {
-                var fileControl = new FileControlViewModel() { Image = "/Images/Folder.jpg", DisplayName = item.Name, Path = item.Path };
-                fileControls.Add(fileControl);
+                resourceLoader = ResourceLoader.GetForViewIndependentUse("ImagesDark");
+                backgroundColor = Colors.Black;
+            }
+            else
+            {
+                resourceLoader = ResourceLoader.GetForViewIndependentUse("ImagesLight");
+                backgroundColor = Colors.White;
             }
 
-            IReadOnlyList<StorageFile> storageFiles = await currentFolder.GetFilesAsync();
-            foreach (var item in storageFiles)
+            if (storageFiles is null)
             {
-                var viewModel = new FileControlViewModel() { Image = "/Images/File.png", DisplayName = item.Name, Path = item.Path };
-                fileControls.Add(viewModel);
+                return;
             }
-            StorageFiles = fileControls;
+            CoreApplication.MainView.CoreWindow.Dispatcher
+                .RunAsync(CoreDispatcherPriority.Normal,
+                () =>
+                {
+                    foreach (var file in storageFiles)
+                    {
+                        if (file.Type == "File")
+                        {
+                            file.Image = resourceLoader.GetString("File");
+                        }
+                        else
+                        {
+                            file.Image = resourceLoader.GetString("Folder");
+                        }
+                    }
+                }).AsTask().ConfigureAwait(true);
         }
+        protected abstract Task GetItemsAsync();
     }
 }
