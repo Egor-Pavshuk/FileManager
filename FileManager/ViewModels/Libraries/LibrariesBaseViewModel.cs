@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -30,6 +31,8 @@ namespace FileManager.ViewModels.Libraries
         private DoubleTappedEventHandler doubleClicked;
         private ItemClickEventHandler itemClicked;
         private ICommand getParentCommand;
+        private ICommand removeFileCommand;
+        private ICommand createFolderCommand;
         protected StorageFolder defaultFolder;
         protected StorageFolder currentFolder;
         protected ResourceLoader resourceLoader;
@@ -75,7 +78,7 @@ namespace FileManager.ViewModels.Libraries
                 }
             }
         }
-        public FileControlViewModel SelectedItem
+        public FileControlViewModel SelectedGridItem
         {
             get => selectedGridItem;
             set
@@ -159,6 +162,30 @@ namespace FileManager.ViewModels.Libraries
                 }
             }
         }
+        public ICommand RemoveFileCommand
+        {
+            get => removeFileCommand;
+            set
+            {
+                if (removeFileCommand != value)
+                {
+                    removeFileCommand = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+        public ICommand CreateFolderCommand
+        {
+            get => createFolderCommand;
+            set
+            {
+                if (createFolderCommand != value)
+                {
+                    createFolderCommand = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
         protected LibrariesBaseViewModel()
         {
             if (Windows.System.Profile.AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Xbox")
@@ -177,10 +204,13 @@ namespace FileManager.ViewModels.Libraries
             settings.ColorValuesChanged += ChangeColorMode;
             ChangeColorMode(settings, this);
 
-            GetParentCommand = new RelayCommand(GetParent);
+            GetParentCommand = new RelayCommand(GetParentAsync);
+            RemoveFileCommand = new RelayCommand(RemoveFileAsync);
+            CreateFolderCommand= new RelayCommand(CreateFolder);
         }
 
-        private async void GetParent(object sender)
+        protected abstract Task GetItemsAsync();
+        private async void GetParentAsync(object sender)
         {
             var newCurrentFolder = await currentFolder.GetParentAsync();
             if (await newCurrentFolder.GetParentAsync() is null)
@@ -199,6 +229,66 @@ namespace FileManager.ViewModels.Libraries
             StorageItems = await newCurrentFolder.GetFoldersAsync();
             await GetItemsAsync().ConfigureAwait(true);
         }
+        private async void RemoveFileAsync(object sender)
+        {
+            if (SelectedGridItem is null)
+            {
+                return;
+            }
+            var contentDialog = new ContentDialog()
+            {
+                Title = "Confirmation",
+                Content = "Are you sure to delete?",
+                PrimaryButtonText = "Yes",
+                CloseButtonText = "Cancel",
+            };
+
+            var confirmationResult = await contentDialog.ShowAsync();
+            if (confirmationResult == ContentDialogResult.Primary)
+            {
+                string itemName = selectedGridItem.DisplayName;
+                Collection<FileControlViewModel> files = new Collection<FileControlViewModel>();
+
+                StorageFiles.Remove(SelectedGridItem);
+                foreach (var file in StorageFiles)
+                {
+                    files.Add(file);
+                }
+                StorageFiles = files;
+                IStorageItem item = await currentFolder.GetItemAsync(itemName);
+                await item.DeleteAsync();
+                
+                SelectedGridItem = null;
+            }
+        }
+
+        private void CreateFolder(object sender)
+        {
+            int countOfNewFolders = StorageFiles.Where(f => f.Type == "Folder" && f.DisplayName.StartsWith("New folder")).Count();
+            currentFolder.CreateFolderAsync($"New folder {countOfNewFolders + 1}").Completed +=
+                async (i, s) =>
+            await CoreApplication.MainView.CoreWindow.Dispatcher
+                .RunAsync(CoreDispatcherPriority.Normal,
+                () =>
+                {
+                    List<FileControlViewModel> files = new List<FileControlViewModel>();
+                    foreach (var file in StorageFiles)
+                    {
+                        files.Add(file);
+                    }
+
+                    files.Insert(files.FindLastIndex(f => f.Type == "Folder") + 1,
+                    new FileControlViewModel()
+                    {
+                        Image = resourceLoader.GetString("folder"),
+                        DisplayName = $"New folder {countOfNewFolders + 1}",
+                        Type = "Folder",
+                        Path = currentFolder.Path + $"\\New folder {countOfNewFolders + 1}"
+                    });
+                    StorageFiles = new Collection<FileControlViewModel> (files);
+                });
+        }
+
         private async void OpenFolderXbox(object sender, ItemClickEventArgs e)
         {
             if (sender is null)
@@ -284,6 +374,5 @@ namespace FileManager.ViewModels.Libraries
                     }
                 }).AsTask().ConfigureAwait(true);
         }
-        protected abstract Task GetItemsAsync();
     }
 }
