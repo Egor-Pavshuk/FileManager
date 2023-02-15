@@ -18,7 +18,7 @@ using Windows.UI.Xaml.Input;
 
 namespace FileManager.ViewModels.Libraries
 {
-    public abstract class LibrariesBaseViewModel : INotifyPropertyChanged
+    public abstract class LibrariesBaseViewModel : BindableBase
     {
         private bool isBackButtonAvailable;
         private bool isDeleteButtonAvailable;
@@ -37,11 +37,7 @@ namespace FileManager.ViewModels.Libraries
         protected StorageFolder currentFolder;
         protected ResourceLoader resourceLoader;
         protected UISettings settings;
-        public event PropertyChangedEventHandler PropertyChanged;
-        public void OnPropertyChanged([CallerMemberName] string prop = "")
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
-        }
+
         public bool IsBackButtonAvailable
         {
             get => isBackButtonAvailable;

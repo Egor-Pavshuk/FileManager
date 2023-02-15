@@ -124,8 +124,10 @@
       <DependentUpon>FileControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Commands\RelayCommand.cs" />
+    <Compile Include="ViewModels\BindableBase.cs" />
     <Compile Include="ViewModels\Libraries\MusicsLibraryViewModel.cs" />
     <Compile Include="ViewModels\Libraries\VideosLibraryViewModel.cs" />
+    <Compile Include="ViewModels\MainPageTitleViewModel.cs" />
     <Compile Include="Views\MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
@@ -136,6 +138,9 @@
     <Compile Include="ViewModels\FileControlViewModel.cs" />
     <Compile Include="ViewModels\Libraries\LibrariesBaseViewModel.cs" />
     <Compile Include="ViewModels\MainPageViewModel.cs" />
+    <Compile Include="Views\MainPageTitle.xaml.cs">
+      <DependentUpon>MainPageTitle.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\MusicsLibraryPage.xaml.cs">
       <DependentUpon>MusicsLibraryPage.xaml</DependentUpon>
     </Compile>
@@ -177,6 +182,10 @@
     <Page Include="Views\MainPage.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\MainPageTitle.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\MusicsLibraryPage.xaml">
       <SubType>Designer</SubType>

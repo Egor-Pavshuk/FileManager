@@ -3,17 +3,12 @@ using System.Runtime.CompilerServices;
 
 namespace FileManager.ViewModels
 {
-    public class FileControlViewModel : INotifyPropertyChanged
+    public class FileControlViewModel : BindableBase
     {
         private string image;
         private string displayName;
         private string path;
         private string type;
-        public event PropertyChangedEventHandler PropertyChanged;
-        public void OnPropertyChanged([CallerMemberName] string prop = "")
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
-        }
         public string Image
         {
             get { return image; }

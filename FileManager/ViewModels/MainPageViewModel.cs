@@ -2,21 +2,17 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using Windows.ApplicationModel.Resources;
+using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 
 namespace FileManager.ViewModels
 {
-    public class MainPageViewModel : INotifyPropertyChanged
+    public class MainPageViewModel : BindableBase
     {
         private Page currentContent;
         private string currentTitle;
         private ResourceLoader resourceLoader;
         private NavigationViewItem selectedItem;
-        public event PropertyChangedEventHandler PropertyChanged;
-        public void OnPropertyChanged([CallerMemberName] string prop = "")
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
-        }
         public Page CurrentContent
         {
             get => currentContent;
@@ -55,8 +51,8 @@ namespace FileManager.ViewModels
         }
         public MainPageViewModel()
         {
-            currentContent = new Page();
-            resourceLoader = Windows.ApplicationModel.Resources.ResourceLoader.GetForCurrentView("Resources");
+            currentContent = new MainPageTitle();
+            resourceLoader = ResourceLoader.GetForCurrentView("Resources");
             CurrentTitle = resourceLoader.GetString("MainPage");
         }
         public void SelectionChanged(object sender, NavigationViewSelectionChangedEventArgs e)
@@ -77,7 +73,7 @@ namespace FileManager.ViewModels
                     CurrentTitle = resourceLoader.GetString("MusicNav");
                     break;
                 default:
-                    CurrentContent = new Page();
+                    CurrentContent = new MainPageTitle();
                     CurrentTitle = resourceLoader.GetString("MainPage");
                     break;
             }
