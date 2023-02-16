@@ -14,10 +14,10 @@
             <RowDefinition/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition MinWidth="740"/>
+            <ColumnDefinition MinWidth="1000"/>
         </Grid.ColumnDefinitions>
         <Border Grid.Row="0" Grid.Column="0" Background ="{ThemeResource SystemColorHighlightColor}" MinWidth="500" Height="100" CornerRadius="20" Opacity="0.3" Margin="240,0,240,0" VerticalAlignment="Center">
-            <TextBlock Text="Welcome to file manager!" FontSize="40" HorizontalAlignment="Center" Opacity="1" Height="60"/>
+            <TextBlock Text="{x:Bind ViewModel.Title }" FontSize="40" HorizontalAlignment="Center" Opacity="1" Height="60"/>
         </Border>
     </Grid>
 </Page>
