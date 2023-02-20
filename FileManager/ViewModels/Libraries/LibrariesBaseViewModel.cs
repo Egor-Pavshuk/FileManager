@@ -490,7 +490,7 @@ namespace FileManager.ViewModels.Libraries
             }
             
             var gridItems = sender as GridView;
-            if (!(gridItems.SelectedItem is FileControlViewModel selectedItem) || selectedItem.Type == "File" || selectedItem.DisplayName == string.Empty)
+            if (!(gridItems.SelectedItem is FileControlViewModel selectedItem) || selectedItem.Type == "File" || string.IsNullOrEmpty(selectedItem.DisplayName))
             {
                 return;
             }

@@ -54,7 +54,7 @@ namespace FileManager.ViewModels
         }
         public void SelectionChanged(object sender, NavigationViewSelectionChangedEventArgs e)
         {
-            SelectedItem = (NavigationViewItem)e.SelectedItem;
+            SelectedItem = (NavigationViewItem)e?.SelectedItem;
             switch (selectedItem.AccessKey)
             {
                 case "0":
