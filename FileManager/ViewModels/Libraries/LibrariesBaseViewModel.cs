@@ -488,14 +488,16 @@ namespace FileManager.ViewModels.Libraries
             {
                 return;
             }
-            IsBackButtonAvailable = true;
-            IsDeleteButtonAvailable = true;
-            IsNewFolderButtonAvailable = true;
+            
             var gridItems = sender as GridView;
-            if (!(gridItems.SelectedItem is FileControlViewModel selectedItem) || selectedItem.Type == "File")
+            if (!(gridItems.SelectedItem is FileControlViewModel selectedItem) || selectedItem.Type == "File" || selectedItem.DisplayName == string.Empty)
             {
                 return;
             }
+
+            IsBackButtonAvailable = true;
+            IsDeleteButtonAvailable = true;
+            IsNewFolderButtonAvailable = true;
 
             CurrentPath = selectedItem.Path;
             var newCurrentFolder = await StorageFolder.GetFolderFromPathAsync(CurrentPath);

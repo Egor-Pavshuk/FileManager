@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
 using Windows.ApplicationModel.Resources;
 using Windows.Storage;
+using Windows.System;
 using Windows.System.Power;
 using Windows.UI.Core;
 
@@ -13,6 +14,7 @@ namespace FileManager.ViewModels
         private string batteryImage;
         private double batteryLevel;
         private string freeSpaceGb;
+        private string ramMemoryUsed;
         private string batteryLevelPercentage;
         private ResourceLoader resourceLoader;
         public string BatteryImage
@@ -63,11 +65,24 @@ namespace FileManager.ViewModels
                 }
             }
         }
+        public string RamMemoryUsed
+        {
+            get => ramMemoryUsed;
+            set
+            {
+                if (ramMemoryUsed != value)
+                {
+                    ramMemoryUsed = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
         public InformationPageViewModel()
         {
-            //ChangeColorMode(settings, this);
             resourceLoader = ResourceLoader.GetForCurrentView("Batteries");
             BatteryTrigger();
+            MemoryTrigger();
+            UpdateMemoryStatus().ConfigureAwait(true);
             UpdateBatteryStatus().ConfigureAwait(true);
             GetFreeSpace();
         }
@@ -77,48 +92,15 @@ namespace FileManager.ViewModels
             Windows.Devices.Power.Battery.AggregateBattery.ReportUpdated
             += async (sender, args) => await UpdateBatteryStatus().ConfigureAwait(true);
         }
-        //protected override void ChangeColorMode(UISettings settings, object sender)
-        //{
-        //    {
-        //        var currentBackgroundColor = settings?.GetColorValue(UIColorType.Background);
-        //        if (backgroundColor == currentBackgroundColor)
-        //        {
-        //            return;
-        //        }
 
-        //        if (currentBackgroundColor == Colors.Black)
-        //        {
-        //            resourceLoader = ResourceLoader.GetForViewIndependentUse("ImagesDark");
-        //            backgroundColor = Colors.Black;
-        //        }
-        //        else
-        //        {
-        //            resourceLoader = ResourceLoader.GetForViewIndependentUse("ImagesLight");
-        //            backgroundColor = Colors.White;
-        //        }
+        public void MemoryTrigger()
+        {
+            MemoryManager.AppMemoryUsageDecreased
+            += async (sender, args) => await UpdateMemoryStatus().ConfigureAwait(true);
+            MemoryManager.AppMemoryUsageIncreased
+            += async (sender, args) => await UpdateMemoryStatus().ConfigureAwait(true);
+        }
 
-        //        if (storageFiles is null)
-        //        {
-        //            return;
-        //        }
-        //        CoreApplication.MainView.CoreWindow.Dispatcher
-        //            .RunAsync(CoreDispatcherPriority.Normal,
-        //            () =>
-        //            {
-        //                foreach (var file in storageFiles)
-        //                {
-        //                    if (file.Type == "File")
-        //                    {
-        //                        file.Image = resourceLoader.GetString("File");
-        //                    }
-        //                    else
-        //                    {
-        //                        file.Image = resourceLoader.GetString("Folder");
-        //                    }
-        //                }
-        //            }).AsTask().ConfigureAwait(true);
-        //    }
-        //}
         private async Task UpdateBatteryStatus()
         {
             await CoreApplication.MainView.CoreWindow.Dispatcher
@@ -169,6 +151,21 @@ namespace FileManager.ViewModels
                 }
             });
         }
+
+        private async Task UpdateMemoryStatus()
+        {
+            await CoreApplication.MainView.CoreWindow.Dispatcher
+                .RunAsync(CoreDispatcherPriority.Normal,
+            () =>
+            {
+                var usageInB = MemoryManager.AppMemoryUsage;
+                var usageInKB = usageInB / 1024.0;
+                var usageInMB = usageInKB / 1024.0;
+
+                RamMemoryUsed = $"Memory usage: {Math.Round(usageInMB, 2)} Mb";
+            });
+        }
+
         private async void GetFreeSpace()
         {
             string freeSpaceKey = "System.FreeSpace";
