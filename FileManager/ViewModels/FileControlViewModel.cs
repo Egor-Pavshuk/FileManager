@@ -9,6 +9,8 @@ namespace FileManager.ViewModels
         private string displayName;
         private string path;
         private string type;
+        private bool isEditMode;
+        private bool isReadOnlyMode;
         public string Image
         {
             get { return image; }
@@ -57,13 +59,40 @@ namespace FileManager.ViewModels
                 }
             }
         }
+        public bool IsEditMode
+        {
+            get => isEditMode;
+            set
+            {
+                if (isEditMode != value)
+                {
+                    isEditMode = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+        public bool IsReadOnlyMode
+        {
+            get => isReadOnlyMode;
+            set
+            {
+                if (isReadOnlyMode != value)
+                {
+                    isReadOnlyMode = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
         public FileControlViewModel()
         {
             DisplayName = "";
+            isReadOnlyMode = true;
         }
         public FileControlViewModel(string displayName)
         {
             DisplayName = displayName;
+            isReadOnlyMode = true;
         }
     }
 }

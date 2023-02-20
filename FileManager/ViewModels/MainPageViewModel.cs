@@ -72,6 +72,10 @@ namespace FileManager.ViewModels
                     CurrentContent = new MusicsLibraryPage();
                     CurrentTitle = resourceLoader.GetString("MusicNav");
                     break;
+                case "3":
+                    CurrentContent = new InformationPage();
+                    CurrentTitle = resourceLoader.GetString("Device information");
+                    break;
                 default:
                     CurrentContent = new MainPageTitle();
                     CurrentTitle = resourceLoader.GetString("MainPage");

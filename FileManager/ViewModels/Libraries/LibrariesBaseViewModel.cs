@@ -1,4 +1,6 @@
 ﻿using FileManager.Commands;
+using FileManager.Models;
+using FileManager.Validation;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -12,6 +14,7 @@ using Windows.ApplicationModel.Resources;
 using Windows.Storage;
 using Windows.UI;
 using Windows.UI.Core;
+using Windows.UI.Popups;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
@@ -23,7 +26,7 @@ namespace FileManager.ViewModels.Libraries
         private bool isBackButtonAvailable;
         private bool isDeleteButtonAvailable;
         private bool isNewFolderButtonAvailable;
-        private Color backgroundColor;
+        private FileControlViewModel editableItem;
         private FileControlViewModel selectedGridItem;
         private IReadOnlyList<IStorageItem> storageItems;
         private Collection<FileControlViewModel> storageFiles;
@@ -33,10 +36,10 @@ namespace FileManager.ViewModels.Libraries
         private ICommand getParentCommand;
         private ICommand removeFileCommand;
         private ICommand createFolderCommand;
+        private ICommand editSaveCommand;
         protected StorageFolder defaultFolder;
         protected StorageFolder currentFolder;
         protected ResourceLoader resourceLoader;
-        protected UISettings settings;
 
         public bool IsBackButtonAvailable
         {
@@ -182,6 +185,19 @@ namespace FileManager.ViewModels.Libraries
                 }
             }
         }
+        public ICommand EditSaveCommand
+        {
+            get => editSaveCommand;
+            set
+            {
+                if (editSaveCommand != value)
+                {
+                    editSaveCommand = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
         protected LibrariesBaseViewModel()
         {
             if (Windows.System.Profile.AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Xbox")
@@ -194,18 +210,141 @@ namespace FileManager.ViewModels.Libraries
                 ItemClicked = (o, e) => { };
                 DoubleClicked = OpenFolderWindows;
             }
-
-            settings = new UISettings();
-            backgroundColor = settings.GetColorValue(UIColorType.Background);
-            settings.ColorValuesChanged += ChangeColorMode;
             ChangeColorMode(settings, this);
 
             GetParentCommand = new RelayCommand(GetParentAsync);
             RemoveFileCommand = new RelayCommand(RemoveFileAsync);
             CreateFolderCommand= new RelayCommand(CreateFolder);
+            EditSaveCommand = new RelayCommand(RenameItem);
         }
 
         protected abstract Task GetItemsAsync();
+        protected override void ChangeColorMode(UISettings uiSettings, object sender)
+        {
+            var currentBackgroundColor = uiSettings?.GetColorValue(UIColorType.Background);
+            if (backgroundColor == currentBackgroundColor && storageFiles != null)
+            {
+                return;
+            }
+
+            if (currentBackgroundColor == Colors.Black)
+            {
+                resourceLoader = ResourceLoader.GetForViewIndependentUse("ImagesDark");
+                backgroundColor = Colors.Black;
+            }
+            else
+            {
+                resourceLoader = ResourceLoader.GetForViewIndependentUse("ImagesLight");
+                backgroundColor = Colors.White;
+            }
+
+            if (storageFiles is null)
+            {
+                return;
+            }
+            CoreApplication.MainView.CoreWindow.Dispatcher
+                .RunAsync(CoreDispatcherPriority.Normal,
+                () =>
+                {
+                    foreach (var file in storageFiles)
+                    {
+                        if (file.Type == "File")
+                        {
+                            file.Image = resourceLoader.GetString("File");
+                        }
+                        else
+                        {
+                            file.Image = resourceLoader.GetString("Folder");
+                        }
+                    }
+                }).AsTask().ConfigureAwait(true);
+        }
+
+        private void RenameItem(object sender)
+        {
+            if (selectedGridItem is null || editableItem != null)
+            {
+                return;
+            }
+            editableItem = new FileControlViewModel()
+            {
+                DisplayName = selectedGridItem.DisplayName,
+                Type = selectedGridItem.Type,
+                Image = selectedGridItem.Image,
+                Path = selectedGridItem.Path,
+            };
+
+            selectedGridItem.IsEditMode = true;
+            selectedGridItem.IsReadOnlyMode = false;
+
+            EditSaveCommand = new RelayCommand(SaveChangesAsync);
+
+        }
+
+        private async void SaveChangesAsync(object sender)
+        {
+            if (selectedGridItem is null || selectedGridItem.IsReadOnlyMode)
+            {
+                return;
+            }
+
+            if (selectedGridItem.DisplayName.EndsWith(' '))
+            {
+                SelectedGridItem.DisplayName = selectedGridItem.DisplayName.Remove(selectedGridItem.DisplayName.Length - 1);
+            }
+            
+            if (editableItem.DisplayName == selectedGridItem.DisplayName)
+            {
+                EditSaveCommand = new RelayCommand(RenameItem);
+                SelectedGridItem.IsEditMode = false;
+                SelectedGridItem.IsReadOnlyMode = true;
+                editableItem = null;
+                return;
+            }
+            if (StorageFiles.Count(f => f.DisplayName == selectedGridItem.DisplayName) > 1)
+            {
+                var messageDialog = new MessageDialog("Item with the same name does exist!")
+                {
+                    Title = "Input error!"
+                };
+                await messageDialog.ShowAsync();
+                return;
+            }
+            if (!ItemNameValidation.Validate(selectedGridItem.DisplayName))
+            {
+                var messageDialog = new MessageDialog("Fields must contain only letters and numbers!")
+                {
+                    Title = "Input error!"
+                };
+                await messageDialog.ShowAsync();
+                return;
+            }
+            var contentDialog = new ContentDialog()
+            {
+                Title = "Confirmation",
+                Content = "Are you sure to rename?",
+                PrimaryButtonText = "Yes",
+                CloseButtonText = "Cancel",
+            };
+
+            var confirmationResult = await contentDialog.ShowAsync();
+            if (confirmationResult == ContentDialogResult.Primary)
+            {
+                IStorageItem item = await currentFolder.GetItemAsync(editableItem.DisplayName);
+                await item.RenameAsync(selectedGridItem.DisplayName);
+                selectedGridItem.Path = currentPath + "\\" + selectedGridItem.DisplayName;
+            }
+            else
+            {
+                SelectedGridItem.DisplayName = editableItem.DisplayName;
+            }
+
+            EditSaveCommand = new RelayCommand(RenameItem);
+            SelectedGridItem.IsEditMode = false;
+            SelectedGridItem.IsReadOnlyMode = true;
+            editableItem = null;
+        }
+
         private async void GetParentAsync(object sender)
         {
             var newCurrentFolder = await currentFolder.GetParentAsync();
@@ -225,6 +364,7 @@ namespace FileManager.ViewModels.Libraries
             StorageItems = await newCurrentFolder.GetFoldersAsync();
             await GetItemsAsync().ConfigureAwait(true);
         }
+
         private async void RemoveFileAsync(object sender)
         {
             if (SelectedGridItem is null)
@@ -307,6 +447,7 @@ namespace FileManager.ViewModels.Libraries
             StorageItems = await newCurrentFolder.GetFoldersAsync();
             await GetItemsAsync().ConfigureAwait(true);
         }
+
         private async void OpenFolderWindows(object sender, DoubleTappedRoutedEventArgs e)
         {
             if (sender is null)
@@ -330,45 +471,6 @@ namespace FileManager.ViewModels.Libraries
             await GetItemsAsync().ConfigureAwait(true);
         }
 
-        private void ChangeColorMode(UISettings settings, object sender)
-        {
-            var currentBackgroundColor = settings.GetColorValue(UIColorType.Background);
-            if (backgroundColor == currentBackgroundColor && storageFiles != null)
-            {
-                return;
-            }
-
-            if (currentBackgroundColor == Colors.Black)
-            {
-                resourceLoader = ResourceLoader.GetForViewIndependentUse("ImagesDark");
-                backgroundColor = Colors.Black;
-            }
-            else
-            {
-                resourceLoader = ResourceLoader.GetForViewIndependentUse("ImagesLight");
-                backgroundColor = Colors.White;
-            }
-
-            if (storageFiles is null)
-            {
-                return;
-            }
-            CoreApplication.MainView.CoreWindow.Dispatcher
-                .RunAsync(CoreDispatcherPriority.Normal,
-                () =>
-                {
-                    foreach (var file in storageFiles)
-                    {
-                        if (file.Type == "File")
-                        {
-                            file.Image = resourceLoader.GetString("File");
-                        }
-                        else
-                        {
-                            file.Image = resourceLoader.GetString("Folder");
-                        }
-                    }
-                }).AsTask().ConfigureAwait(true);
-        }
+        
     }
 }
