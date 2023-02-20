@@ -10,7 +10,7 @@
     mc:Ignorable="d"
     d:DataContext="{d:DesignInstance Type=viewmodels:MainPageViewModel}"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-
+    
     <Grid>
         <NavigationView PaneDisplayMode="LeftCompact" IsBackButtonVisible="Collapsed" IsPaneOpen="False" IsSettingsVisible="False" Header="{Binding CurrentTitle}" SelectedItem="{Binding SelectedItem, Mode=TwoWay}" SelectionChanged="{x:Bind ViewModel.SelectionChanged}" x:Name="NavigationViewControl">
             <NavigationView.MenuItems>

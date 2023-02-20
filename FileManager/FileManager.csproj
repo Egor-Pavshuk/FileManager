@@ -124,8 +124,15 @@
       <DependentUpon>FileControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Commands\RelayCommand.cs" />
+    <Compile Include="Validation\ItemNameValidation.cs" />
+    <Compile Include="ViewModels\BindableBase.cs" />
+    <Compile Include="ViewModels\InformationPageViewModel.cs" />
     <Compile Include="ViewModels\Libraries\MusicsLibraryViewModel.cs" />
     <Compile Include="ViewModels\Libraries\VideosLibraryViewModel.cs" />
+    <Compile Include="ViewModels\MainPageTitleViewModel.cs" />
+    <Compile Include="Views\InformationPage.xaml.cs">
+      <DependentUpon>InformationPage.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
@@ -136,6 +143,9 @@
     <Compile Include="ViewModels\FileControlViewModel.cs" />
     <Compile Include="ViewModels\Libraries\LibrariesBaseViewModel.cs" />
     <Compile Include="ViewModels\MainPageViewModel.cs" />
+    <Compile Include="Views\MainPageTitle.xaml.cs">
+      <DependentUpon>MainPageTitle.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\MusicsLibraryPage.xaml.cs">
       <DependentUpon>MusicsLibraryPage.xaml</DependentUpon>
     </Compile>
@@ -152,6 +162,14 @@
     </AppxManifest>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Images\Battery\battery.png" />
+    <Content Include="Images\Battery\batteryAttention.png" />
+    <Content Include="Images\Battery\batteryCharge.png" />
+    <Content Include="Images\Battery\emptyBattery.png" />
+    <Content Include="Images\Battery\fullBattery.png" />
+    <Content Include="Images\Battery\halfBattery.png" />
+    <Content Include="Images\Battery\lowBattery.png" />
+    <Content Include="Images\DiskStorage\diskStorage.png" />
     <Content Include="Images\FileDark.png" />
     <Content Include="Images\FileLight.png" />
     <Content Include="Images\FolderDark.png" />
@@ -174,9 +192,17 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Views\InformationPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\MainPage.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\MainPageTitle.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\MusicsLibraryPage.xaml">
       <SubType>Designer</SubType>
@@ -203,6 +229,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include=".editorconfig" />
+    <PRIResource Include="Resources\Batteries.resw" />
     <PRIResource Include="Resources\ImagesDark.resw" />
     <PRIResource Include="Resources\ImagesLight.resw" />
   </ItemGroup>

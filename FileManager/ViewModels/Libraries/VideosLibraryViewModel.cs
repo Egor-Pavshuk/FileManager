@@ -14,7 +14,7 @@ namespace FileManager.ViewModels.Libraries
             currentFolder = defaultFolder;
             CurrentPath = currentFolder.Path;
 
-            _ = GetItemsAsync();
+            GetItemsAsync().ConfigureAwait(true);
         }
         protected override async Task GetItemsAsync()
         {

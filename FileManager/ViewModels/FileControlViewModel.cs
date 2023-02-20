@@ -1,19 +1,13 @@
-﻿using System.ComponentModel;
-using System.Runtime.CompilerServices;
-
-namespace FileManager.ViewModels
+﻿namespace FileManager.ViewModels
 {
-    public class FileControlViewModel : INotifyPropertyChanged
+    public class FileControlViewModel : BindableBase
     {
         private string image;
         private string displayName;
         private string path;
         private string type;
-        public event PropertyChangedEventHandler PropertyChanged;
-        public void OnPropertyChanged([CallerMemberName] string prop = "")
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
-        }
+        private bool isEditMode;
+        private bool isReadOnlyMode;
         public string Image
         {
             get { return image; }
@@ -62,13 +56,40 @@ namespace FileManager.ViewModels
                 }
             }
         }
+        public bool IsEditMode
+        {
+            get => isEditMode;
+            set
+            {
+                if (isEditMode != value)
+                {
+                    isEditMode = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+        public bool IsReadOnlyMode
+        {
+            get => isReadOnlyMode;
+            set
+            {
+                if (isReadOnlyMode != value)
+                {
+                    isReadOnlyMode = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
         public FileControlViewModel()
         {
             DisplayName = "";
+            IsReadOnlyMode = true;
         }
         public FileControlViewModel(string displayName)
         {
             DisplayName = displayName;
+            IsReadOnlyMode = true;
         }
     }
 }
