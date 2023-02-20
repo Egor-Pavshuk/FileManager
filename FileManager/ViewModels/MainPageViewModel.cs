@@ -1,8 +1,5 @@
 ﻿using FileManager.Views;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using Windows.ApplicationModel.Resources;
-using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 
 namespace FileManager.ViewModels

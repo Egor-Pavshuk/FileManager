@@ -26,9 +26,11 @@
 
             <AppBarButton Icon="Delete" Label="Delete" Command="{x:Bind Path=ViewModel.RemoveFileCommand}" IsEnabled="{x:Bind ViewModel.IsDeleteButtonAvailable, Mode=TwoWay}"/>
             <AppBarButton Icon="NewFolder" Label="New folder" Command="{x:Bind Path=ViewModel.CreateFolderCommand}" IsEnabled="{x:Bind ViewModel.IsNewFolderButtonAvailable, Mode=TwoWay}"/>
+            <AppBarButton Icon="Rename" Label="Rename" Command="{x:Bind Path=ViewModel.EditSaveCommand, Mode=OneWay}" Visibility="{x:Bind ViewModel.SelectedGridItem.IsReadOnlyMode, Mode=OneWay}" IsEnabled="{x:Bind ViewModel.IsNewFolderButtonAvailable, Mode=TwoWay}"/>
+            <AppBarButton Icon="Save" Label="Save" Command="{x:Bind Path=ViewModel.EditSaveCommand, Mode=OneWay}" Visibility="{x:Bind ViewModel.SelectedGridItem.IsEditMode, Mode=OneWay}" IsEnabled="{x:Bind ViewModel.IsNewFolderButtonAvailable, Mode=TwoWay}"/>
         </CommandBar>
 
-        <GridView Grid.Row="1" ItemsSource="{x:Bind ViewModel.StorageFiles, Mode=TwoWay}" DoubleTapped="{x:Bind ViewModel.DoubleClicked}" ItemClick="{x:Bind ViewModel.ItemClicked}" IsItemClickEnabled="True" SelectedItem="{x:Bind ViewModel.SelectedGridItem, Mode=TwoWay}" Margin="14,1,15,10">
+        <GridView Grid.Row="1" ItemsSource="{x:Bind ViewModel.StorageFiles, Mode=TwoWay}" SelectionChanged="{x:Bind ViewModel.SelectionChanged}" DoubleTapped="{x:Bind ViewModel.DoubleClicked}" ItemClick="{x:Bind ViewModel.ItemClicked}" IsItemClickEnabled="True" SelectedItem="{x:Bind ViewModel.SelectedGridItem, Mode=TwoWay}" Margin="14,1,15,10">
                 <GridView.ItemTemplate>
                     <DataTemplate x:DataType="viewmodels:FileControlViewModel">
                         <Custom:FileControl/>

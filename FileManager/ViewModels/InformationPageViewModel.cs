@@ -1,19 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.IO.IsolatedStorage;
-using System.Linq;
-using System.Runtime;
-using System.Text;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
 using Windows.ApplicationModel.Resources;
-using Windows.Media.SpeechSynthesis;
 using Windows.Storage;
 using Windows.System.Power;
-using Windows.UI;
 using Windows.UI.Core;
-using Windows.UI.ViewManagement;
 
 namespace FileManager.ViewModels
 {
@@ -84,7 +75,7 @@ namespace FileManager.ViewModels
         public void BatteryTrigger()
         {
             Windows.Devices.Power.Battery.AggregateBattery.ReportUpdated
-            += async (sender, args) => await UpdateBatteryStatus().ConfigureAwait(true);            
+            += async (sender, args) => await UpdateBatteryStatus().ConfigureAwait(true);
         }
         //protected override void ChangeColorMode(UISettings settings, object sender)
         //{
@@ -131,7 +122,7 @@ namespace FileManager.ViewModels
         private async Task UpdateBatteryStatus()
         {
             await CoreApplication.MainView.CoreWindow.Dispatcher
-                .RunAsync(CoreDispatcherPriority.Normal, 
+                .RunAsync(CoreDispatcherPriority.Normal,
             () =>
             {
                 var batteryReport = Windows.Devices.Power.Battery.AggregateBattery.GetReport();

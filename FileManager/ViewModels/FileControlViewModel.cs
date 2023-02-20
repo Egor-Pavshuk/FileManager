@@ -1,7 +1,4 @@
-﻿using System.ComponentModel;
-using System.Runtime.CompilerServices;
-
-namespace FileManager.ViewModels
+﻿namespace FileManager.ViewModels
 {
     public class FileControlViewModel : BindableBase
     {
@@ -87,12 +84,12 @@ namespace FileManager.ViewModels
         public FileControlViewModel()
         {
             DisplayName = "";
-            isReadOnlyMode = true;
+            IsReadOnlyMode = true;
         }
         public FileControlViewModel(string displayName)
         {
             DisplayName = displayName;
-            isReadOnlyMode = true;
+            IsReadOnlyMode = true;
         }
     }
 }

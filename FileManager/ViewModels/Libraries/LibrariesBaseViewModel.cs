@@ -1,12 +1,9 @@
 ﻿using FileManager.Commands;
-using FileManager.Models;
 using FileManager.Validation;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Windows.ApplicationModel.Core;
@@ -33,6 +30,7 @@ namespace FileManager.ViewModels.Libraries
         private string currentPath;
         private DoubleTappedEventHandler doubleClicked;
         private ItemClickEventHandler itemClicked;
+        private SelectionChangedEventHandler selectionChanged;
         private ICommand getParentCommand;
         private ICommand removeFileCommand;
         private ICommand createFolderCommand;
@@ -149,6 +147,18 @@ namespace FileManager.ViewModels.Libraries
                 }
             }
         }
+        public SelectionChangedEventHandler SelectionChanged
+        {
+            get => selectionChanged;
+            set
+            {
+                if (selectionChanged != value)
+                {
+                    selectionChanged = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
         public ICommand GetParentCommand
         {
             get => getParentCommand;
@@ -207,14 +217,17 @@ namespace FileManager.ViewModels.Libraries
             }
             else
             {
-                ItemClicked = (o, e) => { };
                 DoubleClicked = OpenFolderWindows;
+                ItemClicked = (o, e) => { };
             }
             ChangeColorMode(settings, this);
+            SelectionChanged = GridSelectionChanged;
+
+            SelectedGridItem = new FileControlViewModel();
 
             GetParentCommand = new RelayCommand(GetParentAsync);
             RemoveFileCommand = new RelayCommand(RemoveFileAsync);
-            CreateFolderCommand= new RelayCommand(CreateFolder);
+            CreateFolderCommand = new RelayCommand(CreateFolder);
             EditSaveCommand = new RelayCommand(RenameItem);
         }
 
@@ -260,6 +273,20 @@ namespace FileManager.ViewModels.Libraries
                 }).AsTask().ConfigureAwait(true);
         }
 
+        private void GridSelectionChanged(object selder, SelectionChangedEventArgs e)
+        {
+            if (editableItem != null)
+            {
+                var file = StorageFiles.First(f => f.Path == editableItem.Path);
+                file.DisplayName = editableItem.DisplayName;
+                file.IsEditMode = false;
+                file.IsReadOnlyMode = true;
+                EditSaveCommand = new RelayCommand(RenameItem);
+
+                editableItem = null;
+            }
+        }
+
         private void RenameItem(object sender)
         {
             if (selectedGridItem is null || editableItem != null)
@@ -292,7 +319,7 @@ namespace FileManager.ViewModels.Libraries
             {
                 SelectedGridItem.DisplayName = selectedGridItem.DisplayName.Remove(selectedGridItem.DisplayName.Length - 1);
             }
-            
+
             if (editableItem.DisplayName == selectedGridItem.DisplayName)
             {
                 EditSaveCommand = new RelayCommand(RenameItem);
@@ -312,7 +339,7 @@ namespace FileManager.ViewModels.Libraries
             }
             if (!ItemNameValidation.Validate(selectedGridItem.DisplayName))
             {
-                var messageDialog = new MessageDialog("Fields must contain only letters and numbers!")
+                var messageDialog = new MessageDialog("Field must contain only letters, numbers or some symbols!")
                 {
                     Title = "Input error!"
                 };
@@ -347,6 +374,11 @@ namespace FileManager.ViewModels.Libraries
 
         private async void GetParentAsync(object sender)
         {
+            if (editableItem != null)
+            {
+                GridSelectionChanged(sender, null);
+            }
+
             var newCurrentFolder = await currentFolder.GetParentAsync();
             if (await newCurrentFolder.GetParentAsync() is null)
             {
@@ -367,14 +399,14 @@ namespace FileManager.ViewModels.Libraries
 
         private async void RemoveFileAsync(object sender)
         {
-            if (SelectedGridItem is null)
+            if (SelectedGridItem is null || SelectedGridItem.IsEditMode)
             {
                 return;
             }
             var contentDialog = new ContentDialog()
             {
                 Title = "Confirmation",
-                Content = "Are you sure to delete?",
+                Content = $"Are you sure to delete \"{selectedGridItem.DisplayName}\"?",
                 PrimaryButtonText = "Yes",
                 CloseButtonText = "Cancel",
             };
@@ -393,7 +425,7 @@ namespace FileManager.ViewModels.Libraries
                 StorageFiles = files;
                 IStorageItem item = await currentFolder.GetItemAsync(itemName);
                 await item.DeleteAsync();
-                
+
                 SelectedGridItem = null;
             }
         }
@@ -413,15 +445,17 @@ namespace FileManager.ViewModels.Libraries
                         files.Add(file);
                     }
 
-                    files.Insert(files.FindLastIndex(f => f.Type == "Folder") + 1,
-                    new FileControlViewModel()
+                    var newFolder = new FileControlViewModel()
                     {
                         Image = resourceLoader.GetString("folder"),
                         DisplayName = $"New folder {countOfNewFolders + 1}",
                         Type = "Folder",
                         Path = currentFolder.Path + $"\\New folder {countOfNewFolders + 1}"
-                    });
-                    StorageFiles = new Collection<FileControlViewModel> (files);
+                    };
+
+                    files.Insert(files.FindLastIndex(f => f.Type == "Folder") + 1, newFolder);
+                    StorageFiles = new Collection<FileControlViewModel>(files);
+                    SelectedGridItem = newFolder;
                 });
         }
 
@@ -471,6 +505,6 @@ namespace FileManager.ViewModels.Libraries
             await GetItemsAsync().ConfigureAwait(true);
         }
 
-        
+
     }
 }
