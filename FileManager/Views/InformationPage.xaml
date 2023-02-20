@@ -26,10 +26,10 @@
                     <TextBlock Text="{x:Bind Path=ViewModel.FreeSpaceGb}" FontSize="32" TextAlignment="Center" Foreground="Black"/>
                 </StackPanel>
             </Border>
-            <Border Width="400" Height="200" Background="{ThemeResource SystemAccentColor}" BorderThickness="1" BorderBrush="DarkGray" CornerRadius="20"  Margin="20 20 20 0">
+            <Border Width="400" Height="200" Background="{ThemeResource SystemAccentColor}" BorderThickness="1" BorderBrush="DarkGray" CornerRadius="20"  Margin="20 20 20 20">
                 <StackPanel Width="400" Height="200" Orientation="Vertical" CornerRadius="20">
-                    <Image Source="/Images/Battery/battery.png" Width="300" Height="140"/>
-                    <ProgressBar Width="300" Height="25" Value="{x:Bind ViewModel.BatteryLevel}" BorderThickness="1" Foreground="Black" BorderBrush="DarkGray"  Background="Gray"/>
+                    <Image Source="/Images/ram.png" Width="200" Height="140"/>
+                    <TextBlock Text="{x:Bind Path=ViewModel.RamMemoryUsed}" Foreground="Black" FontSize="32" TextAlignment="Center" Margin="0 -15 0 0"/>
                 </StackPanel>
             </Border>
         </GridView>
