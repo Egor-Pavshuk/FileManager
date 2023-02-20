@@ -41,7 +41,7 @@ namespace FileManager
 
                 rootFrame.NavigationFailed += OnNavigationFailed;
 
-                if (e.PreviousExecutionState == ApplicationExecutionState.Terminated)
+                if (e?.PreviousExecutionState == ApplicationExecutionState.Terminated)
                 {
                     //TODO: Load state from previously suspended application
                 }
@@ -50,7 +50,7 @@ namespace FileManager
                 Window.Current.Content = rootFrame;
             }
 
-            if (e.PrelaunchActivated == false)
+            if (e?.PrelaunchActivated == false)
             {
                 if (rootFrame.Content == null)
                 {
