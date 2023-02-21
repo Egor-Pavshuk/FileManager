@@ -5,4 +5,4 @@
 <p>In the application, it is possible to browse directories from different libraries, such as Images, Videos, and Music. It is also possible to open the desired directory, where the existing files are displayed.</p>
 <p>The functionality of creating a new folder, deleting files and renaming them has been implemented.</p>
 <p>The application theme changes depending on the system theme.</p>
-<p>Also implemented is a section that displays the battery status, the amount of free memory on the disk, and the amount of RAM used by the application.</p>
+<p>Also is implemented a section that displays the battery status, the amount of free memory on the disk, and the amount of RAM used by the application.</p>
