@@ -23,13 +23,13 @@
             <Border Width="400" Height="200" Background="{ThemeResource SystemColorActiveCaptionColor}" BorderThickness="1" BorderBrush="DarkGray" CornerRadius="20"  Margin="20 20 20 20">
                 <StackPanel Width="400" Height="200" Orientation="Vertical" CornerRadius="20">
                     <Image Source="/Images/DiskStorage/diskStorage.png" Width="250" Height="100" Margin="0 20 0 10"/>
-                    <TextBlock Text="{x:Bind Path=ViewModel.FreeSpaceGb}" FontSize="32" TextAlignment="Center" Foreground="Black"/>
+                    <TextBlock Text="{x:Bind Path=ViewModel.FreeSpaceGb}" Width="400" TextWrapping="Wrap" FontSize="32" TextAlignment="Center" Foreground="Black"/>
                 </StackPanel>
             </Border>
             <Border Width="400" Height="200" Background="{ThemeResource SystemAccentColor}" BorderThickness="1" BorderBrush="DarkGray" CornerRadius="20"  Margin="20 20 20 20">
                 <StackPanel Width="400" Height="200" Orientation="Vertical" CornerRadius="20">
                     <Image Source="/Images/ram.png" Width="200" Height="140"/>
-                    <TextBlock Text="{x:Bind Path=ViewModel.RamMemoryUsed}" Foreground="Black" FontSize="32" TextAlignment="Center" Margin="0 -15 0 0"/>
+                    <TextBlock Text="{x:Bind Path=ViewModel.RamMemoryUsed}" Width="400" TextWrapping="Wrap" Foreground="Black" FontSize="32" TextAlignment="Center" Margin="0 -15 0 0"/>
                 </StackPanel>
             </Border>
         </GridView>

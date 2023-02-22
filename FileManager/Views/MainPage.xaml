@@ -18,6 +18,8 @@
                 <NavigationViewItem AccessKey="1" Content="Videos" Icon="Video" x:Name="Videos" />
                 <NavigationViewItem AccessKey="2" Content="Music" Icon="MusicInfo" x:Name="Music" />
                 <NavigationViewItem AccessKey="3" Content="Analize" Icon="Manage" x:Name="Analize" />
+                <NavigationViewItemSeparator/>
+                <NavigationViewItem AccessKey="4" Content="Drive" Icon="Folder" x:Name="GoogleDrive" />
             </NavigationView.MenuItems>
             <Frame x:Name="MainContent" Content="{Binding CurrentContent}">
                 
