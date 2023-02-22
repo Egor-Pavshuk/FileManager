@@ -120,16 +120,52 @@
   <data name="AppDisplayName" xml:space="preserve">
     <value>Файл менеджер</value>
   </data>
+  <data name="cancelButton" xml:space="preserve">
+    <value>Отмена</value>
+  </data>
+  <data name="confirmation" xml:space="preserve">
+    <value>Подтверждение</value>
+  </data>
+  <data name="deleteConfirmText" xml:space="preserve">
+    <value>Вы уверены, что хотите удалить</value>
+  </data>
+  <data name="freeSpace" xml:space="preserve">
+    <value>Свободное место</value>
+  </data>
   <data name="ImageNav" xml:space="preserve">
     <value>Изображения</value>
+  </data>
+  <data name="InformationNav" xml:space="preserve">
+    <value>Информация об устройстве</value>
+  </data>
+  <data name="inputError" xml:space="preserve">
+    <value>Ошибка ввода!</value>
+  </data>
+  <data name="invalidInput" xml:space="preserve">
+    <value>Поле должно содержать только буквы, цифры или спецсимволы!</value>
   </data>
   <data name="MainPage" xml:space="preserve">
     <value>Главная</value>
   </data>
+  <data name="memoryUsage" xml:space="preserve">
+    <value>Использовано памяти</value>
+  </data>
   <data name="MusicNav" xml:space="preserve">
     <value>Музыка</value>
   </data>
+  <data name="renameConfirmText" xml:space="preserve">
+    <value>Вы уверены, что хотите переименовать?</value>
+  </data>
+  <data name="sameNameError" xml:space="preserve">
+    <value>Файл с таким именем уже существует!</value>
+  </data>
   <data name="VideoNav" xml:space="preserve">
     <value>Видео</value>
+  </data>
+  <data name="welcomeTitle" xml:space="preserve">
+    <value>Добро пожаловать в файловый менеджер!</value>
+  </data>
+  <data name="yesButton" xml:space="preserve">
+    <value>Да</value>
   </data>
 </root>

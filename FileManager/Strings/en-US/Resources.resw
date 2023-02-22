@@ -120,16 +120,52 @@
   <data name="AppDisplayName" xml:space="preserve">
     <value>File manager</value>
   </data>
+  <data name="cancelButton" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="confirmation" xml:space="preserve">
+    <value>Confirmation</value>
+  </data>
+  <data name="deleteConfirmText" xml:space="preserve">
+    <value>Are you sure to delete</value>
+  </data>
+  <data name="freeSpace" xml:space="preserve">
+    <value>Free space</value>
+  </data>
   <data name="ImageNav" xml:space="preserve">
     <value>Images</value>
+  </data>
+  <data name="InformationNav" xml:space="preserve">
+    <value>Device information</value>
+  </data>
+  <data name="inputError" xml:space="preserve">
+    <value>Input error!</value>
+  </data>
+  <data name="invalidInput" xml:space="preserve">
+    <value>Field must contain only letters, numbers or some symbols!</value>
   </data>
   <data name="MainPage" xml:space="preserve">
     <value>Main page</value>
   </data>
+  <data name="memoryUsage" xml:space="preserve">
+    <value>Memory usage</value>
+  </data>
   <data name="MusicNav" xml:space="preserve">
     <value>Musics</value>
   </data>
+  <data name="renameConfirmText" xml:space="preserve">
+    <value>Are you sure to rename?</value>
+  </data>
+  <data name="sameNameError" xml:space="preserve">
+    <value>Item with the same name already exist!</value>
+  </data>
   <data name="VideoNav" xml:space="preserve">
     <value>Videos</value>
+  </data>
+  <data name="welcomeTitle" xml:space="preserve">
+    <value>Welcome to file manager!</value>
+  </data>
+  <data name="yesButton" xml:space="preserve">
+    <value>Yes</value>
   </data>
 </root>

@@ -1,7 +1,10 @@
-﻿namespace FileManager.ViewModels
+﻿using Windows.ApplicationModel.Resources;
+
+namespace FileManager.ViewModels
 {
     public class MainPageTitleViewModel : BindableBase
     {
+        private ResourceLoader resourceLoader;
         private string title;
         public string Title
         {
@@ -17,7 +20,8 @@
         }
         public MainPageTitleViewModel()
         {
-            Title = "Welcome to file manager!";
+            resourceLoader = ResourceLoader.GetForCurrentView("Resources");
+            Title = resourceLoader.GetString("welcomeTitle");
         }
     }
 }
