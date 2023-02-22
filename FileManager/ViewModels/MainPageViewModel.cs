@@ -6,6 +6,11 @@ namespace FileManager.ViewModels
 {
     public class MainPageViewModel : BindableBase
     {
+        private const string imageNavigation = "ImageNav";
+        private const string videoNavigation = "VideoNav";
+        private const string musicNavigation = "MusicNav";
+        private const string infoNavigation = "InformationNav";
+        private const string mainNavigation = "MainPage";
         private Page currentContent;
         private string currentTitle;
         private ResourceLoader resourceLoader;
@@ -59,23 +64,23 @@ namespace FileManager.ViewModels
             {
                 case "0":
                     CurrentContent = new PicturesLibraryPage();
-                    CurrentTitle = resourceLoader.GetString("ImageNav");
+                    CurrentTitle = resourceLoader.GetString(imageNavigation);
                     break;
                 case "1":
                     CurrentContent = new VideosLibraryPage();
-                    CurrentTitle = resourceLoader.GetString("VideoNav");
+                    CurrentTitle = resourceLoader.GetString(videoNavigation);
                     break;
                 case "2":
                     CurrentContent = new MusicsLibraryPage();
-                    CurrentTitle = resourceLoader.GetString("MusicNav");
+                    CurrentTitle = resourceLoader.GetString(musicNavigation);
                     break;
                 case "3":
                     CurrentContent = new InformationPage();
-                    CurrentTitle = resourceLoader.GetString("Device information");
+                    CurrentTitle = resourceLoader.GetString(infoNavigation);
                     break;
                 default:
                     CurrentContent = new MainPageTitle();
-                    CurrentTitle = resourceLoader.GetString("MainPage");
+                    CurrentTitle = resourceLoader.GetString(mainNavigation);
                     break;
             }
         }

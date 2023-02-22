@@ -11,12 +11,15 @@ namespace FileManager.ViewModels
 {
     public class InformationPageViewModel : BindableBase
     {
+        private const string batteries = "Batteries";
+        private const string resources = "Resources";
         private string batteryImage;
         private double batteryLevel;
         private string freeSpaceGb;
         private string ramMemoryUsed;
         private string batteryLevelPercentage;
-        private ResourceLoader resourceLoader;
+        private ResourceLoader batteryResourceLoader;
+        private ResourceLoader stringsResourceLoader;
         public string BatteryImage
         {
             get => batteryImage;
@@ -79,7 +82,8 @@ namespace FileManager.ViewModels
         }
         public InformationPageViewModel()
         {
-            resourceLoader = ResourceLoader.GetForCurrentView("Batteries");
+            batteryResourceLoader = ResourceLoader.GetForCurrentView(batteries);
+            stringsResourceLoader = ResourceLoader.GetForCurrentView(resources);
             BatteryTrigger();
             MemoryTrigger();
             UpdateMemoryStatus().ConfigureAwait(true);
@@ -103,6 +107,14 @@ namespace FileManager.ViewModels
 
         private async Task UpdateBatteryStatus()
         {
+            const string fullBattery = "fullBattery";
+            const string batteryCharge = "batteryCharge";
+            const string battery = "battery";
+            const string halfbattery = "halfBattery";
+            const string lowBattery = "lowBattery";
+            const string emptyBattery = "emptyBattery";
+            const string batteryAttention = "batteryAttention";
+
             await CoreApplication.MainView.CoreWindow.Dispatcher
                 .RunAsync(CoreDispatcherPriority.Normal,
             () =>
@@ -118,35 +130,35 @@ namespace FileManager.ViewModels
                 switch (batteryReport.Status)
                 {
                     case BatteryStatus.Idle:
-                        BatteryImage = resourceLoader.GetString("fullbattery");
+                        BatteryImage = batteryResourceLoader.GetString(fullBattery);
                         break;
                     case BatteryStatus.Charging:
-                        BatteryImage = resourceLoader.GetString("batteryCharge");
+                        BatteryImage = batteryResourceLoader.GetString(batteryCharge);
                         break;
                     case BatteryStatus.Discharging:
                         if (batteryLevel <= 100 && BatteryLevel > 76)
                         {
-                            BatteryImage = resourceLoader.GetString("fullbattery");
+                            BatteryImage = batteryResourceLoader.GetString(fullBattery);
                         }
                         else if (BatteryLevel <= 76 && BatteryLevel > 51)
                         {
-                            BatteryImage = resourceLoader.GetString("battery");
+                            BatteryImage = batteryResourceLoader.GetString(battery);
                         }
                         else if (BatteryLevel <= 51 && BatteryLevel > 31)
                         {
-                            BatteryImage = resourceLoader.GetString("halfBattery");
+                            BatteryImage = batteryResourceLoader.GetString(halfbattery);
                         }
                         else if (BatteryLevel <= 31 && BatteryLevel > 21)
                         {
-                            BatteryImage = resourceLoader.GetString("lowBattery");
+                            BatteryImage = batteryResourceLoader.GetString(lowBattery);
                         }
                         else
                         {
-                            BatteryImage = resourceLoader.GetString("emptyBattery");
+                            BatteryImage = batteryResourceLoader.GetString(emptyBattery);
                         }
                         break;
                     default:
-                        BatteryImage = resourceLoader.GetString("batteryAttention");
+                        BatteryImage = batteryResourceLoader.GetString(batteryAttention);
                         break;
                 }
             });
@@ -154,6 +166,7 @@ namespace FileManager.ViewModels
 
         private async Task UpdateMemoryStatus()
         {
+            const string memoryUsage = "memoryUsage";
             await CoreApplication.MainView.CoreWindow.Dispatcher
                 .RunAsync(CoreDispatcherPriority.Normal,
             () =>
@@ -162,13 +175,14 @@ namespace FileManager.ViewModels
                 var usageInKB = usageInB / 1024.0;
                 var usageInMB = usageInKB / 1024.0;
 
-                RamMemoryUsed = $"Memory usage: {Math.Round(usageInMB, 2)} Mb";
+                RamMemoryUsed = stringsResourceLoader.GetString(memoryUsage) + $": {Math.Round(usageInMB, 2)} Mb";
             });
         }
 
         private async void GetFreeSpace()
         {
-            string freeSpaceKey = "System.FreeSpace";
+            const string freeSpace = "freeSpace";
+            const string freeSpaceKey = "System.FreeSpace";
             var retrieveProperties = await ApplicationData.Current.LocalFolder.Properties.RetrievePropertiesAsync(new string[] { freeSpaceKey });
             var freeSpaceRemaining = retrieveProperties[freeSpaceKey];
 
@@ -176,7 +190,7 @@ namespace FileManager.ViewModels
             var sizeInMB = sizeInKB / 1024.0;
             var sizeInGb = sizeInMB / 1024.0;
 
-            FreeSpaceGb = $"Free space: {Math.Round(sizeInGb, 2)} Gb";
+            FreeSpaceGb = stringsResourceLoader.GetString(freeSpace) + $": {Math.Round(sizeInGb, 2)} Gb";
         }
     }
 }
