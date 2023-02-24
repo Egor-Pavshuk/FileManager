@@ -5,8 +5,8 @@
     xmlns:local="using:FileManager.Controlls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:viewmodels="using:FileManager.ViewModels"
-    d:DataContext="{d:DesignInstance Type=viewmodels:FileControlViewModel}"
+    xmlns:vml="using:FileManager.VMLocator"
+    vml:ViewModelLocator.AutoWireViewModel="True"
     mc:Ignorable="d" Height="120" Width="120">
 
     <Grid>
