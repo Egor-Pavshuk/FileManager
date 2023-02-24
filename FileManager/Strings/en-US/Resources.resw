@@ -123,6 +123,9 @@
   <data name="cancelButton" xml:space="preserve">
     <value>Cancel</value>
   </data>
+  <data name="changeTypeConfirmText" xml:space="preserve">
+    <value>Are you sure to change file type? The data may be lost!</value>
+  </data>
   <data name="confirmation" xml:space="preserve">
     <value>Confirmation</value>
   </data>
@@ -161,6 +164,9 @@
   </data>
   <data name="VideoNav" xml:space="preserve">
     <value>Videos</value>
+  </data>
+  <data name="warning" xml:space="preserve">
+    <value>Warning!</value>
   </data>
   <data name="welcomeTitle" xml:space="preserve">
     <value>Welcome to file manager!</value>
