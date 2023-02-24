@@ -11,7 +11,7 @@
 
     <Grid>
         <StackPanel>
-            <Image Source="{Binding Image, Mode=TwoWay}" Width="90" Height="80"/>
+            <Image Source="{Binding Image, Mode=TwoWay}" Width="70" Height="60" Margin="0 10 0 0"/>
             <TextBlock Text="{Binding DisplayName, Mode=TwoWay}" Visibility="{Binding IsReadOnlyMode}" Width="110" Height="40" TextWrapping="Wrap" TextAlignment="Center"/>
             <TextBox Text="{Binding DisplayName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Visibility="{Binding IsEditMode}" Width="110" Height="35" TextWrapping="Wrap" TextAlignment="Center"/>
         </StackPanel>
