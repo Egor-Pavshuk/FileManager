@@ -9,6 +9,7 @@ using System.Windows.Input;
 using Windows.ApplicationModel.Core;
 using Windows.ApplicationModel.Resources;
 using Windows.Storage;
+using Windows.System;
 using Windows.UI;
 using Windows.UI.Core;
 using Windows.UI.Popups;
@@ -214,12 +215,12 @@ namespace FileManager.ViewModels.Libraries
             const string resources = "Resources";
             if (Windows.System.Profile.AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Xbox")
             {
-                ItemClicked = OpenFolderXbox;
+                ItemClicked = OpenFileXbox;
                 DoubleClicked = (o, e) => { };
             }
             else
             {
-                DoubleClicked = OpenFolderWindows;
+                DoubleClicked = OpenFileWindows;
                 ItemClicked = (o, e) => { };
             }
 
@@ -254,6 +255,9 @@ namespace FileManager.ViewModels.Libraries
 
         protected override void ChangeColorMode(UISettings uiSettings, object sender)
         {
+            const string image = "image";
+            const string video = "video";
+            const string audio = "audio";
             const string folder = "folder";
             const string file = "file";
             const string imagesDark = "ImagesDark";
@@ -281,13 +285,23 @@ namespace FileManager.ViewModels.Libraries
                     {
                         foreach (var storageFile in storageFiles)
                         {
-                            if (storageFile.Type == "File")
+                            switch (storageFile.Type)
                             {
-                                storageFile.Image = themeResourceLoader.GetString(file);
-                            }
-                            else
-                            {
-                                storageFile.Image = themeResourceLoader.GetString(folder);
+                                case image:
+                                    storageFile.Image = themeResourceLoader.GetString(image);
+                                    break;
+                                case video:
+                                    storageFile.Image = themeResourceLoader.GetString(video);
+                                    break;
+                                case audio:
+                                    storageFile.Image = themeResourceLoader.GetString(audio);
+                                    break;
+                                case folder:
+                                    storageFile.Image = themeResourceLoader.GetString(folder);
+                                    break;
+                                default:
+                                    storageFile.Image = themeResourceLoader.GetString(file);
+                                    break;
                             }
                         }
                     }).AsTask().ConfigureAwait(true);
@@ -297,6 +311,9 @@ namespace FileManager.ViewModels.Libraries
 
         private async Task GetItemsAsync()
         {
+            const string image = "image";
+            const string video = "video";
+            const string audio = "audio";
             const string folder = "folder";
             const string file = "file";
 
@@ -304,18 +321,42 @@ namespace FileManager.ViewModels.Libraries
             {
                 StorageItems = await currentFolder.GetItemsAsync();
             }
+            else
+            {
+                StorageItems = await currentFolder.GetFoldersAsync();
+            }
 
             Collection<FileControlViewModel> fileControls = new Collection<FileControlViewModel>();
             foreach (var item in StorageItems)
             {
-                var fileControl = new FileControlViewModel() { Image = themeResourceLoader.GetString(folder), DisplayName = item.Name, Path = item.Path, Type = "Folder" };
-                fileControls.Add(fileControl);
+                if (item.IsOfType(StorageItemTypes.Folder))
+                {
+                    var fileControl = new FileControlViewModel() { Image = themeResourceLoader.GetString(folder), DisplayName = item.Name, Path = item.Path, Type = folder };
+                    fileControls.Add(fileControl);
+                }                
             }
 
             IReadOnlyList<StorageFile> storageFiles = await currentFolder.GetFilesAsync();
             foreach (var item in storageFiles)
             {
-                var viewModel = new FileControlViewModel() { Image = themeResourceLoader.GetString(file), DisplayName = item.Name, Path = item.Path, Type = "File" };
+                FileControlViewModel viewModel;
+                if (item.ContentType.Contains(image, StringComparison.Ordinal))
+                {
+                    viewModel = new FileControlViewModel() { Image = themeResourceLoader.GetString(image), DisplayName = item.Name, Path = item.Path, Type = image };
+                }
+                else if (item.ContentType.Contains(video, StringComparison.Ordinal))
+                {
+                    viewModel = new FileControlViewModel() { Image = themeResourceLoader.GetString(video), DisplayName = item.Name, Path = item.Path, Type = video };
+                }
+                else if (item.ContentType.Contains(audio, StringComparison.Ordinal))
+                {
+                    viewModel = new FileControlViewModel() { Image = themeResourceLoader.GetString(audio), DisplayName = item.Name, Path = item.Path, Type = audio };
+                }
+                else
+                {
+                    viewModel = new FileControlViewModel() { Image = themeResourceLoader.GetString(file), DisplayName = item.Name, Path = item.Path, Type = file };
+                }
+                
                 fileControls.Add(viewModel);
             }
             StorageFiles = fileControls;
@@ -363,6 +404,9 @@ namespace FileManager.ViewModels.Libraries
             const string renameConfirmText = "renameConfirmText";
             const string yesButton = "yesButton";
             const string cancelButton = "cancelButton";
+            const string warning = "warning";
+            const string changeTypeConfirmText = "changeTypeConfirmText";
+            const string folder = "folder";
             bool saveChanges = false;
 
             if (selectedGridItem != null && selectedGridItem.IsEditMode)
@@ -374,7 +418,10 @@ namespace FileManager.ViewModels.Libraries
 
                 if (editableItem.DisplayName != selectedGridItem.DisplayName)
                 {
-                    if (StorageFiles.Count(f => f.DisplayName == selectedGridItem.DisplayName) > 1)
+                    var editableItemDysplayName = editableItem.DisplayName;
+                    var selectedItemDysplayName = selectedGridItem.DisplayName;
+
+                    if (StorageFiles.Count(f => f.DisplayName == selectedItemDysplayName) > 1)
                     {
                         var messageDialog = new MessageDialog(stringsResourceLoader.GetString(sameNameError))
                         {
@@ -382,7 +429,7 @@ namespace FileManager.ViewModels.Libraries
                         };
                         await messageDialog.ShowAsync();
                     }
-                    else if (!ItemNameValidation.Validate(selectedGridItem.DisplayName))
+                    else if (!ItemNameValidation.Validate(selectedItemDysplayName))
                     {
                         var messageDialog = new MessageDialog(stringsResourceLoader.GetString(invalidInput))
                         {
@@ -392,7 +439,7 @@ namespace FileManager.ViewModels.Libraries
                     }
                     else
                     {
-                        var contentDialog = new ContentDialog()
+                        var confirmationContentDialog = new ContentDialog()
                         {
                             Title = stringsResourceLoader.GetString(confirmation),
                             Content = stringsResourceLoader.GetString(renameConfirmText),
@@ -400,16 +447,32 @@ namespace FileManager.ViewModels.Libraries
                             CloseButtonText = stringsResourceLoader.GetString(cancelButton),
                         };
 
-                        var confirmationResult = await contentDialog.ShowAsync();
+                        var confirmationResult = await confirmationContentDialog.ShowAsync();
+
+                        if (editableItem.Type != folder &&
+                        editableItemDysplayName.Substring(editableItemDysplayName.LastIndexOf('.')) != selectedItemDysplayName.Substring(selectedItemDysplayName.LastIndexOf('.')) &&
+                        confirmationResult == ContentDialogResult.Primary)
+                        {
+                            var changeTypeContentDialog = new ContentDialog()
+                            {
+                                Title = stringsResourceLoader.GetString(warning),
+                                Content = stringsResourceLoader.GetString(changeTypeConfirmText),
+                                PrimaryButtonText = stringsResourceLoader.GetString(yesButton),
+                                CloseButtonText = stringsResourceLoader.GetString(cancelButton),
+                            };
+
+                            confirmationResult = await changeTypeContentDialog.ShowAsync();
+                        }
+
                         if (confirmationResult == ContentDialogResult.Primary)
                         {
                             IStorageItem item = await currentFolder.GetItemAsync(editableItem.DisplayName);
-                            await item.RenameAsync(selectedGridItem.DisplayName);
-                            selectedGridItem.Path = currentPath + "\\" + selectedGridItem.DisplayName;
+                            await item.RenameAsync(selectedItemDysplayName);
+                            selectedGridItem.Path = currentPath + "\\" + selectedItemDysplayName;
                         }
                         else
                         {
-                            SelectedGridItem.DisplayName = editableItem.DisplayName;
+                            SelectedGridItem.DisplayName = editableItemDysplayName;
                         }     
                         
                         saveChanges = true;
@@ -529,45 +592,71 @@ namespace FileManager.ViewModels.Libraries
                 });
         }
 
-        private async void OpenFolderXbox(object sender, ItemClickEventArgs e)
+        private async void OpenFileXbox(object sender, ItemClickEventArgs e)
         {
+            const string folder = "folder";
+
             if (sender != null)
             {
                 var gridItems = (GridView)sender;
-                if (gridItems.SelectedItem is FileControlViewModel selectedItem && selectedItem.Type != "File" && !string.IsNullOrEmpty(selectedItem.DisplayName))
+                if (gridItems.SelectedItem is FileControlViewModel selectedItem && !string.IsNullOrEmpty(selectedItem.DisplayName))
                 {
-                    IsBackButtonAvailable = true;
-                    IsDeleteButtonAvailable = true;
-                    IsNewFolderButtonAvailable = true;
+                    if (selectedItem.Type != folder)
+                    {
+                        var file = await currentFolder.GetFileAsync(selectedItem.DisplayName);
 
-                    CurrentPath = selectedItem.Path;
-                    var newCurrentFolder = await StorageFolder.GetFolderFromPathAsync(CurrentPath);
-                    currentFolder = newCurrentFolder;
+                        if (file != null)
+                        {
+                            await Launcher.LaunchFileAsync(file);
+                        }
+                    }
+                    else
+                    {
+                        IsBackButtonAvailable = true;
+                        IsDeleteButtonAvailable = true;
+                        IsNewFolderButtonAvailable = true;
 
-                    StorageItems = await newCurrentFolder.GetFoldersAsync();
-                    await GetItemsAsync().ConfigureAwait(true);
+                        CurrentPath = selectedItem.Path;
+                        var newCurrentFolder = await StorageFolder.GetFolderFromPathAsync(CurrentPath);
+                        currentFolder = newCurrentFolder;
+
+                        await GetItemsAsync().ConfigureAwait(true);
+                    }
                 }
             }
         }
 
-        private async void OpenFolderWindows(object sender, DoubleTappedRoutedEventArgs e)
+        private async void OpenFileWindows(object sender, DoubleTappedRoutedEventArgs e)
         {
+            const string folder = "folder";
+
             if (sender != null)
             {
                 var gridItems = (GridView)sender;
-                if (gridItems.SelectedItem is FileControlViewModel selectedItem && selectedItem.Type != "File" && !string.IsNullOrEmpty(selectedItem.DisplayName))
+                if (gridItems.SelectedItem is FileControlViewModel selectedItem && !string.IsNullOrEmpty(selectedItem.DisplayName))
                 {
-                    IsBackButtonAvailable = true;
-                    IsDeleteButtonAvailable = true;
-                    IsNewFolderButtonAvailable = true;
+                    if (selectedItem.Type != folder)
+                    {
+                        var file = await currentFolder.GetFileAsync(selectedItem.DisplayName);
 
-                    CurrentPath = selectedItem.Path;
-                    var newCurrentFolder = await StorageFolder.GetFolderFromPathAsync(CurrentPath);
-                    currentFolder = newCurrentFolder;
+                        if (file != null)
+                        {
+                            await Launcher.LaunchFileAsync(file);
+                        }
+                    }
+                    else
+                    {
+                        IsBackButtonAvailable = true;
+                        IsDeleteButtonAvailable = true;
+                        IsNewFolderButtonAvailable = true;
 
-                    StorageItems = await newCurrentFolder.GetFoldersAsync();
-                    await GetItemsAsync().ConfigureAwait(true);
-                }                
+                        CurrentPath = selectedItem.Path;
+                        var newCurrentFolder = await StorageFolder.GetFolderFromPathAsync(CurrentPath);
+                        currentFolder = newCurrentFolder;
+                        
+                        await GetItemsAsync().ConfigureAwait(true);
+                    }
+                }                    
             }             
         }
     }
