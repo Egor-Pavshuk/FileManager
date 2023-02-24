@@ -123,6 +123,9 @@
   <data name="cancelButton" xml:space="preserve">
     <value>Отмена</value>
   </data>
+  <data name="changeTypeConfirmText" xml:space="preserve">
+    <value>Вы уверены, что хотите изменить тип файла? Данные могут быть утеряны!</value>
+  </data>
   <data name="confirmation" xml:space="preserve">
     <value>Подтверждение</value>
   </data>
@@ -161,6 +164,9 @@
   </data>
   <data name="VideoNav" xml:space="preserve">
     <value>Видео</value>
+  </data>
+  <data name="warning" xml:space="preserve">
+    <value>Предупреждение!</value>
   </data>
   <data name="welcomeTitle" xml:space="preserve">
     <value>Добро пожаловать в файловый менеджер!</value>
