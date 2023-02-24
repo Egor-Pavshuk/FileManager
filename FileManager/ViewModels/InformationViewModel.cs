@@ -9,7 +9,7 @@ using Windows.UI.Core;
 
 namespace FileManager.ViewModels
 {
-    public class InformationPageViewModel : BindableBase
+    public class InformationViewModel : BindableBase
     {
         private const string batteries = "Batteries";
         private const string resources = "Resources";
@@ -80,7 +80,7 @@ namespace FileManager.ViewModels
                 }
             }
         }
-        public InformationPageViewModel()
+        public InformationViewModel()
         {
             batteryResourceLoader = ResourceLoader.GetForCurrentView(batteries);
             stringsResourceLoader = ResourceLoader.GetForCurrentView(resources);

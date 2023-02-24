@@ -237,7 +237,7 @@ namespace FileManager.ViewModels.Libraries
                     break;
                 default:
                     break;
-            }            
+            }
             currentFolder = defaultFolder;
             GetItemsAsync().ConfigureAwait(true);
 
@@ -278,7 +278,7 @@ namespace FileManager.ViewModels.Libraries
                 }
 
                 if (storageFiles != null)
-                {                  
+                {
                     CoreApplication.MainView.CoreWindow.Dispatcher
                     .RunAsync(CoreDispatcherPriority.Normal,
                     () =>
@@ -333,7 +333,7 @@ namespace FileManager.ViewModels.Libraries
                 {
                     var fileControl = new FileControlViewModel() { Image = themeResourceLoader.GetString(folder), DisplayName = item.Name, Path = item.Path, Type = folder };
                     fileControls.Add(fileControl);
-                }                
+                }
             }
 
             IReadOnlyList<StorageFile> storageFiles = await currentFolder.GetFilesAsync();
@@ -356,11 +356,11 @@ namespace FileManager.ViewModels.Libraries
                 {
                     viewModel = new FileControlViewModel() { Image = themeResourceLoader.GetString(file), DisplayName = item.Name, Path = item.Path, Type = file };
                 }
-                
+
                 fileControls.Add(viewModel);
             }
             StorageFiles = fileControls;
-        }        
+        }
 
         private void GridSelectionChanged(object selder, SelectionChangedEventArgs e)
         {
@@ -473,15 +473,15 @@ namespace FileManager.ViewModels.Libraries
                         else
                         {
                             SelectedGridItem.DisplayName = editableItemDysplayName;
-                        }     
-                        
+                        }
+
                         saveChanges = true;
-                    }                    
+                    }
                 }
                 else
                 {
                     saveChanges = true;
-                }                
+                }
             }
             else
             {
@@ -521,7 +521,7 @@ namespace FileManager.ViewModels.Libraries
                 currentFolder = defaultFolder;
 
                 await GetItemsAsync().ConfigureAwait(true);
-            }            
+            }
         }
 
         private async void RemoveFileAsync(object sender)
@@ -532,7 +532,7 @@ namespace FileManager.ViewModels.Libraries
             const string cancelButton = "cancelButton";
 
             if (SelectedGridItem != null && SelectedGridItem.IsReadOnlyMode)
-            {               
+            {
                 var contentDialog = new ContentDialog()
                 {
                     Title = stringsResourceLoader.GetString(confirmation),
@@ -558,7 +558,7 @@ namespace FileManager.ViewModels.Libraries
 
                     SelectedGridItem = null;
                 }
-            }            
+            }
         }
 
         private void CreateFolder(object sender)
@@ -653,11 +653,11 @@ namespace FileManager.ViewModels.Libraries
                         CurrentPath = selectedItem.Path;
                         var newCurrentFolder = await StorageFolder.GetFolderFromPathAsync(CurrentPath);
                         currentFolder = newCurrentFolder;
-                        
+
                         await GetItemsAsync().ConfigureAwait(true);
                     }
-                }                    
-            }             
+                }
+            }
         }
     }
 }
