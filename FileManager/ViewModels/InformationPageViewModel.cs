@@ -121,8 +121,17 @@ namespace FileManager.ViewModels
             {
                 var batteryReport = Windows.Devices.Power.Battery.AggregateBattery.GetReport();
 
-                double percentage = (batteryReport.RemainingCapacityInMilliwattHours.Value /
+                double percentage;
+                try
+                {
+                    percentage = (batteryReport.RemainingCapacityInMilliwattHours.Value /
                 (double)batteryReport.FullChargeCapacityInMilliwattHours.Value);
+                }
+                catch (InvalidOperationException)
+                {
+                    percentage = 1;
+                }
+                
 
                 BatteryLevel = percentage * 100;
                 BatteryLevelPercentage = $"{(int)BatteryLevel} %";
