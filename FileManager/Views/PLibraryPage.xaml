@@ -1,22 +1,24 @@
 ﻿<Page
-    x:Class="FileManager.Views.VideosLibraryPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:FileManager.Views"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:viewmodels="using:FileManager.ViewModels" 
+    xmlns:models="using:FileManager.Models"
+    xmlns:library="using:FileManager.ViewModels.Libraries"
+    xmlns:Custom="using:FileManager.Controlls"
+    x:Class="FileManager.Views.PLibraryPage"
     xmlns:vml="using:FileManager.VMLocator"
     vml:ViewModelLocator.AutoWireViewModel="True"
-    xmlns:Custom="using:FileManager.Controlls"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
     <Grid>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="40"/>
-                <RowDefinition/>
-            </Grid.RowDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
 
         <CommandBar Grid.Row="0">
             <CommandBar.Content>
@@ -31,15 +33,16 @@
             <AppBarButton Icon="Delete" Label="Delete" Command="{Binding RemoveFileCommand}" IsEnabled="{Binding IsDeleteButtonAvailable, Mode=TwoWay}"/>
             <AppBarButton Icon="NewFolder" Label="New folder" Command="{Binding CreateFolderCommand}" IsEnabled="{Binding IsNewFolderButtonAvailable, Mode=TwoWay}"/>
             <AppBarButton Icon="Rename" Label="Rename" Command="{Binding EditSaveCommand, Mode=OneWay}" Visibility="{Binding SelectedGridItem.IsReadOnlyMode, Mode=OneWay}" IsEnabled="{Binding IsNewFolderButtonAvailable, Mode=TwoWay}"/>
-            <AppBarButton Icon="Save" Label="Save" Command="{Binding EditSaveCommand, Mode=OneWay}" Visibility="{Binding IsSaveButtonVisible, Mode=OneWay}" IsEnabled="{Binding IsNewFolderButtonAvailable, Mode=TwoWay}"/>
+            <AppBarButton Icon="Save" Label="Save" Command="{Binding EditSaveCommand, Mode=OneWay}" Visibility="{Binding SelectedGridItem.IsEditMode, Mode=OneWay}" IsEnabled="{Binding IsNewFolderButtonAvailable, Mode=TwoWay}"/>
         </CommandBar>
 
-        <GridView Grid.Row="1" ItemsSource="{Binding StorageFiles, Mode=TwoWay}" vml:DoubleTapAttachedProperties.ItemDoubleTapCommand="{Binding DoubleClicked}" vml:SelectionChangedAttachedProperties.SelectionChangedCommand="{Binding SelectionChanged}" vml:ItemClickAttachedProperties.ItemClickCommand="{Binding ItemClicked}" IsItemClickEnabled="True" SelectedItem="{Binding SelectedGridItem, Mode=TwoWay}" Margin="14,1,15,10">
+        <GridView Grid.Row="1" x:Name="StorageItems" ItemsSource="{Binding StorageFiles, Mode=TwoWay}" vml:DoubleTapAttachedProperties.ItemDoubleTapCommand="{Binding DoubleClicked1}" vml:SelectionChangedAttachedProperties.SelectionChangedCommand="{Binding SelectionChanged1}" vml:ItemClickAttachedProperties.ItemClickCommand="{Binding ItemClicked1}" IsItemClickEnabled="True" SelectedItem="{Binding SelectedGridItem, Mode=TwoWay}" Margin="14,1,15,10">
             <GridView.ItemTemplate>
                 <DataTemplate x:DataType="viewmodels:FileControlViewModel">
                     <Custom:FileControl/>
                 </DataTemplate>
             </GridView.ItemTemplate>
         </GridView>
+
     </Grid>
 </Page>
