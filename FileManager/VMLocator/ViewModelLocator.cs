@@ -1,4 +1,5 @@
 ﻿using FileManager.ViewModels;
+using FileManager.Views;
 using System;
 using System.Globalization;
 using System.Reflection;
@@ -34,9 +35,23 @@ namespace FileManager.VMLocator
             if (view is FrameworkElement frameworkElement)
             {
                 var viewModelType = FindViewModel(frameworkElement.GetType());
-                if (viewModelType != typeof(FileControlViewModel))
+                switch (frameworkElement.GetType().Name)
                 {
-                    frameworkElement.DataContext = Activator.CreateInstance(viewModelType);
+                    case nameof(PicturesLibraryPage):
+                        frameworkElement.DataContext = Activator.CreateInstance(viewModelType, "Pictures");
+                        break;
+                    case nameof(VideosLibraryPage):
+                        frameworkElement.DataContext = Activator.CreateInstance(viewModelType, "Videos");
+                        break;
+                    case nameof(MusicsLibraryPage):
+                        frameworkElement.DataContext = Activator.CreateInstance(viewModelType, "Music");
+                        break;
+                    default:
+                        if (viewModelType != typeof(FileControlViewModel))
+                        {
+                            frameworkElement.DataContext = Activator.CreateInstance(viewModelType);
+                        }
+                        break;
                 }
             }
         }
@@ -50,6 +65,11 @@ namespace FileManager.VMLocator
                 viewName = viewType.FullName
                     .Replace("Page", string.Empty, StringComparison.Ordinal)
                     .Replace("Views", "ViewModels", StringComparison.Ordinal);
+
+                if (viewName.Contains("Library", StringComparison.Ordinal))
+                {
+                    viewName = viewName.Replace(viewName.Substring(viewName.LastIndexOf('.') + 1), "Libraries.LibrariesBase", StringComparison.Ordinal);
+                }
             }
             else if (viewType.FullName.EndsWith("Control"))
             {
