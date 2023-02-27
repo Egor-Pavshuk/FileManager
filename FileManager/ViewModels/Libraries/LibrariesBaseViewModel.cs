@@ -24,22 +24,23 @@ namespace FileManager.ViewModels.Libraries
         private bool isBackButtonAvailable;
         private bool isDeleteButtonAvailable;
         private bool isNewFolderButtonAvailable;
+        private bool isSaveButtonVisible;
         private FileControlViewModel editableItem;
         private FileControlViewModel selectedGridItem;
         private IReadOnlyList<IStorageItem> storageItems;
         private Collection<FileControlViewModel> storageFiles;
         private string currentPath;
-        private DoubleTappedEventHandler doubleClicked;
-        private ItemClickEventHandler itemClicked;
-        private SelectionChangedEventHandler selectionChanged;
+        private ICommand doubleClicked;
+        private ICommand itemClicked;
+        private ICommand selectionChanged;
         private ICommand getParentCommand;
         private ICommand removeFileCommand;
         private ICommand createFolderCommand;
         private ICommand editSaveCommand;
-        private StorageFolder defaultFolder;
+        private readonly StorageFolder defaultFolder;
         private StorageFolder currentFolder;
         private ResourceLoader themeResourceLoader;
-        private ResourceLoader stringsResourceLoader;
+        private readonly ResourceLoader stringsResourceLoader;
 
         public bool IsBackButtonAvailable
         {
@@ -73,6 +74,18 @@ namespace FileManager.ViewModels.Libraries
                 if (isNewFolderButtonAvailable != value)
                 {
                     isNewFolderButtonAvailable = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+        public bool IsSaveButtonVisible
+        {
+            get => isSaveButtonVisible;
+            set
+            {
+                if (isSaveButtonVisible != value)
+                {
+                    isSaveButtonVisible = value;
                     OnPropertyChanged();
                 }
             }
@@ -125,7 +138,7 @@ namespace FileManager.ViewModels.Libraries
                 }
             }
         }
-        public DoubleTappedEventHandler DoubleClicked
+        public ICommand DoubleClickedCommand
         {
             get => doubleClicked;
             set
@@ -137,7 +150,7 @@ namespace FileManager.ViewModels.Libraries
                 }
             }
         }
-        public ItemClickEventHandler ItemClicked
+        public ICommand ItemClickedCommand
         {
             get => itemClicked;
             set
@@ -149,7 +162,7 @@ namespace FileManager.ViewModels.Libraries
                 }
             }
         }
-        public SelectionChangedEventHandler SelectionChanged
+        public ICommand SelectionChangedCommand
         {
             get => selectionChanged;
             set
@@ -215,13 +228,13 @@ namespace FileManager.ViewModels.Libraries
             const string resources = "Resources";
             if (Windows.System.Profile.AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Xbox")
             {
-                ItemClicked = OpenFileXbox;
-                DoubleClicked = (o, e) => { };
+                ItemClickedCommand = new RelayCommand(OpenFileXboxAsync);
+                DoubleClickedCommand = new RelayCommand( (o) => { });
             }
             else
             {
-                DoubleClicked = OpenFileWindows;
-                ItemClicked = (o, e) => { };
+                DoubleClickedCommand = new RelayCommand(OpenFileWindowsAsync);
+                ItemClickedCommand = new RelayCommand((o) => { });
             }
 
             switch (libraryName)
@@ -242,9 +255,8 @@ namespace FileManager.ViewModels.Libraries
             GetItemsAsync().ConfigureAwait(true);
 
             ChangeColorMode(settings, this);
-            SelectionChanged = GridSelectionChanged;
+            SelectionChangedCommand = new RelayCommand(GridSelectionChanged);
 
-            SelectedGridItem = new FileControlViewModel();
             stringsResourceLoader = ResourceLoader.GetForCurrentView(resources);
 
             GetParentCommand = new RelayCommand(GetParentAsync);
@@ -362,8 +374,9 @@ namespace FileManager.ViewModels.Libraries
             StorageFiles = fileControls;
         }
 
-        private void GridSelectionChanged(object selder, SelectionChangedEventArgs e)
+        private void GridSelectionChanged(object selder)
         {
+            IsSaveButtonVisible = false;
             if (editableItem != null)
             {
                 var file = StorageFiles.First(f => f.Path == editableItem.Path);
@@ -391,6 +404,7 @@ namespace FileManager.ViewModels.Libraries
                 selectedGridItem.IsEditMode = true;
                 selectedGridItem.IsReadOnlyMode = false;
 
+                IsSaveButtonVisible = true;
                 EditSaveCommand = new RelayCommand(SaveChangesAsync);
             }
         }
@@ -493,6 +507,7 @@ namespace FileManager.ViewModels.Libraries
                 EditSaveCommand = new RelayCommand(RenameItem);
                 SelectedGridItem.IsEditMode = false;
                 SelectedGridItem.IsReadOnlyMode = true;
+                IsSaveButtonVisible = false;
                 editableItem = null;
             }
         }
@@ -501,7 +516,7 @@ namespace FileManager.ViewModels.Libraries
         {
             if (editableItem != null)
             {
-                GridSelectionChanged(sender, null);
+                GridSelectionChanged(sender);
             }
 
             var newCurrentFolder = await currentFolder.GetParentAsync();
@@ -519,6 +534,7 @@ namespace FileManager.ViewModels.Libraries
                 IsDeleteButtonAvailable = false;
                 IsNewFolderButtonAvailable = false;
                 currentFolder = defaultFolder;
+                SelectedGridItem = new FileControlViewModel();
 
                 await GetItemsAsync().ConfigureAwait(true);
             }
@@ -564,9 +580,10 @@ namespace FileManager.ViewModels.Libraries
         private void CreateFolder(object sender)
         {
             const string folder = "folder";
+            const string newFolderName = "New folder";
 
-            int countOfNewFolders = StorageFiles.Where(f => f.Type == "Folder" && f.DisplayName.StartsWith("New folder")).Count();
-            currentFolder.CreateFolderAsync($"New folder {countOfNewFolders + 1}").Completed +=
+            int countOfNewFolders = StorageFiles.Where(f => f.Type == folder && f.DisplayName.StartsWith(newFolderName)).Count();
+            currentFolder.CreateFolderAsync($"{newFolderName} {countOfNewFolders + 1}").Completed +=
                 async (i, s) =>
             await CoreApplication.MainView.CoreWindow.Dispatcher
                 .RunAsync(CoreDispatcherPriority.Normal,
@@ -581,20 +598,25 @@ namespace FileManager.ViewModels.Libraries
                     var newFolder = new FileControlViewModel()
                     {
                         Image = themeResourceLoader.GetString(folder),
-                        DisplayName = $"New folder {countOfNewFolders + 1}",
-                        Type = "Folder",
-                        Path = currentFolder.Path + $"\\New folder {countOfNewFolders + 1}"
+                        DisplayName = $"{newFolderName} {countOfNewFolders + 1}",
+                        Type = folder,
+                        Path = currentFolder.Path + $"\\{newFolderName} {countOfNewFolders + 1}"
                     };
 
-                    files.Insert(files.FindLastIndex(f => f.Type == "Folder") + 1, newFolder);
+                    files.Insert(files.FindLastIndex(f => f.Type == folder) + 1, newFolder);
                     StorageFiles = new Collection<FileControlViewModel>(files);
                     SelectedGridItem = newFolder;
                 });
         }
 
-        private async void OpenFileXbox(object sender, ItemClickEventArgs e)
+        private async void OpenFileXboxAsync(object sender)
         {
             const string folder = "folder";
+
+            if (editableItem != null)
+            {
+                GridSelectionChanged(sender);
+            }
 
             if (sender != null)
             {
@@ -626,9 +648,14 @@ namespace FileManager.ViewModels.Libraries
             }
         }
 
-        private async void OpenFileWindows(object sender, DoubleTappedRoutedEventArgs e)
+        private async void OpenFileWindowsAsync(object sender)
         {
             const string folder = "folder";
+
+            if (editableItem != null)
+            {
+                GridSelectionChanged(sender);
+            }
 
             if (sender != null)
             {
