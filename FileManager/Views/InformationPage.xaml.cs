@@ -1,5 +1,4 @@
-﻿using FileManager.ViewModels;
-using Windows.UI.Xaml.Controls;
+﻿using Windows.UI.Xaml.Controls;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -10,11 +9,9 @@ namespace FileManager.Views
     /// </summary>
     public sealed partial class InformationPage : Page
     {
-        public InformationPageViewModel ViewModel { get; set; } = new InformationPageViewModel();
         public InformationPage()
         {
             this.InitializeComponent();
-            DataContext = ViewModel;
         }
     }
 }

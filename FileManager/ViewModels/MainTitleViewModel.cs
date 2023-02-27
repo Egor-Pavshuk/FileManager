@@ -2,7 +2,7 @@
 
 namespace FileManager.ViewModels
 {
-    public class MainPageTitleViewModel : BindableBase
+    public class MainTitleViewModel : BindableBase
     {
         private ResourceLoader resourceLoader;
         private string title;
@@ -18,7 +18,7 @@ namespace FileManager.ViewModels
                 }
             }
         }
-        public MainPageTitleViewModel()
+        public MainTitleViewModel()
         {
             resourceLoader = ResourceLoader.GetForCurrentView("Resources");
             Title = resourceLoader.GetString("welcomeTitle");

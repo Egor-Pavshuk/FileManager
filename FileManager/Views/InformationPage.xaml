@@ -5,6 +5,8 @@
     xmlns:local="using:FileManager.Views"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vml="using:FileManager.VMLocator"
+    vml:ViewModelLocator.AutoWireViewModel="True"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
@@ -15,21 +17,21 @@
                     <SolidColorBrush Color="#FFF4B717" Opacity="1"/>
                 </Border.Background>
                 <StackPanel Width="400" Height="200" Orientation="Vertical" CornerRadius="20">
-                    <Image Source="{x:Bind ViewModel.BatteryImage, Mode=OneWay}" Width="300" Height="130"/>
-                    <ProgressBar Width="300" Height="25" Value="{x:Bind ViewModel.BatteryLevel, Mode=TwoWay}" BorderThickness="1" Foreground="Black" BorderBrush="DarkGray"  Background="Gray"/>
-                    <TextBlock Text="{x:Bind ViewModel.BatteryLevelPercentage, Mode=TwoWay}" Foreground="Black" FontSize="32" TextAlignment="Center"/>
+                    <Image Source="{Binding BatteryImage, Mode=OneWay}" Width="300" Height="130"/>
+                    <ProgressBar Width="300" Height="25" Value="{Binding BatteryLevel, Mode=OneWay}" BorderThickness="1" Foreground="Black" BorderBrush="DarkGray"  Background="Gray"/>
+                    <TextBlock Text="{Binding BatteryLevelPercentage, Mode=OneWay}" Foreground="Black" FontSize="32" TextAlignment="Center"/>
                 </StackPanel>
             </Border>
             <Border Width="400" Height="200" Background="{ThemeResource SystemColorActiveCaptionColor}" BorderThickness="1" BorderBrush="DarkGray" CornerRadius="20"  Margin="20 20 20 20">
                 <StackPanel Width="400" Height="200" Orientation="Vertical" CornerRadius="20">
                     <Image Source="/Images/DiskStorage/diskStorage.png" Width="250" Height="100" Margin="0 20 0 10"/>
-                    <TextBlock Text="{x:Bind Path=ViewModel.FreeSpaceGb}" Width="400" TextWrapping="Wrap" FontSize="32" TextAlignment="Center" Foreground="Black"/>
+                    <TextBlock Text="{Binding FreeSpaceGb}" Width="400" TextWrapping="Wrap" FontSize="32" TextAlignment="Center" Foreground="Black"/>
                 </StackPanel>
             </Border>
             <Border Width="400" Height="200" Background="{ThemeResource SystemAccentColor}" BorderThickness="1" BorderBrush="DarkGray" CornerRadius="20"  Margin="20 20 20 20">
                 <StackPanel Width="400" Height="200" Orientation="Vertical" CornerRadius="20">
                     <Image Source="/Images/ram.png" Width="200" Height="140"/>
-                    <TextBlock Text="{x:Bind Path=ViewModel.RamMemoryUsed}" Width="400" TextWrapping="Wrap" Foreground="Black" FontSize="32" TextAlignment="Center" Margin="0 -15 0 0"/>
+                    <TextBlock Text="{Binding RamMemoryUsed}" Width="400" TextWrapping="Wrap" Foreground="Black" FontSize="32" TextAlignment="Center" Margin="0 -15 0 0"/>
                 </StackPanel>
             </Border>
         </GridView>

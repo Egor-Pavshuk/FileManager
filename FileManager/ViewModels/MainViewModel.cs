@@ -4,7 +4,7 @@ using Windows.UI.Xaml.Controls;
 
 namespace FileManager.ViewModels
 {
-    public class MainPageViewModel : BindableBase
+    public class MainViewModel : BindableBase
     {
         private const string imageNavigation = "ImageNav";
         private const string videoNavigation = "VideoNav";
@@ -15,6 +15,7 @@ namespace FileManager.ViewModels
         private string currentTitle;
         private ResourceLoader resourceLoader;
         private NavigationViewItem selectedItem;
+
         public Page CurrentContent
         {
             get => currentContent;
@@ -35,6 +36,7 @@ namespace FileManager.ViewModels
                 if (selectedItem != value)
                 {
                     selectedItem = value;
+                    SelectionChanged();
                     OnPropertyChanged();
                 }
             }
@@ -51,15 +53,15 @@ namespace FileManager.ViewModels
                 }
             }
         }
-        public MainPageViewModel()
+        public MainViewModel()
         {
-            currentContent = new MainPageTitle();
+            currentContent = new MainTitlePage();
             resourceLoader = ResourceLoader.GetForCurrentView("Resources");
             CurrentTitle = resourceLoader.GetString("MainPage");
         }
-        public void SelectionChanged(object sender, NavigationViewSelectionChangedEventArgs e)
+
+        private void SelectionChanged()
         {
-            SelectedItem = (NavigationViewItem)e?.SelectedItem;
             switch (selectedItem.AccessKey)
             {
                 case "0":
@@ -79,7 +81,7 @@ namespace FileManager.ViewModels
                     CurrentTitle = resourceLoader.GetString(infoNavigation);
                     break;
                 default:
-                    CurrentContent = new MainPageTitle();
+                    CurrentContent = new MainTitlePage();
                     CurrentTitle = resourceLoader.GetString(mainNavigation);
                     break;
             }
