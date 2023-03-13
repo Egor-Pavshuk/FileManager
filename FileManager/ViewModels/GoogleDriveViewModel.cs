@@ -14,6 +14,11 @@ using Windows.UI.Popups;
 using Windows.Data.Json;
 using FileManager.Models;
 using System.Collections.ObjectModel;
+using Windows.ApplicationModel.Resources;
+using Windows.ApplicationModel.Core;
+using Windows.UI.Core;
+using Windows.UI.ViewManagement;
+using Windows.UI;
 
 namespace FileManager.ViewModels
 {
@@ -31,6 +36,7 @@ namespace FileManager.ViewModels
         private Collection<FileControlViewModel> storageFiles;
         private FileControlViewModel selectedGridItem;
         private TokenResult tokenResult;
+        private ResourceLoader themeResourceLoader;
         private ICommand navigationStartingCommand;
 
         public Uri WebViewCurrentSource
@@ -109,9 +115,66 @@ namespace FileManager.ViewModels
         public GoogleDriveViewModel()
         {
             tokenResult = new TokenResult();
+            ChangeColorMode(settings, this);
             NavigationStartingCommand = new RelayCommand(NavigationStarting);
             IsWebViewVisible = true;
             WebViewCurrentSource = new Uri(googleUri);
+        }
+
+        protected override void ChangeColorMode(UISettings uiSettings, object sender)
+        {
+            const string image = "image";
+            const string video = "video";
+            const string audio = "audio";
+            const string folder = "folder";
+            const string file = "file";
+            const string imagesDark = "ImagesDark";
+            const string imagesLight = "ImagesLight";
+
+            var currentBackgroundColor = uiSettings?.GetColorValue(UIColorType.Background);
+            if (backgroundColor != currentBackgroundColor || storageFiles == null)
+            {
+                if (currentBackgroundColor == Colors.Black)
+                {
+                    themeResourceLoader = ResourceLoader.GetForViewIndependentUse(imagesDark);
+                    backgroundColor = Colors.Black;
+                }
+                else
+                {
+                    themeResourceLoader = ResourceLoader.GetForViewIndependentUse(imagesLight);
+                    backgroundColor = Colors.White;
+                }
+
+                if (storageFiles != null)
+                {
+                    CoreApplication.MainView.CoreWindow.Dispatcher
+                    .RunAsync(CoreDispatcherPriority.Normal,
+                    () =>
+                    {
+                        foreach (var storageFile in storageFiles)
+                        {
+                            switch (storageFile.Type)
+                            {
+                                case image:
+                                    storageFile.Image = themeResourceLoader.GetString(image);
+                                    break;
+                                case video:
+                                    storageFile.Image = themeResourceLoader.GetString(video);
+                                    break;
+                                case audio:
+                                    storageFile.Image = themeResourceLoader.GetString(audio);
+                                    break;
+                                case folder:
+                                    storageFile.Image = themeResourceLoader.GetString(folder);
+                                    break;
+                                default:
+                                    storageFile.Image = themeResourceLoader.GetString(file);
+                                    break;
+                            }
+                        }
+                    }).AsTask().ConfigureAwait(true);
+                }
+            }
         }
 
         private async void NavigationStarting(object args)
@@ -176,6 +239,15 @@ namespace FileManager.ViewModels
 
         private async Task GetItemsAsync()
         {
+            const string image = "image";
+            const string photo = "photo";
+            const string shortcut = "shortcut";
+            const string video = "video";
+            const string audio = "audio";
+            const string folder = "folder";
+            const string file = "file";
+            const string mimeType = "mimeType";
+
             using (HttpClient client = new HttpClient())
             {
                 if (DateTime.Now.Subtract(lastRefreshTime).Seconds >= int.Parse(tokenResult.ExpiresIn))
@@ -187,6 +259,37 @@ namespace FileManager.ViewModels
                 var files = await client.GetAsync("https://www.googleapis.com/drive/v3/files").ConfigureAwait(true);
                 string responseFiles = await files.Content.ReadAsStringAsync().ConfigureAwait(true);
 
+                List<FileControlViewModel> driveFiles = new List<FileControlViewModel>();
+                foreach (var driveFile in JsonObject.Parse(responseFiles)["files"].GetArray())
+                {
+                    FileControlViewModel viewModel = new FileControlViewModel();
+                    var type = JsonObject.Parse(driveFile.ToString())[mimeType].ToString();
+                    var currentFile = JsonObject.Parse(driveFile.ToString());
+
+                    if (type.Contains("." + folder, StringComparison.Ordinal))
+                    {
+                        viewModel = new FileControlViewModel() { Id = currentFile["id"].ToString(), Image = themeResourceLoader.GetString(folder), DisplayName = currentFile["name"].ToString(), Path = string.Empty, Type = folder };
+                    }
+                    else if (type.Contains("." + photo, StringComparison.Ordinal) || type.Contains("." + shortcut, StringComparison.Ordinal))
+                    {
+                        viewModel = new FileControlViewModel() { Id = currentFile["id"].ToString(), Image = themeResourceLoader.GetString(image), DisplayName = currentFile["name"].ToString(), Path = string.Empty, Type = image };
+                    }
+                    else if (type.Contains("." + video, StringComparison.Ordinal))
+                    {
+                        viewModel = new FileControlViewModel() { Id = currentFile["id"].ToString(), Image = themeResourceLoader.GetString(video), DisplayName = currentFile["name"].ToString(), Path = string.Empty, Type = video };
+                    }
+                    else if (type.Contains("." + audio, StringComparison.Ordinal))
+                    {
+                        viewModel = new FileControlViewModel() { Id = currentFile["id"].ToString(), Image = themeResourceLoader.GetString(audio), DisplayName = currentFile["name"].ToString(), Path = string.Empty, Type = audio };
+                    }
+                    else
+                    {
+                        viewModel = new FileControlViewModel() { Id = currentFile["id"].ToString(), Image = themeResourceLoader.GetString(file), DisplayName = currentFile["name"].ToString(), Path = string.Empty, Type = file };
+                    }
+
+                    driveFiles.Add(viewModel);
+                }
+                StorageFiles = new Collection<FileControlViewModel>(driveFiles.OrderBy(f => f.Type).ToList());
             }
         }
 
