@@ -2,12 +2,25 @@
 {
     public class FileControlViewModel : BindableBase
     {
+        private string id;
         private string image;
         private string displayName;
         private string path;
         private string type;
         private bool isEditMode;
         private bool isReadOnlyMode;
+        public string Id
+        {
+            get { return id; }
+            set
+            {
+                if (id != value)
+                {
+                    id = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
         public string Image
         {
             get { return image; }
