@@ -135,6 +135,9 @@
   <data name="freeSpace" xml:space="preserve">
     <value>Free space</value>
   </data>
+  <data name="GoogleDriveNav" xml:space="preserve">
+    <value>Google drive</value>
+  </data>
   <data name="ImageNav" xml:space="preserve">
     <value>Images</value>
   </data>
