@@ -197,7 +197,7 @@ namespace FileManager.ViewModels
                 string request = new StringBuilder()
                     .Append($"&client_id={clientId}")
                     .Append($"&client_secret={secret}")
-                    .Append("&grant_type=authorization_code")
+                    .Append("&grant_type=refresh_token")
                     .Append($"&refresh_token={tokenResult.RefreshToken}")
                     .ToString();
                 StringContent content = new StringContent(request, Encoding.UTF8, "application/x-www-form-urlencoded");
@@ -208,7 +208,6 @@ namespace FileManager.ViewModels
                     string responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(true);
                     JsonObject responseObject = JsonObject.Parse(responseContent);
                     tokenResult.AccessToken = responseObject.GetNamedString("access_token");
-                    tokenResult.RefreshToken = responseObject.GetNamedString("refresh_token");
                     tokenResult.ExpiresIn = responseObject.GetNamedValue("expires_in").ToString();
                     lastRefreshTime = DateTime.Now;
                 }
