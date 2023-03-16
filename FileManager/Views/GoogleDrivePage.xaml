@@ -34,16 +34,20 @@
             <AppBarButton Icon="Save" Label="Save" Command="{Binding EditSaveCommand, Mode=OneWay}" Visibility="{Binding IsSaveButtonVisible, Mode=OneWay}" IsEnabled="{Binding IsNewFolderButtonAvailable, Mode=TwoWay}"/>
         </CommandBar>
 
-        <GridView Grid.Row="1" ItemsSource="{Binding StorageFiles, Mode=TwoWay}" vml:DoubleTapAttachedProperties.ItemDoubleTapCommand="{Binding DoubleClickedCommand}" vml:SelectionChangedAttachedProperties.SelectionChangedCommand="{Binding SelectionChangedCommand}" vml:ItemClickAttachedProperties.ItemClickCommand="{Binding ItemClickedCommand}" IsItemClickEnabled="True" SelectedItem="{Binding SelectedGridItem, Mode=TwoWay}" Margin="14,1,15,10">
+        <GridView Grid.Row="1" Visibility="{Binding IsFilesVisible}" ItemsSource="{Binding StorageFiles, Mode=TwoWay}" vml:DoubleTapAttachedProperties.ItemDoubleTapCommand="{Binding DoubleClickedCommand}" vml:SelectionChangedAttachedProperties.SelectionChangedCommand="{Binding SelectionChangedCommand}" vml:ItemClickAttachedProperties.ItemClickCommand="{Binding ItemClickedCommand}" IsItemClickEnabled="True" SelectedItem="{Binding SelectedGridItem, Mode=TwoWay}" Margin="14,1,15,10">
             <GridView.ItemTemplate>
                 <DataTemplate x:DataType="viewmodels:FileControlViewModel">
                     <Custom:FileControl/>
                 </DataTemplate>
             </GridView.ItemTemplate>
         </GridView>
-        
+        <Border Grid.Row="1" Visibility="{Binding IsLoadingVisible}" Background="White" MinWidth="150" Height="100" Opacity="0.9" CornerRadius="15" Margin="240,0,240,0" VerticalAlignment="Center">
+            <Border Grid.Row="0" Grid.Column="0" Background ="{ThemeResource SystemColorHighlightColor}" MinWidth="150" Height="100" CornerRadius="15" Opacity="0.5" VerticalAlignment="Center">
+                <TextBlock Text="{Binding LoadingText}" Foreground="White" FontSize="40" HorizontalAlignment="Center" Opacity="1" Height="60"/>
+            </Border>
+        </Border>
         <Frame Grid.Row="1">
             <WebView x:Name="WebView" Source="{Binding WebViewCurrentSource, Mode=TwoWay}" Visibility="{Binding IsWebViewVisible, Mode=OneWay}" vml:NavigationStartingAttachedProperties.NavigationStartingCommand="{Binding NavigationStartingCommand}" Margin="0,0,0,10"/>
         </Frame>
-    </Grid>
+    </Grid>    
 </Page>

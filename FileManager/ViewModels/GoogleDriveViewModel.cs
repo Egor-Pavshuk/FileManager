@@ -1,24 +1,22 @@
-﻿using System;
+﻿using FileManager.Commands;
+using FileManager.Models;
+using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Collections.ObjectModel;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
-using FileManager.Commands;
 using System.Windows.Input;
-using Windows.UI.Xaml.Controls;
-using System.Net.Http;
-using Google.Apis.Auth.OAuth2;
-using static System.Net.WebRequestMethods;
-using System.Net.Http.Headers;
-using Windows.UI.Popups;
-using Windows.Data.Json;
-using FileManager.Models;
-using System.Collections.ObjectModel;
-using Windows.ApplicationModel.Resources;
 using Windows.ApplicationModel.Core;
-using Windows.UI.Core;
-using Windows.UI.ViewManagement;
+using Windows.ApplicationModel.Resources;
+using Windows.Data.Json;
 using Windows.UI;
+using Windows.UI.Core;
+using Windows.UI.Popups;
+using Windows.UI.ViewManagement;
+using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Controls.Primitives;
 
 namespace FileManager.ViewModels
 {
@@ -29,15 +27,23 @@ namespace FileManager.ViewModels
         private const string clientId = "148004585806-56makt200p390b18n2q21ugq71tb2msg.apps.googleusercontent.com";
         private const string secret = "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";
         private const string googleUri = "https://accounts.google.com/o/oauth2/auth?client_id=" + clientId + "&redirect_uri=" + "https://localhost/" + "&response_type=code&scope=" + scope;
+        private string loadingText;
+        private string currentFolderId;
         private Uri webViewCurrentSource;
         private bool isWebViewVisible;
         private bool isContentVisible;
+        private bool isLoadingVisible;
+        private bool isFilesVisible;
+        private bool isBackButtonAvailable;
+        private Stack<string> openedFoldersId = new Stack<string>();
         private DateTime lastRefreshTime;
         private Collection<FileControlViewModel> storageFiles;
         private FileControlViewModel selectedGridItem;
         private TokenResult tokenResult;
         private ResourceLoader themeResourceLoader;
         private ICommand navigationStartingCommand;
+        private ICommand doubleClickedCommand;
+        private ICommand getParentCommand;
 
         public Uri WebViewCurrentSource
         {
@@ -71,6 +77,54 @@ namespace FileManager.ViewModels
                 if (isContentVisible != value)
                 {
                     isContentVisible = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+        public bool IsLoadingVisible
+        {
+            get => isLoadingVisible;
+            set
+            {
+                if (isLoadingVisible != value)
+                {
+                    isLoadingVisible = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+        public bool IsFilesVisible
+        {
+            get => isFilesVisible;
+            set
+            {
+                if (isFilesVisible != value)
+                {
+                    isFilesVisible = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+        public bool IsBackButtonAvailable
+        {
+            get => isBackButtonAvailable;
+            set
+            {
+                if (isBackButtonAvailable != value)
+                {
+                    isBackButtonAvailable = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+        public string LoadingText
+        {
+            get => loadingText;
+            set
+            {
+                if (loadingText != value)
+                {
+                    loadingText = value;
                     OnPropertyChanged();
                 }
             }
@@ -111,14 +165,41 @@ namespace FileManager.ViewModels
                 }
             }
         }
+        public ICommand DoubleClickedCommand
+        {
+            get => doubleClickedCommand;
+            set
+            {
+                if (doubleClickedCommand != value)
+                {
+                    doubleClickedCommand = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+        public ICommand GetParentCommand
+        {
+            get => getParentCommand;
+            set
+            {
+                if (getParentCommand != value)
+                {
+                    getParentCommand = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
 
         public GoogleDriveViewModel()
         {
             tokenResult = new TokenResult();
             ChangeColorMode(settings, this);
             NavigationStartingCommand = new RelayCommand(NavigationStarting);
+            DoubleClickedCommand = new RelayCommand(OpenFolder);
+            GetParentCommand = new RelayCommand(GetParent);
             IsWebViewVisible = true;
             WebViewCurrentSource = new Uri(googleUri);
+            LoadingText = "Loading..."; //todo move to strings
         }
 
         protected override void ChangeColorMode(UISettings uiSettings, object sender)
@@ -180,7 +261,7 @@ namespace FileManager.ViewModels
         private async void NavigationStarting(object args)
         {
             var webView = (WebViewNavigationStartingEventArgs)args;
-            if (webView != null )
+            if (webView != null)
             {
                 if (webView.Uri.ToString().StartsWith("https://localhost/", StringComparison.Ordinal))
                 {
@@ -188,8 +269,9 @@ namespace FileManager.ViewModels
                     if (navigationUri.Contains("code=", StringComparison.Ordinal))
                     {
                         string exchangeCode = navigationUri.Substring(navigationUri.IndexOf('=') + 1, navigationUri.IndexOf('&') - navigationUri.IndexOf('=') - 1);
-                        webView.Cancel = true;                        
+                        webView.Cancel = true;
                         IsWebViewVisible = false;
+                        IsContentVisible = true;
                         await ExchangeCodeOnTokenAsync(exchangeCode).ConfigureAwait(true);
                         await GetItemsAsync().ConfigureAwait(true);
                     }
@@ -237,7 +319,7 @@ namespace FileManager.ViewModels
             }
         }
 
-        private async Task GetItemsAsync()
+        private async Task GetItemsAsync(string q = "")
         {
             const string image = "image";
             const string photo = "photo";
@@ -248,6 +330,9 @@ namespace FileManager.ViewModels
             const string file = "file";
             const string mimeType = "mimeType";
 
+            IsFilesVisible = false;
+            IsLoadingVisible = true;
+
             using (HttpClient client = new HttpClient())
             {
                 if (DateTime.Now.Subtract(lastRefreshTime).Seconds >= int.Parse(tokenResult.ExpiresIn))
@@ -256,40 +341,91 @@ namespace FileManager.ViewModels
                 }
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(tokenResult.TokenType, tokenResult.AccessToken);
 
-                var files = await client.GetAsync("https://www.googleapis.com/drive/v3/files").ConfigureAwait(true);
-                string responseFiles = await files.Content.ReadAsStringAsync().ConfigureAwait(true);
-
-                List<FileControlViewModel> driveFiles = new List<FileControlViewModel>();
-                foreach (var driveFile in JsonObject.Parse(responseFiles)["files"].GetArray())
+                string nextPageToken = string.Empty;
+                HttpResponseMessage driveResult;
+                JsonArray responseFiles = new JsonArray();
+                if (string.IsNullOrEmpty(q))
                 {
-                    FileControlViewModel viewModel = new FileControlViewModel();
-                    var type = JsonObject.Parse(driveFile.ToString())[mimeType].ToString();
-                    var currentFile = JsonObject.Parse(driveFile.ToString());
+                    var rootFolderResult = await client.GetAsync($"https://www.googleapis.com/drive/v3/files/root").ConfigureAwait(true);
+                    var rootFolderString = await rootFolderResult.Content.ReadAsStringAsync().ConfigureAwait(true);
+                    string rootFolderId = JsonObject.Parse(rootFolderString)["id"].ToString();
+                    currentFolderId = rootFolderId;
+                    q = $"{rootFolderId}+in+parents&fields=files(id,+mimeType,+name)";
+                }
 
-                    if (type.Contains("." + folder, StringComparison.Ordinal))
+                do
+                {
+                    driveResult = await client.GetAsync($"https://www.googleapis.com/drive/v3/files?pageToken={nextPageToken}&q={q}").ConfigureAwait(true);
+                    var result = await driveResult.Content.ReadAsStringAsync().ConfigureAwait(true);
+                    var jsonParse = JsonObject.Parse(result);
+                    var jsonFiles = jsonParse["files"].GetArray();
+                    foreach (var resultFile in jsonFiles)
                     {
-                        viewModel = new FileControlViewModel() { Id = currentFile["id"].ToString(), Image = themeResourceLoader.GetString(folder), DisplayName = currentFile["name"].ToString(), Path = string.Empty, Type = folder };
+                        responseFiles.Add(resultFile);
                     }
-                    else if (type.Contains("." + photo, StringComparison.Ordinal) || type.Contains("." + shortcut, StringComparison.Ordinal))
+                    if (jsonParse.TryGetValue("nextPageToken", out IJsonValue value))
                     {
-                        viewModel = new FileControlViewModel() { Id = currentFile["id"].ToString(), Image = themeResourceLoader.GetString(image), DisplayName = currentFile["name"].ToString(), Path = string.Empty, Type = image };
-                    }
-                    else if (type.Contains("." + video, StringComparison.Ordinal))
-                    {
-                        viewModel = new FileControlViewModel() { Id = currentFile["id"].ToString(), Image = themeResourceLoader.GetString(video), DisplayName = currentFile["name"].ToString(), Path = string.Empty, Type = video };
-                    }
-                    else if (type.Contains("." + audio, StringComparison.Ordinal))
-                    {
-                        viewModel = new FileControlViewModel() { Id = currentFile["id"].ToString(), Image = themeResourceLoader.GetString(audio), DisplayName = currentFile["name"].ToString(), Path = string.Empty, Type = audio };
+                        nextPageToken = value.ToString();
+                        nextPageToken = nextPageToken.Substring(1, nextPageToken.Length - 2);
                     }
                     else
                     {
-                        viewModel = new FileControlViewModel() { Id = currentFile["id"].ToString(), Image = themeResourceLoader.GetString(file), DisplayName = currentFile["name"].ToString(), Path = string.Empty, Type = file };
+                        nextPageToken = string.Empty;
+                    }
+
+                } while (!string.IsNullOrEmpty(nextPageToken));
+
+                List<FileControlViewModel> driveFiles = new List<FileControlViewModel>();
+
+                foreach (var driveFile in responseFiles)
+                {
+                    FileControlViewModel viewModel;
+                    var currentFile = JsonObject.Parse(driveFile.Stringify());
+                    var type = currentFile[mimeType].ToString();
+
+                    if (type.Contains("." + folder, StringComparison.Ordinal))
+                    {
+                        string currentFileName = currentFile["name"].ToString();
+                        viewModel = new FileControlViewModel() { Id = currentFile["id"].ToString(), Image = themeResourceLoader.GetString(folder), DisplayName = currentFileName.Substring(1, currentFileName.Length - 2), Path = string.Empty, Type = folder };
+                        driveFiles.Add(viewModel);
+                    }
+                }
+
+                foreach (var driveFile in responseFiles)
+                {
+                    FileControlViewModel viewModel;
+                    var currentFile = JsonObject.Parse(driveFile.Stringify());
+                    var type = currentFile[mimeType].ToString();
+                    string currentFileName = currentFile["name"].ToString();
+
+                    if (type.Contains("." + folder, StringComparison.Ordinal))
+                    {
+                        continue;
+                    }
+
+                    if (type.Contains("." + photo, StringComparison.Ordinal) || type.Contains("." + shortcut, StringComparison.Ordinal) || type.Contains(photo, StringComparison.Ordinal) || type.Contains(image, StringComparison.Ordinal))
+                    {
+                        viewModel = new FileControlViewModel() { Id = currentFile["id"].ToString(), Image = themeResourceLoader.GetString(image), DisplayName = currentFileName.Substring(1, currentFileName.Length - 2), Path = string.Empty, Type = image };
+                    }
+                    else if (type.Contains("." + video, StringComparison.Ordinal) || type.Contains(video, StringComparison.Ordinal))
+                    {
+                        viewModel = new FileControlViewModel() { Id = currentFile["id"].ToString(), Image = themeResourceLoader.GetString(video), DisplayName = currentFileName.Substring(1, currentFileName.Length - 2), Path = string.Empty, Type = video };
+                    }
+                    else if (type.Contains("." + audio, StringComparison.Ordinal) || type.Contains(audio, StringComparison.Ordinal))
+                    {
+                        viewModel = new FileControlViewModel() { Id = currentFile["id"].ToString(), Image = themeResourceLoader.GetString(audio), DisplayName = currentFileName.Substring(1, currentFileName.Length - 2), Path = string.Empty, Type = audio };
+                    }
+                    else
+                    {
+                        viewModel = new FileControlViewModel() { Id = currentFile["id"].ToString(), Image = themeResourceLoader.GetString(file), DisplayName = currentFileName.Substring(1, currentFileName.Length - 2), Path = string.Empty, Type = file };
                     }
 
                     driveFiles.Add(viewModel);
                 }
-                StorageFiles = new Collection<FileControlViewModel>(driveFiles.OrderBy(f => f.Type).ToList());
+
+                StorageFiles = new Collection<FileControlViewModel>(driveFiles);
+                IsLoadingVisible = false;
+                IsFilesVisible = true;
             }
         }
 
@@ -320,6 +456,39 @@ namespace FileManager.ViewModels
                     await message.ShowAsync();
                 }
                 content.Dispose();
+            }
+        }
+
+        private void OpenFolder(object sender)
+        {
+            if (sender != null)
+            {
+                var gridItems = (GridView)sender;
+                if (gridItems.SelectedItem is FileControlViewModel selectedItem && !string.IsNullOrEmpty(selectedItem.DisplayName) && selectedItem.Type == "folder")
+                {
+                    if (openedFoldersId.Count == 0)
+                    {
+                        IsBackButtonAvailable = true;
+                    }
+                    openedFoldersId.Push(currentFolderId);
+                    currentFolderId = selectedItem.Id;
+                    GetItemsAsync($"{selectedItem.Id}+in+parents&fields=files(*)").ConfigureAwait(true);
+                }
+            }
+
+        }
+
+        private void GetParent(object sender)
+        {
+            if (openedFoldersId.Count != 0)
+            {
+                string parentFolderId = openedFoldersId.Pop();
+                currentFolderId = parentFolderId;
+                GetItemsAsync($"{parentFolderId}+in+parents&fields=files(*)").ConfigureAwait(true);
+                if (openedFoldersId.Count == 0)
+                {
+                    IsBackButtonAvailable = false;
+                }
             }
         }
     }
