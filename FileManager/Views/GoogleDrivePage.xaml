@@ -30,14 +30,14 @@
 
             <AppBarButton Icon="Delete" Label="Delete" Command="{Binding RemoveFileCommand}" IsEnabled="{Binding IsDeleteButtonAvailable, Mode=TwoWay}"/>
             <AppBarButton Icon="NewFolder" Label="New folder" Command="{Binding CreateFolderCommand}" IsEnabled="{Binding IsNewFolderButtonAvailable, Mode=TwoWay}"/>
-            <AppBarButton Icon="Rename" Label="Rename" Command="{Binding EditSaveCommand, Mode=OneWay}" Visibility="{Binding SelectedGridItem.IsReadOnlyMode, Mode=OneWay}" IsEnabled="{Binding IsNewFolderButtonAvailable, Mode=TwoWay}"/>
+            <AppBarButton Icon="Download" Label="Rename" Command="{Binding DownloanFileCommand, Mode=OneWay}" Visibility="{Binding SelectedGridItem.IsReadOnlyMode, Mode=OneWay}" IsEnabled="{Binding IsNewFolderButtonAvailable, Mode=TwoWay}"/>
             <AppBarButton Icon="Save" Label="Save" Command="{Binding EditSaveCommand, Mode=OneWay}" Visibility="{Binding IsSaveButtonVisible, Mode=OneWay}" IsEnabled="{Binding IsNewFolderButtonAvailable, Mode=TwoWay}"/>
         </CommandBar>
 
         <GridView Grid.Row="1" Visibility="{Binding IsFilesVisible}" ItemsSource="{Binding StorageFiles, Mode=TwoWay}" vml:DoubleTapAttachedProperties.ItemDoubleTapCommand="{Binding DoubleClickedCommand}" vml:SelectionChangedAttachedProperties.SelectionChangedCommand="{Binding SelectionChangedCommand}" vml:ItemClickAttachedProperties.ItemClickCommand="{Binding ItemClickedCommand}" IsItemClickEnabled="True" SelectedItem="{Binding SelectedGridItem, Mode=TwoWay}" Margin="14,1,15,10">
             <GridView.ItemTemplate>
-                <DataTemplate x:DataType="viewmodels:FileControlViewModel">
-                    <Custom:FileControl/>
+                <DataTemplate x:DataType="viewmodels:GoogleFileControlViewModel">
+                    <Custom:GoogleFileControl/>
                 </DataTemplate>
             </GridView.ItemTemplate>
         </GridView>
