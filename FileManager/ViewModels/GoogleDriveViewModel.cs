@@ -1,22 +1,27 @@
 ﻿using FileManager.Commands;
 using FileManager.Models;
+using Google.Apis.Download;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Windows.ApplicationModel.Core;
 using Windows.ApplicationModel.Resources;
 using Windows.Data.Json;
+using Windows.Storage;
+using Windows.Storage.Pickers;
 using Windows.UI;
 using Windows.UI.Core;
 using Windows.UI.Popups;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
 
 namespace FileManager.ViewModels
 {
@@ -37,13 +42,15 @@ namespace FileManager.ViewModels
         private bool isBackButtonAvailable;
         private Stack<string> openedFoldersId = new Stack<string>();
         private DateTime lastRefreshTime;
-        private Collection<FileControlViewModel> storageFiles;
-        private FileControlViewModel selectedGridItem;
+        private Collection<GoogleFileControlViewModel> storageFiles;
+        private List<string> downloadingFilesId;
+        private GoogleFileControlViewModel selectedGridItem;
         private TokenResult tokenResult;
         private ResourceLoader themeResourceLoader;
         private ICommand navigationStartingCommand;
         private ICommand doubleClickedCommand;
         private ICommand getParentCommand;
+        private ICommand downloanFileCommand;
 
         public Uri WebViewCurrentSource
         {
@@ -129,7 +136,7 @@ namespace FileManager.ViewModels
                 }
             }
         }
-        public FileControlViewModel SelectedGridItem
+        public GoogleFileControlViewModel SelectedGridItem
         {
             get => selectedGridItem;
             set
@@ -141,7 +148,7 @@ namespace FileManager.ViewModels
                 }
             }
         }
-        public Collection<FileControlViewModel> StorageFiles
+        public Collection<GoogleFileControlViewModel> StorageFiles
         {
             get => storageFiles;
             set
@@ -189,14 +196,28 @@ namespace FileManager.ViewModels
                 }
             }
         }
+        public ICommand DownloanFileCommand
+        {
+            get => downloanFileCommand;
+            set
+            {
+                if (downloanFileCommand != value)
+                {
+                    downloanFileCommand = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
 
         public GoogleDriveViewModel()
         {
             tokenResult = new TokenResult();
             ChangeColorMode(settings, this);
+            downloadingFilesId = new List<string>();
             NavigationStartingCommand = new RelayCommand(NavigationStarting);
             DoubleClickedCommand = new RelayCommand(OpenFolder);
             GetParentCommand = new RelayCommand(GetParent);
+            DownloanFileCommand = new RelayCommand(DownloadFileAsync);
             IsWebViewVisible = true;
             WebViewCurrentSource = new Uri(googleUri);
             LoadingText = "Loading..."; //todo move to strings
@@ -286,37 +307,46 @@ namespace FileManager.ViewModels
 
         private async Task ExchangeCodeOnTokenAsync(string exchangeCode)
         {
-            using (HttpClient client = new HttpClient())
+            try
             {
-                string request = new StringBuilder()
-                    .Append($"code={exchangeCode}")
-                    .Append($"&client_id={clientId}")
-                    .Append($"&client_secret={secret}")
-                    .Append("&redirect_uri=https://localhost/")
-                    .Append("&grant_type=authorization_code")
-                    .Append("&access_type=offline")
-                    .ToString();
-                StringContent content = new StringContent(request, Encoding.UTF8, "application/x-www-form-urlencoded");
-                var response = await client.PostAsync(authEndpoint, content).ConfigureAwait(true);
+                using (HttpClient client = new HttpClient())
+                {
+                    string request = new StringBuilder()
+                        .Append($"code={exchangeCode}")
+                        .Append($"&client_id={clientId}")
+                        .Append($"&client_secret={secret}")
+                        .Append("&redirect_uri=https://localhost/")
+                        .Append("&grant_type=authorization_code")
+                        .Append("&access_type=offline")
+                        .ToString();
+                    StringContent content = new StringContent(request, Encoding.UTF8, "application/x-www-form-urlencoded");
+                    var response = await client.PostAsync(authEndpoint, content).ConfigureAwait(true);
 
-                if (response.IsSuccessStatusCode)
-                {
-                    string responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(true);
-                    JsonObject responseObject = JsonObject.Parse(responseContent);
-                    tokenResult.AccessToken = responseObject.GetNamedString("access_token");
-                    tokenResult.RefreshToken = responseObject.GetNamedString("refresh_token");
-                    tokenResult.TokenType = responseObject.GetNamedString("token_type");
-                    tokenResult.ExpiresIn = responseObject.GetNamedValue("expires_in").ToString();
-                    tokenResult.Scope = responseObject.GetNamedString("scope");
-                    lastRefreshTime = DateTime.Now;
+                    if (response.IsSuccessStatusCode)
+                    {
+                        string responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(true);
+                        JsonObject responseObject = JsonObject.Parse(responseContent);
+                        tokenResult.AccessToken = responseObject.GetNamedString("access_token");
+                        tokenResult.RefreshToken = responseObject.GetNamedString("refresh_token");
+                        tokenResult.TokenType = responseObject.GetNamedString("token_type");
+                        tokenResult.ExpiresIn = responseObject.GetNamedValue("expires_in").ToString();
+                        tokenResult.Scope = responseObject.GetNamedString("scope");
+                        lastRefreshTime = DateTime.Now;
+                    }
+                    else
+                    {
+                        var message = new MessageDialog("The response returned error!");
+                        await message.ShowAsync();
+                    }
+                    content.Dispose();
                 }
-                else
-                {
-                    var message = new MessageDialog("The response returned error!");
-                    await message.ShowAsync();
-                }
-                content.Dispose();
             }
+            catch (Exception)
+            {
+
+                throw; //todo exceptions
+            }
+            
         }
 
         private async Task GetItemsAsync(string q = "")
@@ -333,6 +363,67 @@ namespace FileManager.ViewModels
             IsFilesVisible = false;
             IsLoadingVisible = true;
 
+            JsonArray responseFiles = await GetFilesFromGoogleDriveAsync(q).ConfigureAwait(true);
+
+            List<GoogleFileControlViewModel> driveFiles = new List<GoogleFileControlViewModel>();
+
+            foreach (var driveFile in responseFiles)
+            {
+                GoogleFileControlViewModel viewModel;
+                var currentFile = JsonObject.Parse(driveFile.Stringify());
+                var type = currentFile[mimeType].ToString();
+
+                if (type.Contains("." + folder, StringComparison.Ordinal))
+                {
+                    string currentFileName = currentFile["name"].ToString();
+                    viewModel = new GoogleFileControlViewModel() { Id = currentFile["id"].ToString(), Image = themeResourceLoader.GetString(folder), DisplayName = currentFileName.Substring(1, currentFileName.Length - 2), Type = folder };
+                    driveFiles.Add(viewModel);
+                }
+            }
+
+            foreach (var driveFile in responseFiles)
+            {
+                GoogleFileControlViewModel viewModel;
+                var currentFile = JsonObject.Parse(driveFile.Stringify());
+                var type = currentFile[mimeType].ToString();
+                string currentFileName = currentFile["name"].ToString();
+
+                if (type.Contains("." + folder, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                if (type.Contains("." + photo, StringComparison.Ordinal) || type.Contains("." + shortcut, StringComparison.Ordinal) || type.Contains(photo, StringComparison.Ordinal) || type.Contains(image, StringComparison.Ordinal))
+                {
+                    viewModel = new GoogleFileControlViewModel() { Id = currentFile["id"].ToString(), Image = themeResourceLoader.GetString(image), DisplayName = currentFileName.Substring(1, currentFileName.Length - 2), Type = image };
+                }
+                else if (type.Contains("." + video, StringComparison.Ordinal) || type.Contains(video, StringComparison.Ordinal))
+                {
+                    viewModel = new GoogleFileControlViewModel() { Id = currentFile["id"].ToString(), Image = themeResourceLoader.GetString(video), DisplayName = currentFileName.Substring(1, currentFileName.Length - 2), Type = video };
+                }
+                else if (type.Contains("." + audio, StringComparison.Ordinal) || type.Contains(audio, StringComparison.Ordinal))
+                {
+                    viewModel = new GoogleFileControlViewModel() { Id = currentFile["id"].ToString(), Image = themeResourceLoader.GetString(audio), DisplayName = currentFileName.Substring(1, currentFileName.Length - 2), Type = audio };
+                }
+                else
+                {
+                    viewModel = new GoogleFileControlViewModel() { Id = currentFile["id"].ToString(), Image = themeResourceLoader.GetString(file), DisplayName = currentFileName.Substring(1, currentFileName.Length - 2), Type = file };
+                }
+                driveFiles.Add(viewModel);
+            }
+
+            StorageFiles = new Collection<GoogleFileControlViewModel>(driveFiles);
+            CheckFilesForDownloading();
+            IsLoadingVisible = false;
+            IsFilesVisible = true;
+        }
+
+        private async Task<JsonArray> GetFilesFromGoogleDriveAsync(string q)
+        {
+            JsonArray driveFiles = new JsonArray();
+            string nextPageToken = string.Empty;
+            HttpResponseMessage driveResult;
+
             using (HttpClient client = new HttpClient())
             {
                 if (DateTime.Now.Subtract(lastRefreshTime).Seconds >= int.Parse(tokenResult.ExpiresIn))
@@ -341,9 +432,6 @@ namespace FileManager.ViewModels
                 }
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(tokenResult.TokenType, tokenResult.AccessToken);
 
-                string nextPageToken = string.Empty;
-                HttpResponseMessage driveResult;
-                JsonArray responseFiles = new JsonArray();
                 if (string.IsNullOrEmpty(q))
                 {
                     var rootFolderResult = await client.GetAsync($"https://www.googleapis.com/drive/v3/files/root").ConfigureAwait(true);
@@ -361,7 +449,7 @@ namespace FileManager.ViewModels
                     var jsonFiles = jsonParse["files"].GetArray();
                     foreach (var resultFile in jsonFiles)
                     {
-                        responseFiles.Add(resultFile);
+                        driveFiles.Add(resultFile);
                     }
                     if (jsonParse.TryGetValue("nextPageToken", out IJsonValue value))
                     {
@@ -374,58 +462,19 @@ namespace FileManager.ViewModels
                     }
 
                 } while (!string.IsNullOrEmpty(nextPageToken));
+            }
+            return driveFiles;
+        }
 
-                List<FileControlViewModel> driveFiles = new List<FileControlViewModel>();
-
-                foreach (var driveFile in responseFiles)
+        private void CheckFilesForDownloading()
+        {
+            foreach (var file in storageFiles)
+            {
+                if (downloadingFilesId.Exists(id => id == file.Id))
                 {
-                    FileControlViewModel viewModel;
-                    var currentFile = JsonObject.Parse(driveFile.Stringify());
-                    var type = currentFile[mimeType].ToString();
-
-                    if (type.Contains("." + folder, StringComparison.Ordinal))
-                    {
-                        string currentFileName = currentFile["name"].ToString();
-                        viewModel = new FileControlViewModel() { Id = currentFile["id"].ToString(), Image = themeResourceLoader.GetString(folder), DisplayName = currentFileName.Substring(1, currentFileName.Length - 2), Path = string.Empty, Type = folder };
-                        driveFiles.Add(viewModel);
-                    }
+                    file.IsDownloading = true;
+                    file.DownloadStatus = "Downloading";
                 }
-
-                foreach (var driveFile in responseFiles)
-                {
-                    FileControlViewModel viewModel;
-                    var currentFile = JsonObject.Parse(driveFile.Stringify());
-                    var type = currentFile[mimeType].ToString();
-                    string currentFileName = currentFile["name"].ToString();
-
-                    if (type.Contains("." + folder, StringComparison.Ordinal))
-                    {
-                        continue;
-                    }
-
-                    if (type.Contains("." + photo, StringComparison.Ordinal) || type.Contains("." + shortcut, StringComparison.Ordinal) || type.Contains(photo, StringComparison.Ordinal) || type.Contains(image, StringComparison.Ordinal))
-                    {
-                        viewModel = new FileControlViewModel() { Id = currentFile["id"].ToString(), Image = themeResourceLoader.GetString(image), DisplayName = currentFileName.Substring(1, currentFileName.Length - 2), Path = string.Empty, Type = image };
-                    }
-                    else if (type.Contains("." + video, StringComparison.Ordinal) || type.Contains(video, StringComparison.Ordinal))
-                    {
-                        viewModel = new FileControlViewModel() { Id = currentFile["id"].ToString(), Image = themeResourceLoader.GetString(video), DisplayName = currentFileName.Substring(1, currentFileName.Length - 2), Path = string.Empty, Type = video };
-                    }
-                    else if (type.Contains("." + audio, StringComparison.Ordinal) || type.Contains(audio, StringComparison.Ordinal))
-                    {
-                        viewModel = new FileControlViewModel() { Id = currentFile["id"].ToString(), Image = themeResourceLoader.GetString(audio), DisplayName = currentFileName.Substring(1, currentFileName.Length - 2), Path = string.Empty, Type = audio };
-                    }
-                    else
-                    {
-                        viewModel = new FileControlViewModel() { Id = currentFile["id"].ToString(), Image = themeResourceLoader.GetString(file), DisplayName = currentFileName.Substring(1, currentFileName.Length - 2), Path = string.Empty, Type = file };
-                    }
-
-                    driveFiles.Add(viewModel);
-                }
-
-                StorageFiles = new Collection<FileControlViewModel>(driveFiles);
-                IsLoadingVisible = false;
-                IsFilesVisible = true;
             }
         }
 
@@ -464,7 +513,7 @@ namespace FileManager.ViewModels
             if (sender != null)
             {
                 var gridItems = (GridView)sender;
-                if (gridItems.SelectedItem is FileControlViewModel selectedItem && !string.IsNullOrEmpty(selectedItem.DisplayName) && selectedItem.Type == "folder")
+                if (gridItems.SelectedItem is GoogleFileControlViewModel selectedItem && !string.IsNullOrEmpty(selectedItem.DisplayName) && selectedItem.Type == "folder")
                 {
                     if (openedFoldersId.Count == 0)
                     {
@@ -490,6 +539,86 @@ namespace FileManager.ViewModels
                     IsBackButtonAvailable = false;
                 }
             }
+        }
+
+        private async void DownloadFileAsync(object sender)
+        {
+            const string googleDownloanUri = "https://www.googleapis.com/drive/v3/files/";
+            const string folder = "folder";
+            if (selectedGridItem != null && !string.IsNullOrEmpty(selectedGridItem.DisplayName) && selectedGridItem.Type != folder)
+            {
+                var picker = new FolderPicker
+                {
+                    ViewMode = PickerViewMode.Thumbnail,
+                    SuggestedStartLocation = PickerLocationId.Downloads
+                };
+                picker.FileTypeFilter.Add("*");
+                StorageFolder downloadFolder = await picker.PickSingleFolderAsync();
+
+                if (downloadFolder != null)
+                {
+                    if (DateTime.Now.Subtract(lastRefreshTime).Seconds >= int.Parse(tokenResult.ExpiresIn))
+                    {
+                        await RefreshTokenAsync().ConfigureAwait(true);
+                    }
+
+                    Uri source = new Uri(googleDownloanUri + selectedGridItem.Id.Substring(1, selectedGridItem.Id.Length - 2) + "?alt=media");
+
+                    StorageFile destinationFile = await downloadFolder.CreateFileAsync(
+                        selectedGridItem.DisplayName, CreationCollisionOption.GenerateUniqueName);
+
+                    SelectedGridItem.IsDownloading = true;
+                    SelectedGridItem.DownloadStatus = "Downloading"; //todo resources
+                    downloadingFilesId.Add(SelectedGridItem.Id);
+                    DownloadFileAsync(source, destinationFile, SelectedGridItem.Id);
+
+
+                    //BackgroundDownloader downloader = new BackgroundDownloader();
+                    //downloader.SetRequestHeader("Authorization", tokenResult.AccessToken);
+                    //DownloadOperation download = downloader.CreateDownload(source, destinationFile);
+                    //download.IsRandomAccessRequired = true;
+                    //Progress<DownloadOperation> progress = new Progress<DownloadOperation>(x => SelectedGridItem.ProgressChanged(download));
+                    //cancellationToken = new CancellationTokenSource();
+
+                    //try
+                    //{
+                    //    
+                    //    await download.StartAsync().AsTask(cancellationToken.Token, progress).ConfigureAwait(true);                        
+                    //}
+                    //catch (TaskCanceledException)
+                    //{
+                    //    MessageDialog messageDialog = new MessageDialog("Task canceled!");
+                    //    await messageDialog.ShowAsync();
+                    //}
+                }
+            }
+        }
+
+        private async void DownloadFileAsync(Uri source, StorageFile destinationFile, string fileId)
+        {
+            var downloadingFile = storageFiles.First(f => f.Id == fileId);
+            using (HttpClient client = new HttpClient())
+            {
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(tokenResult.TokenType, tokenResult.AccessToken);
+                var stream = await client.GetStreamAsync(source).ConfigureAwait(true);
+                using (var fileStream = await destinationFile.OpenStreamForWriteAsync().ConfigureAwait(true))
+                {
+                    await stream.CopyToAsync(fileStream).ConfigureAwait(true);
+                }
+            }
+            downloadingFilesId.Remove(fileId);
+            if (storageFiles.Any(f => f.Id == fileId))
+            {
+                downloadingFile = storageFiles.First(f => f.Id == fileId);
+                downloadingFile.DownloadStatus = "Completed";//todo resources
+                CloseDownloadingAsync(downloadingFile);
+            }                 
+        }
+        private async void CloseDownloadingAsync(GoogleFileControlViewModel file)
+        {
+            await Task.Delay(2000).ConfigureAwait(true);
+            file.IsDownloading = false;
+            file.DownloadStatus = string.Empty;
         }
     }
 }
