@@ -372,7 +372,7 @@ namespace FileManager.ViewModels
             
         }
 
-        private async Task GetItemsAsync(string q = "")
+        private async Task GetItemsAsync(string folderId = "")
         {
             const string image = "image";
             const string photo = "photo";
@@ -386,7 +386,7 @@ namespace FileManager.ViewModels
             IsFilesVisible = false;
             IsLoadingVisible = true;
 
-            JsonArray responseFiles = await GetFilesFromGoogleDriveAsync(q).ConfigureAwait(true);
+            JsonArray responseFiles = await GetFilesFromGoogleDriveAsync(folderId).ConfigureAwait(true);
 
             List<GoogleFileControlViewModel> driveFiles = new List<GoogleFileControlViewModel>();
 
@@ -441,11 +441,12 @@ namespace FileManager.ViewModels
             IsFilesVisible = true;
         }
 
-        private async Task<JsonArray> GetFilesFromGoogleDriveAsync(string q)
+        private async Task<JsonArray> GetFilesFromGoogleDriveAsync(string folderId)
         {
             JsonArray driveFiles = new JsonArray();
             string nextPageToken = string.Empty;
             HttpResponseMessage driveResult;
+            string q;
 
             using (HttpClient client = new HttpClient())
             {
@@ -455,13 +456,17 @@ namespace FileManager.ViewModels
                 }
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(tokenResult.TokenType, tokenResult.AccessToken);
 
-                if (string.IsNullOrEmpty(q))
+                if (string.IsNullOrEmpty(folderId))
                 {
                     var rootFolderResult = await client.GetAsync($"https://www.googleapis.com/drive/v3/files/root").ConfigureAwait(true);
                     var rootFolderString = await rootFolderResult.Content.ReadAsStringAsync().ConfigureAwait(true);
                     string rootFolderId = JsonObject.Parse(rootFolderString)["id"].ToString();
                     currentFolderId = rootFolderId;
                     q = $"{rootFolderId}+in+parents and trashed=false&fields=files(id,+mimeType,+name)";
+                }
+                else
+                {
+                    q = $"{folderId}+in+parents and trashed=false&fields=files(*)";
                 }
 
                 do
@@ -544,7 +549,7 @@ namespace FileManager.ViewModels
                     }
                     openedFoldersId.Push(currentFolderId);
                     currentFolderId = selectedItem.Id;
-                    GetItemsAsync($"{selectedItem.Id}+in+parents and trashed=false&fields=files(*)").ConfigureAwait(true);
+                    GetItemsAsync(currentFolderId).ConfigureAwait(true);
                 }
             }
 
@@ -554,9 +559,8 @@ namespace FileManager.ViewModels
         {
             if (openedFoldersId.Count != 0)
             {
-                string parentFolderId = openedFoldersId.Pop();
-                currentFolderId = parentFolderId;
-                GetItemsAsync($"{parentFolderId}+in+parents and trashed=false&fields=files(*)").ConfigureAwait(true);
+                currentFolderId = openedFoldersId.Pop();
+                GetItemsAsync(currentFolderId).ConfigureAwait(true);
                 if (openedFoldersId.Count == 0)
                 {
                     IsBackButtonAvailable = false;
@@ -646,57 +650,26 @@ namespace FileManager.ViewModels
 
         private async void UploadFileAsync(object sender)
         {
-            //const string googleUploadUri = "https://www.googleapis.com/upload/drive/v3/files";
-            const string folder = "folder";
-
-            if (selectedGridItem != null && !string.IsNullOrEmpty(selectedGridItem.DisplayName) && selectedGridItem.Type != folder)
+            var picker = new FileOpenPicker
             {
-                var picker = new FileOpenPicker
-                {
-                    ViewMode = PickerViewMode.Thumbnail,
-                    SuggestedStartLocation = PickerLocationId.Downloads
-                };
-                picker.FileTypeFilter.Add("*");
-                StorageFile uploadFile = await picker.PickSingleFileAsync();
+                ViewMode = PickerViewMode.Thumbnail,
+                SuggestedStartLocation = PickerLocationId.Downloads
+            };
+            picker.FileTypeFilter.Add("*");
+            StorageFile uploadFile = await picker.PickSingleFileAsync();
 
-                if (uploadFile != null)
-                {
-                    if (DateTime.Now.Subtract(lastRefreshTime).Seconds >= int.Parse(tokenResult.ExpiresIn))
-                    {
-                        await RefreshTokenAsync().ConfigureAwait(true);
-                    }
+            if (uploadFile != null)
+            {
+                UploadFileOnDriveAsync(uploadFile, currentFolderId);
+            }
 
-                    //Uri source = new Uri(googleUploadUri + $"?uploadType=resumable");
 
-                    var credentional = GoogleCredential.FromAccessToken(tokenResult.AccessToken).CreateScoped(DriveService.Scope.Drive);
-                    using (var service = new DriveService(new BaseClientService.Initializer()
-                    {
-                        HttpClientInitializer = credentional
-                    }))
-                    {
-                        var fileMetadata = new Google.Apis.Drive.v3.Data.File()
-                        {
-                            Name = uploadFile.Name,
-                            Parents = new List<string>() { currentFolderId.Substring(1, currentFolderId.Length - 2) }
-                        };
+            //const string googleUploadUri = "https://www.googleapis.com/upload/drive/v3/files";
+            //const string folder = "folder";
 
-                        var stream = await uploadFile.OpenStreamForReadAsync().ConfigureAwait(true);
-
-                        var request = service.Files.Create(fileMetadata, stream, "application/octet-stream");
-                        request.Fields = "*";
-                        var results = await request.UploadAsync().ConfigureAwait(true);
-
-                        if (results.Status == Google.Apis.Upload.UploadStatus.Failed)
-                        {
-                            await new MessageDialog(results.Exception.Message).ShowAsync();
-                        }
-                        else
-                        {
-                            //var id = request.ResponseBody?.Id;
-                            GetItemsAsync($"{currentFolderId}+in+parents&fields=files(*)").ConfigureAwait(true);
-                        }
-                    }                    
-                }
+            //if (selectedGridItem != null && !string.IsNullOrEmpty(selectedGridItem.DisplayName) && selectedGridItem.Type != folder)
+            //{
+                
                 //var request = $"?uploadType=resumable&parents={currentFolderId}&";
                 //StringContent content = new StringContent(request, Encoding.UTF8);
 
@@ -775,9 +748,44 @@ namespace FileManager.ViewModels
                 //    {
                 //        var exceptionText = e.InnerException;
                 //    }
-            }
+            //}
 
             
+        }
+        private async void UploadFileOnDriveAsync(StorageFile uploadFile, string folderId)
+        {
+            if (DateTime.Now.Subtract(lastRefreshTime).Seconds >= int.Parse(tokenResult.ExpiresIn))
+            {
+                await RefreshTokenAsync().ConfigureAwait(true);
+            }
+
+            var credentional = GoogleCredential.FromAccessToken(tokenResult.AccessToken).CreateScoped(DriveService.Scope.Drive);
+            using (var service = new DriveService(new BaseClientService.Initializer()
+            {
+                HttpClientInitializer = credentional
+            }))
+            {
+                var fileMetadata = new Google.Apis.Drive.v3.Data.File()
+                {
+                    Name = uploadFile.Name,
+                    Parents = new List<string>() { currentFolderId.Substring(1, currentFolderId.Length - 2) }
+                };
+
+                var stream = await uploadFile.OpenStreamForReadAsync().ConfigureAwait(true);
+
+                var request = service.Files.Create(fileMetadata, stream, "application/octet-stream");
+                request.Fields = "*";
+                var results = await request.UploadAsync().ConfigureAwait(true);
+
+                if (results.Status == Google.Apis.Upload.UploadStatus.Failed)
+                {
+                    await new MessageDialog(results.Exception.Message).ShowAsync();
+                }
+                else if(currentFolderId == folderId)
+                {
+                    GetItemsAsync(currentFolderId).ConfigureAwait(true);
+                }
+            }
         }
     }
 }
