@@ -56,6 +56,7 @@
     <uap:Capability Name="removableStorage"/>
     <iot:Capability Name="lowLevelDevices"/>
     <Capability Name="allJoyn"/>
+    <Capability Name="internetClientServer"/>
     <DeviceCapability Name="lowLevel"/>
   </Capabilities>
 </Package>
