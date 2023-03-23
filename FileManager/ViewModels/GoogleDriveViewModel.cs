@@ -1,10 +1,8 @@
 ﻿using FileManager.Commands;
 using FileManager.Models;
 using Google.Apis.Auth.OAuth2;
-using Google.Apis.Download;
 using Google.Apis.Drive.v3;
 using Google.Apis.Services;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -12,25 +10,19 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Windows.ApplicationModel.Core;
 using Windows.ApplicationModel.Resources;
 using Windows.Data.Json;
-using Windows.Media.Protection.PlayReady;
 using Windows.Storage;
 using Windows.Storage.Pickers;
-using Windows.Storage.Pickers.Provider;
 using Windows.UI;
 using Windows.UI.Core;
 using Windows.UI.Popups;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
 
 namespace FileManager.ViewModels
 {
@@ -61,6 +53,7 @@ namespace FileManager.ViewModels
         private ICommand getParentCommand;
         private ICommand downloadFileCommand;
         private ICommand uploadFileCommand;
+        private ICommand deleteFileCommand;
 
         public Uri WebViewCurrentSource
         {
@@ -230,6 +223,18 @@ namespace FileManager.ViewModels
                 }
             }
         }
+        public ICommand DeleteFileCommand
+        {
+            get => deleteFileCommand;
+            set
+            {
+                if (deleteFileCommand != value)
+                {
+                    deleteFileCommand = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
 
         public GoogleDriveViewModel()
         {
@@ -241,6 +246,7 @@ namespace FileManager.ViewModels
             GetParentCommand = new RelayCommand(GetParent);
             DownloadFileCommand = new RelayCommand(DownloadFileAsync);
             UploadFileCommand = new RelayCommand(UploadFileAsync);
+            DeleteFileCommand = new RelayCommand(DeleteFileAsync);
             IsWebViewVisible = true;
             WebViewCurrentSource = new Uri(googleUri);
             LoadingText = "Loading..."; //todo move to strings
@@ -317,7 +323,7 @@ namespace FileManager.ViewModels
                         IsWebViewVisible = false;
                         IsContentVisible = true;
                         await ExchangeCodeOnTokenAsync(exchangeCode).ConfigureAwait(true);
-                        await GetItemsAsync().ConfigureAwait(true);
+                        _ = GetItemsAsync().ConfigureAwait(true);
                     }
                     else
                     {
@@ -369,7 +375,7 @@ namespace FileManager.ViewModels
 
                 throw; //todo exceptions
             }
-            
+
         }
 
         private async Task GetItemsAsync(string folderId = "")
@@ -639,7 +645,7 @@ namespace FileManager.ViewModels
                 downloadingFile = storageFiles.First(f => f.Id == fileId);
                 downloadingFile.DownloadStatus = "Completed";//todo resources
                 CloseDownloadingAsync(downloadingFile);
-            }                 
+            }
         }
         private async void CloseDownloadingAsync(GoogleFileControlViewModel file)
         {
@@ -669,88 +675,86 @@ namespace FileManager.ViewModels
 
             //if (selectedGridItem != null && !string.IsNullOrEmpty(selectedGridItem.DisplayName) && selectedGridItem.Type != folder)
             //{
-                
-                //var request = $"?uploadType=resumable&parents={currentFolderId}&";
-                //StringContent content = new StringContent(request, Encoding.UTF8);
 
-                //var stream = await uploadFile.OpenStreamForReadAsync().ConfigureAwait(true);
-                //var bytes = new byte[(int)stream.Length];
-                //stream.Read(bytes, 0, (int)stream.Length);
+            //var request = $"?uploadType=resumable&parents={currentFolderId}&";
+            //StringContent content = new StringContent(request, Encoding.UTF8);
 
-                //using (var content = new Windows.Web.Http.HttpMultipartContent())
-                //{
-                //    using (var fileContent = new ByteArrayContent(buffer.ToArray()))
-                //    {
-                //        var bufferContent = new Windows.Web.Http.HttpBufferContent(buffer);
-                //        content.Add(bufferContent);
-                //        //content.Add(new StringContent("charset=UTF-8"));
-                //        content.Headers.ContentType = Windows.Web.Http.Headers.HttpMediaTypeHeaderValue.Parse("application/*");
-                //        //content.Headers.ContentEncoding.Add(Windows.Web.Http.Headers.HttpContentCodingHeaderValue.Parse("UTF-8"));
-                //        //content.Headers.ContentLength = lenght;
+            //var stream = await uploadFile.OpenStreamForReadAsync().ConfigureAwait(true);
+            //var bytes = new byte[(int)stream.Length];
+            //stream.Read(bytes, 0, (int)stream.Length);
 
-                //        var httpClient = new Windows.Web.Http.HttpClient();
-                //        httpClient.DefaultRequestHeaders.Authorization = new Windows.Web.Http.Headers.HttpCredentialsHeaderValue(tokenResult.TokenType, tokenResult.AccessToken);
-                //        try
-                //        {
-                //            var response = await httpClient.PostAsync(source, content);
-                //            var result = JsonObject.Parse(await response.Content.ReadAsStringAsync());
-                //        }
-                //        catch (Exception e)
-                //        {
-                //            var exceptionText = e.InnerException;
-                //        }
+            //using (var content = new Windows.Web.Http.HttpMultipartContent())
+            //{
+            //    using (var fileContent = new ByteArrayContent(buffer.ToArray()))
+            //    {
+            //        var bufferContent = new Windows.Web.Http.HttpBufferContent(buffer);
+            //        content.Add(bufferContent);
+            //        //content.Add(new StringContent("charset=UTF-8"));
+            //        content.Headers.ContentType = Windows.Web.Http.Headers.HttpMediaTypeHeaderValue.Parse("application/*");
+            //        //content.Headers.ContentEncoding.Add(Windows.Web.Http.Headers.HttpContentCodingHeaderValue.Parse("UTF-8"));
+            //        //content.Headers.ContentLength = lenght;
+
+            //        var httpClient = new Windows.Web.Http.HttpClient();
+            //        httpClient.DefaultRequestHeaders.Authorization = new Windows.Web.Http.Headers.HttpCredentialsHeaderValue(tokenResult.TokenType, tokenResult.AccessToken);
+            //        try
+            //        {
+            //            var response = await httpClient.PostAsync(source, content);
+            //            var result = JsonObject.Parse(await response.Content.ReadAsStringAsync());
+            //        }
+            //        catch (Exception e)
+            //        {
+            //            var exceptionText = e.InnerException;
+            //        }
 
 
-                //    }
-                //}
-
-                //using (var content = new MultipartFormDataContent())
-                //{
-                //    var streamContent = new StreamContent(stream);
-                //    streamContent.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
-                //    //content.Add(streamContent, "file", uploadFile.Name);
-                //    //content.Headers.ContentType = new MediaTypeHeaderValue("application/x-www-form-urlencoded");
-                //    //content.Add(new StringContent("charset=UTF-8"));
-                //    //JsonObject obj = new JsonObject
-                //    //{
-                //    //    { "parents", JsonValue.CreateStringValue($"[{currentFolderId}]") }
-                //    //};
-                //    //content.Headers.ContentType = new MediaTypeHeaderValue("application/x-www-form-urlencoded");
-                //    var request = new HttpRequestMessage(HttpMethod.Post, source);
-                //    //request.Headers.Add("X-Upload-Content-Type", "application/octet-stream");
-                //    //request.Headers.Add("X-Upload-Content-Length", streamContent.Headers.ContentLength.ToString());
-                //    //request.Headers.Add("charset", "UTF - 8");
-
-                //    //request.Headers.Add("parents", $"[{currentFolderId}]");
-
-                //    request.Content = streamContent;
-                //    request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
-                //    request.Content.Headers.ContentLength = stream.Length;
-
-                //    var fileContent = new ByteArrayContent(bytes);
-                //    content.Add(fileContent);
-                //    content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
-
-                //    //content.Add(streamContent, "file", uploadFile.Name);
-                //    //content.Add(new ByteArrayContent(bytes));
-                //    //content.Headers.ContentEncoding.Add(Windows.Web.Http.Headers.HttpContentCodingHeaderValue.Parse("UTF-8"));
-                //    //content.Headers.ContentLength = streamContent.Headers.ContentLength;
-
-                //    var httpClient = new HttpClient();
-                //    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(tokenResult.TokenType, tokenResult.AccessToken);
-                //    try
-                //    {
-                //        var response = await httpClient.PostAsync(source, content).ConfigureAwait(true);
-                //        var result = JsonObject.Parse(await response.Content.ReadAsStringAsync());
-                //        //var location = response.Headers.Location.ToSting();
-                //    }
-                //    catch (Exception e)
-                //    {
-                //        var exceptionText = e.InnerException;
-                //    }
+            //    }
             //}
 
-            
+            //using (var content = new MultipartFormDataContent())
+            //{
+            //    var streamContent = new StreamContent(stream);
+            //    streamContent.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+            //    //content.Add(streamContent, "file", uploadFile.Name);
+            //    //content.Headers.ContentType = new MediaTypeHeaderValue("application/x-www-form-urlencoded");
+            //    //content.Add(new StringContent("charset=UTF-8"));
+            //    //JsonObject obj = new JsonObject
+            //    //{
+            //    //    { "parents", JsonValue.CreateStringValue($"[{currentFolderId}]") }
+            //    //};
+            //    //content.Headers.ContentType = new MediaTypeHeaderValue("application/x-www-form-urlencoded");
+            //    var request = new HttpRequestMessage(HttpMethod.Post, source);
+            //    //request.Headers.Add("X-Upload-Content-Type", "application/octet-stream");
+            //    //request.Headers.Add("X-Upload-Content-Length", streamContent.Headers.ContentLength.ToString());
+            //    //request.Headers.Add("charset", "UTF - 8");
+
+            //    //request.Headers.Add("parents", $"[{currentFolderId}]");
+
+            //    request.Content = streamContent;
+            //    request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+            //    request.Content.Headers.ContentLength = stream.Length;
+
+            //    var fileContent = new ByteArrayContent(bytes);
+            //    content.Add(fileContent);
+            //    content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+
+            //    //content.Add(streamContent, "file", uploadFile.Name);
+            //    //content.Add(new ByteArrayContent(bytes));
+            //    //content.Headers.ContentEncoding.Add(Windows.Web.Http.Headers.HttpContentCodingHeaderValue.Parse("UTF-8"));
+            //    //content.Headers.ContentLength = streamContent.Headers.ContentLength;
+
+            //    var httpClient = new HttpClient();
+            //    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(tokenResult.TokenType, tokenResult.AccessToken);
+            //    try
+            //    {
+            //        var response = await httpClient.PostAsync(source, content).ConfigureAwait(true);
+            //        var result = JsonObject.Parse(await response.Content.ReadAsStringAsync());
+            //        //var location = response.Headers.Location.ToSting();
+            //    }
+            //    catch (Exception e)
+            //    {
+            //        var exceptionText = e.InnerException;
+            //    }
+            //}
         }
         private async void UploadFileOnDriveAsync(StorageFile uploadFile, string folderId)
         {
@@ -781,9 +785,33 @@ namespace FileManager.ViewModels
                 {
                     await new MessageDialog(results.Exception.Message).ShowAsync();
                 }
-                else if(currentFolderId == folderId)
+                else if (currentFolderId == folderId)
                 {
-                    GetItemsAsync(currentFolderId).ConfigureAwait(true);
+                    _ = GetItemsAsync(currentFolderId).ConfigureAwait(true);
+                }
+            }
+        }
+        private async void DeleteFileAsync(object sender)
+        {
+            string folderId = currentFolderId;
+            if (selectedGridItem != null && !string.IsNullOrEmpty(selectedGridItem.DisplayName))
+            {
+                if (DateTime.Now.Subtract(lastRefreshTime).Seconds >= int.Parse(tokenResult.ExpiresIn))
+                {
+                    await RefreshTokenAsync().ConfigureAwait(true);
+                }
+                var credentional = GoogleCredential.FromAccessToken(tokenResult.AccessToken).CreateScoped(DriveService.Scope.Drive);
+                using (var service = new DriveService(new BaseClientService.Initializer()
+                {
+                    HttpClientInitializer = credentional
+                }))
+                {
+                    var request = service.Files.Delete(selectedGridItem.Id.Substring(1, selectedGridItem.Id.Length - 2));
+                    await request.ExecuteAsync().ConfigureAwait(true);
+                    if (currentFolderId == folderId)
+                    {
+                        _ = GetItemsAsync(currentFolderId).ConfigureAwait(true);
+                    }
                 }
             }
         }
