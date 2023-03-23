@@ -1,5 +1,7 @@
 ﻿using FileManager.Commands;
+using FileManager.Controlls;
 using FileManager.Models;
+using FileManager.Validation;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Drive.v3;
 using Google.Apis.Services;
@@ -47,6 +49,7 @@ namespace FileManager.ViewModels
         private List<string> downloadingFilesId;
         private GoogleFileControlViewModel selectedGridItem;
         private TokenResult tokenResult;
+        private ResourceLoader stringsResourceLoader;
         private ResourceLoader themeResourceLoader;
         private ICommand navigationStartingCommand;
         private ICommand doubleClickedCommand;
@@ -54,6 +57,7 @@ namespace FileManager.ViewModels
         private ICommand downloadFileCommand;
         private ICommand uploadFileCommand;
         private ICommand deleteFileCommand;
+        private ICommand createNewFolderCommand;
 
         public Uri WebViewCurrentSource
         {
@@ -235,9 +239,22 @@ namespace FileManager.ViewModels
                 }
             }
         }
+        public ICommand CreateNewFolderCommand
+        {
+            get => createNewFolderCommand;
+            set
+            {
+                if (createNewFolderCommand != value)
+                {
+                    createNewFolderCommand = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
 
         public GoogleDriveViewModel()
         {
+            const string resources = "Resources";
             tokenResult = new TokenResult();
             ChangeColorMode(settings, this);
             downloadingFilesId = new List<string>();
@@ -247,6 +264,8 @@ namespace FileManager.ViewModels
             DownloadFileCommand = new RelayCommand(DownloadFileAsync);
             UploadFileCommand = new RelayCommand(UploadFileAsync);
             DeleteFileCommand = new RelayCommand(DeleteFileAsync);
+            CreateNewFolderCommand = new RelayCommand(CreateNewFolderAsync);
+            stringsResourceLoader = ResourceLoader.GetForCurrentView(resources);
             IsWebViewVisible = true;
             WebViewCurrentSource = new Uri(googleUri);
             LoadingText = "Loading..."; //todo move to strings
@@ -758,6 +777,7 @@ namespace FileManager.ViewModels
         }
         private async void UploadFileOnDriveAsync(StorageFile uploadFile, string folderId)
         {
+            const string contentType = "application/octet-stream";
             if (DateTime.Now.Subtract(lastRefreshTime).Seconds >= int.Parse(tokenResult.ExpiresIn))
             {
                 await RefreshTokenAsync().ConfigureAwait(true);
@@ -777,7 +797,7 @@ namespace FileManager.ViewModels
 
                 var stream = await uploadFile.OpenStreamForReadAsync().ConfigureAwait(true);
 
-                var request = service.Files.Create(fileMetadata, stream, "application/octet-stream");
+                var request = service.Files.Create(fileMetadata, stream, contentType);
                 request.Fields = "*";
                 var results = await request.UploadAsync().ConfigureAwait(true);
 
@@ -813,6 +833,61 @@ namespace FileManager.ViewModels
                         _ = GetItemsAsync(currentFolderId).ConfigureAwait(true);
                     }
                 }
+            }
+        }
+
+        private async void CreateNewFolderAsync(object sender)
+        {
+            var parameters = new string[] { "Folder", "Enter folder name" };
+            const string inputError = "inputError";
+            const string invalidInput = "invalidInput";
+            const string contentType = "application/vnd.google-apps.folder";
+            var contentDialog = new ContentDialogControl()
+            {
+                Title = "Folder name",
+                PrimaryButtonText = "Create",
+                SecondaryButtonText = "Cancele",
+                DataContext = Activator.CreateInstance(typeof(ContentDialogControlViewModel), parameters)
+
+            };
+            var result = await contentDialog.ShowAsync();
+            var gridItem = (ContentDialogControlViewModel)contentDialog.DataContext;
+            var folderName = gridItem.InputText;
+
+            if (result == ContentDialogResult.Primary && ItemNameValidation.Validate(folderName))
+            {
+                if (DateTime.Now.Subtract(lastRefreshTime).Seconds >= int.Parse(tokenResult.ExpiresIn))
+                {
+                    await RefreshTokenAsync().ConfigureAwait(true);
+                }
+
+                var credentional = GoogleCredential.FromAccessToken(tokenResult.AccessToken).CreateScoped(DriveService.Scope.Drive);
+                using (var service = new DriveService(new BaseClientService.Initializer()
+                {
+                    HttpClientInitializer = credentional
+                }))
+                {
+                    var fileMetadata = new Google.Apis.Drive.v3.Data.File()
+                    {
+                        Name = folderName,
+                        Parents = new List<string>() { currentFolderId.Substring(1, currentFolderId.Length - 2) },
+                        MimeType = contentType
+                    };
+
+                    var request = service.Files.Create(fileMetadata);
+                    request.Fields = "*";
+                    await request.ExecuteAsync().ConfigureAwait(true);
+
+                    _ = GetItemsAsync(currentFolderId).ConfigureAwait(true);
+                }
+            }
+            else if (!ItemNameValidation.Validate(folderName))
+            {
+                var messageDialog = new MessageDialog(stringsResourceLoader.GetString(invalidInput))
+                {
+                    Title = stringsResourceLoader.GetString(inputError)
+                };
+                await messageDialog.ShowAsync(); //move to ContemntDialogControlVM
             }
         }
     }

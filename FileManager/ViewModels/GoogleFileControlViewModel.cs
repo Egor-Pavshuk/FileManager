@@ -1,8 +1,4 @@
-﻿using System.IO;
-using System.Threading.Tasks;
-using Windows.Networking.BackgroundTransfer;
-
-namespace FileManager.ViewModels
+﻿namespace FileManager.ViewModels
 {
     public class GoogleFileControlViewModel : BindableBase
     {

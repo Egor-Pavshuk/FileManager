@@ -120,6 +120,9 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controlls\ContentDialogControl.xaml.cs">
+      <DependentUpon>ContentDialogControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controlls\GoogleFileControl.xaml.cs">
       <DependentUpon>GoogleFileControl.xaml</DependentUpon>
     </Compile>
@@ -129,6 +132,7 @@
     <Compile Include="Commands\RelayCommand.cs" />
     <Compile Include="Models\TokenResult.cs" />
     <Compile Include="Validation\ItemNameValidation.cs" />
+    <Compile Include="ViewModels\ContentDialogControlViewModel.cs" />
     <Compile Include="ViewModels\GoogleFileControlViewModel.cs" />
     <Compile Include="ViewModels\GoogleDriveViewModel.cs" />
     <Compile Include="Views\GoogleDrivePage.xaml.cs">
@@ -151,7 +155,6 @@
     <Compile Include="Views\MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Models\ItemBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ViewModels\FileControlViewModel.cs" />
     <Compile Include="ViewModels\Libraries\LibrariesBaseViewModel.cs" />
@@ -208,6 +211,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Page Include="Controlls\ContentDialogControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Controlls\GoogleFileControl.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
