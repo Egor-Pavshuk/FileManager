@@ -10,13 +10,9 @@ namespace FileManager.Views
     /// </summary>
     public sealed partial class VideosLibraryPage : Page
     {
-        const string videoPage = "Videos";
-        public LibrariesBaseViewModel ViewModel { get; set; } = new LibrariesBaseViewModel(videoPage);
-
         public VideosLibraryPage()
         {
             this.InitializeComponent();
-            DataContext = ViewModel;
         }
     }
 }
