@@ -9,12 +9,10 @@
     xmlns:vml="using:FileManager.VMLocator" 
     vml:ViewModelLocator.AutoWireViewModel="True"
     Title="{Binding Title}"
-    PrimaryButtonCommand="{Binding PrimaryButtonCommand}"
     PrimaryButtonText="{Binding PrimaryButtonContent}"
-    SecondaryButtonCommand="{Binding SecondaryButtonCommand}"
     SecondaryButtonText="{Binding SecondaryButtonContent}">
 
     <Grid>
-        <TextBox Text="{Binding InputText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="{Binding PlaceHolder}" />
+        <TextBox Text="{Binding InputText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="{Binding PlaceHolder}" FontSize="20" TextAlignment="Left" />
     </Grid>
 </ContentDialog>

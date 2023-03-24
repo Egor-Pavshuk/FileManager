@@ -138,9 +138,6 @@
     <Compile Include="Views\GoogleDrivePage.xaml.cs">
       <DependentUpon>GoogleDrivePage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\PLibraryPage.xaml.cs">
-      <DependentUpon>PLibraryPage.xaml</DependentUpon>
-    </Compile>
     <Compile Include="VMLocator\ItemClickAttachedProperties.cs" />
     <Compile Include="VMLocator\OnNavigateWebViewAttachedProperties.cs" />
     <Compile Include="VMLocator\SelectionChangedAttachedProperties.cs" />
@@ -242,10 +239,6 @@
     <Page Include="Views\MusicsLibraryPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Views\PLibraryPage.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
     </Page>
     <Page Include="Views\PicturesLibraryPage.xaml">
       <SubType>Designer</SubType>

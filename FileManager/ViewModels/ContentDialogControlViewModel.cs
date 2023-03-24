@@ -1,6 +1,4 @@
-﻿using System.Windows.Input;
-
-namespace FileManager.ViewModels
+﻿namespace FileManager.ViewModels
 {
     public class ContentDialogControlViewModel : BindableBase
     {
@@ -9,8 +7,6 @@ namespace FileManager.ViewModels
         private string placeHolder;
         private string primaryButtonText;
         private string secondaryButtonText;
-        private ICommand primaryButtonCommand;
-        private ICommand secondaryButtonCommand;
         public string InputText
         {
             get => inputText;
@@ -67,30 +63,6 @@ namespace FileManager.ViewModels
                 if (secondaryButtonText != value)
                 {
                     secondaryButtonText = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-        public ICommand PrimaryButtonCommand
-        {
-            get => primaryButtonCommand;
-            set
-            {
-                if (primaryButtonCommand != value)
-                {
-                    primaryButtonCommand = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-        public ICommand SecondaryButtonCommand
-        {
-            get => secondaryButtonCommand;
-            set
-            {
-                if (secondaryButtonCommand != value)
-                {
-                    secondaryButtonCommand = value;
                     OnPropertyChanged();
                 }
             }
