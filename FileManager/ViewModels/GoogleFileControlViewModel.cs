@@ -1,14 +1,26 @@
 ﻿namespace FileManager.ViewModels
 {
-    public class FileControlViewModel : BindableBase
+    public class GoogleFileControlViewModel : BindableBase
     {
+        private string id;
         private string image;
         private string displayName;
-        private string path;
         private string type;
-        private bool isEditMode;
-        private bool isReadOnlyMode;
-
+        private bool isDownloading;
+        private int downloadProgress;
+        private string downloadStatus;
+        public string Id
+        {
+            get { return id; }
+            set
+            {
+                if (id != value)
+                {
+                    id = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
         public string Image
         {
             get { return image; }
@@ -33,18 +45,6 @@
                 }
             }
         }
-        public string Path
-        {
-            get { return path; }
-            set
-            {
-                if (path != value)
-                {
-                    path = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
         public string Type
         {
             get { return type; }
@@ -57,40 +57,49 @@
                 }
             }
         }
-        public bool IsEditMode
+        public string DownloadStatus
         {
-            get => isEditMode;
+            get => downloadStatus;
             set
             {
-                if (isEditMode != value)
+                if (downloadStatus != value)
                 {
-                    isEditMode = value;
+                    downloadStatus = value;
                     OnPropertyChanged();
                 }
             }
         }
-        public bool IsReadOnlyMode
+        public bool IsDownloading
         {
-            get => isReadOnlyMode;
+            get => isDownloading;
             set
             {
-                if (isReadOnlyMode != value)
+                if (isDownloading != value)
                 {
-                    isReadOnlyMode = value;
+                    isDownloading = value;
                     OnPropertyChanged();
                 }
             }
         }
-
-        public FileControlViewModel()
+        public int DownloadProgress
+        {
+            get => downloadProgress;
+            set
+            {
+                if (downloadProgress != value)
+                {
+                    downloadProgress = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+        public GoogleFileControlViewModel()
         {
             DisplayName = "";
-            IsReadOnlyMode = true;
         }
-        public FileControlViewModel(string displayName)
+        public GoogleFileControlViewModel(string displayName)
         {
             DisplayName = displayName;
-            IsReadOnlyMode = true;
         }
     }
 }

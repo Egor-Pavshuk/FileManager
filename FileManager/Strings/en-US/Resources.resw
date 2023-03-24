@@ -129,11 +129,32 @@
   <data name="confirmation" xml:space="preserve">
     <value>Confirmation</value>
   </data>
+  <data name="connectionError" xml:space="preserve">
+    <value>Connection error!</value>
+  </data>
+  <data name="connectionErrorContent" xml:space="preserve">
+    <value>Failed to connect to the server.</value>
+  </data>
+  <data name="createButton" xml:space="preserve">
+    <value>Create</value>
+  </data>
   <data name="deleteConfirmText" xml:space="preserve">
     <value>Are you sure to delete</value>
   </data>
+  <data name="downloadCompleted" xml:space="preserve">
+    <value>Completed</value>
+  </data>
+  <data name="downloadingText" xml:space="preserve">
+    <value>Downloading</value>
+  </data>
+  <data name="failed" xml:space="preserve">
+    <value>Failed</value>
+  </data>
   <data name="freeSpace" xml:space="preserve">
     <value>Free space</value>
+  </data>
+  <data name="GoogleDriveNav" xml:space="preserve">
+    <value>Google drive</value>
   </data>
   <data name="ImageNav" xml:space="preserve">
     <value>Images</value>
@@ -147,6 +168,9 @@
   <data name="invalidInput" xml:space="preserve">
     <value>Field must contain only letters, numbers or some symbols!</value>
   </data>
+  <data name="loadingText" xml:space="preserve">
+    <value>Loading...</value>
+  </data>
   <data name="MainPage" xml:space="preserve">
     <value>Main page</value>
   </data>
@@ -156,8 +180,17 @@
   <data name="MusicNav" xml:space="preserve">
     <value>Musics</value>
   </data>
+  <data name="newFolder" xml:space="preserve">
+    <value>New folder</value>
+  </data>
+  <data name="placeHolderFolderName" xml:space="preserve">
+    <value>Enter folder name</value>
+  </data>
   <data name="renameConfirmText" xml:space="preserve">
     <value>Are you sure to rename?</value>
+  </data>
+  <data name="responseError" xml:space="preserve">
+    <value>The request returned error </value>
   </data>
   <data name="sameNameError" xml:space="preserve">
     <value>Item with the same name already exist!</value>

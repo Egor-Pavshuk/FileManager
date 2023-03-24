@@ -15,7 +15,6 @@ using Windows.UI.Core;
 using Windows.UI.Popups;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Input;
 
 namespace FileManager.ViewModels.Libraries
 {
@@ -229,7 +228,7 @@ namespace FileManager.ViewModels.Libraries
             if (Windows.System.Profile.AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Xbox")
             {
                 ItemClickedCommand = new RelayCommand(OpenFileXboxAsync);
-                DoubleClickedCommand = new RelayCommand( (o) => { });
+                DoubleClickedCommand = new RelayCommand((o) => { });
             }
             else
             {

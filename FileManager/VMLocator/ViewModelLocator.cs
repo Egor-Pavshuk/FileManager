@@ -47,7 +47,7 @@ namespace FileManager.VMLocator
                         frameworkElement.DataContext = Activator.CreateInstance(viewModelType, "Music");
                         break;
                     default:
-                        if (viewModelType != typeof(FileControlViewModel))
+                        if (viewModelType != typeof(FileControlViewModel) && viewModelType != typeof(GoogleFileControlViewModel))
                         {
                             frameworkElement.DataContext = Activator.CreateInstance(viewModelType);
                         }

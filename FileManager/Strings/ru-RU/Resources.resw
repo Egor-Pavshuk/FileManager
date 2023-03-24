@@ -129,11 +129,32 @@
   <data name="confirmation" xml:space="preserve">
     <value>Подтверждение</value>
   </data>
+  <data name="connectionError" xml:space="preserve">
+    <value>Ошибка соединения!</value>
+  </data>
+  <data name="connectionErrorContent" xml:space="preserve">
+    <value>Не удалось подключиться к серверу.</value>
+  </data>
+  <data name="createButton" xml:space="preserve">
+    <value>Создать</value>
+  </data>
   <data name="deleteConfirmText" xml:space="preserve">
     <value>Вы уверены, что хотите удалить</value>
   </data>
+  <data name="downloadCompleted" xml:space="preserve">
+    <value>Загружено</value>
+  </data>
+  <data name="downloadingText" xml:space="preserve">
+    <value>Загрузка</value>
+  </data>
+  <data name="failed" xml:space="preserve">
+    <value>Ошибка</value>
+  </data>
   <data name="freeSpace" xml:space="preserve">
     <value>Свободное место</value>
+  </data>
+  <data name="GoogleDriveNav" xml:space="preserve">
+    <value>Google диск</value>
   </data>
   <data name="ImageNav" xml:space="preserve">
     <value>Изображения</value>
@@ -147,6 +168,9 @@
   <data name="invalidInput" xml:space="preserve">
     <value>Поле должно содержать только буквы, цифры или спецсимволы!</value>
   </data>
+  <data name="loadingText" xml:space="preserve">
+    <value>Загрузка...</value>
+  </data>
   <data name="MainPage" xml:space="preserve">
     <value>Главная</value>
   </data>
@@ -156,8 +180,17 @@
   <data name="MusicNav" xml:space="preserve">
     <value>Музыка</value>
   </data>
+  <data name="newFolder" xml:space="preserve">
+    <value>Новая папка</value>
+  </data>
+  <data name="placeHolderFolderName" xml:space="preserve">
+    <value>Введите название</value>
+  </data>
   <data name="renameConfirmText" xml:space="preserve">
     <value>Вы уверены, что хотите переименовать?</value>
+  </data>
+  <data name="responseError" xml:space="preserve">
+    <value>Запрос вернул ошибку</value>
   </data>
   <data name="sameNameError" xml:space="preserve">
     <value>Файл с таким именем уже существует!</value>

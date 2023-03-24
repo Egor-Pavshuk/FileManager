@@ -11,6 +11,7 @@ namespace FileManager.ViewModels
         private const string musicNavigation = "MusicNav";
         private const string infoNavigation = "InformationNav";
         private const string mainNavigation = "MainPage";
+        private const string googleDriveNav = "GoogleDriveNav";
         private Page currentContent;
         private string currentTitle;
         private ResourceLoader resourceLoader;
@@ -79,6 +80,10 @@ namespace FileManager.ViewModels
                 case "3":
                     CurrentContent = new InformationPage();
                     CurrentTitle = resourceLoader.GetString(infoNavigation);
+                    break;
+                case "4":
+                    CurrentContent = new GoogleDrivePage();
+                    CurrentTitle = resourceLoader.GetString(googleDriveNav);
                     break;
                 default:
                     CurrentContent = new MainTitlePage();
