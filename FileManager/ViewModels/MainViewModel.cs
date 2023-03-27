@@ -13,6 +13,7 @@ namespace FileManager.ViewModels
         private const string mainNavigation = "MainPage";
         private const string googleDriveNav = "GoogleDriveNav";
         private Page currentContent;
+        private Page googleDrivePage;
         private string currentTitle;
         private ResourceLoader resourceLoader;
         private NavigationViewItem selectedItem;
@@ -82,7 +83,23 @@ namespace FileManager.ViewModels
                     CurrentTitle = resourceLoader.GetString(infoNavigation);
                     break;
                 case "4":
-                    CurrentContent = new GoogleDrivePage();
+                    if (googleDrivePage != null)
+                    {
+                        var dataContext = (GoogleDriveViewModel)googleDrivePage.DataContext;
+                        if (!dataContext.IsErrorVisible)
+                        {
+                            CurrentContent = googleDrivePage;
+                        }
+                        else
+                        {
+                            CurrentContent = new GoogleDrivePage();
+                        }
+                    }
+                    else
+                    {
+                        CurrentContent = new GoogleDrivePage();
+                    }
+                    googleDrivePage = currentContent;
                     CurrentTitle = resourceLoader.GetString(googleDriveNav);
                     break;
                 default:
