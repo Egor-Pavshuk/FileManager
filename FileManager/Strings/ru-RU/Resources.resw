@@ -186,6 +186,9 @@
   <data name="placeHolderFolderName" xml:space="preserve">
     <value>Введите название</value>
   </data>
+  <data name="rename" xml:space="preserve">
+    <value>Переименовать</value>
+  </data>
   <data name="renameConfirmText" xml:space="preserve">
     <value>Вы уверены, что хотите переименовать?</value>
   </data>

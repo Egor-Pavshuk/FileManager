@@ -18,7 +18,7 @@
             <RowDefinition/>
         </Grid.RowDefinitions>
 
-        <CommandBar Grid.Row="0" Visibility="{Binding IsContentVisible}">
+        <CommandBar Grid.Row="0" Visibility="{Binding IsCommandPanelVisible}">
             <CommandBar.Content>
                 <Button x:Name="BackButton"
                             Style="{StaticResource NavigationBackButtonNormalStyle}"
@@ -28,10 +28,11 @@
                             Command="{Binding GetParentCommand}"/>
             </CommandBar.Content>
 
-            <AppBarButton Icon="Delete" Label="Delete" Command="{Binding DeleteFileCommand}" IsEnabled="{Binding IsDeleteButtonAvailable, Mode=TwoWay}"/>
             <AppBarButton Icon="NewFolder" Label="New folder" Command="{Binding CreateNewFolderCommand}" IsEnabled="{Binding IsNewFolderButtonAvailable, Mode=TwoWay}"/>
+            <AppBarButton Icon="Rename" Label="Rename" Command="{Binding RenameFileCommand}" IsEnabled="{Binding IsNewFolderButtonAvailable, Mode=TwoWay}"/>
             <AppBarButton Icon="Download" Label="Rename" Command="{Binding DownloadFileCommand, Mode=OneWay}" IsEnabled="{Binding IsNewFolderButtonAvailable, Mode=TwoWay}"/>
             <AppBarButton Icon="Upload" Label="Save" Command="{Binding UploadFileCommand, Mode=OneWay}" IsEnabled="{Binding IsNewFolderButtonAvailable, Mode=TwoWay}"/>
+            <AppBarButton Icon="Delete" Label="Delete" Command="{Binding DeleteFileCommand}" IsEnabled="{Binding IsDeleteButtonAvailable, Mode=TwoWay}"/>
         </CommandBar>
 
         <GridView Grid.Row="1" Visibility="{Binding IsFilesVisible}" ItemsSource="{Binding StorageFiles, Mode=TwoWay}" vml:DoubleTapAttachedProperties.ItemDoubleTapCommand="{Binding DoubleClickedCommand}" vml:SelectionChangedAttachedProperties.SelectionChangedCommand="{Binding SelectionChangedCommand}" vml:ItemClickAttachedProperties.ItemClickCommand="{Binding ItemClickedCommand}" IsItemClickEnabled="True" SelectedItem="{Binding SelectedGridItem, Mode=TwoWay}" Margin="14,1,15,10">

@@ -72,10 +72,11 @@
             Title = string.Empty;
             PlaceHolder = string.Empty;
         }
-        public ContentDialogControlViewModel(string title, string placeHolder)
+        public ContentDialogControlViewModel(string title, string placeHolder, string inputText = "")
         {
             Title = title;
             PlaceHolder = placeHolder;
+            InputText = inputText;
         }
     }
 }

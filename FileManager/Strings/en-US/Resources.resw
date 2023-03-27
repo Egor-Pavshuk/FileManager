@@ -183,8 +183,11 @@
   <data name="newFolder" xml:space="preserve">
     <value>New folder</value>
   </data>
-  <data name="placeHolderFolderName" xml:space="preserve">
-    <value>Enter folder name</value>
+  <data name="placeHolderFileName" xml:space="preserve">
+    <value>Enter file name</value>
+  </data>
+  <data name="rename" xml:space="preserve">
+    <value>Rename</value>
   </data>
   <data name="renameConfirmText" xml:space="preserve">
     <value>Are you sure to rename?</value>

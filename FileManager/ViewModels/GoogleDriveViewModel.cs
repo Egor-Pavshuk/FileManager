@@ -41,7 +41,7 @@ namespace FileManager.ViewModels
         private string currentFolderId;
         private Uri webViewCurrentSource;
         private bool isWebViewVisible;
-        private bool isContentVisible;
+        private bool isCommandPanelVisible;
         private bool isLoadingVisible;
         private bool isFilesVisible;
         private bool isBackButtonAvailable;
@@ -61,6 +61,7 @@ namespace FileManager.ViewModels
         private ICommand uploadFileCommand;
         private ICommand deleteFileCommand;
         private ICommand createNewFolderCommand;
+        private ICommand renameFileCommand;
 
         public Uri WebViewCurrentSource
         {
@@ -86,14 +87,14 @@ namespace FileManager.ViewModels
                 }
             }
         }
-        public bool IsContentVisible
+        public bool IsCommandPanelVisible
         {
-            get => isContentVisible;
+            get => isCommandPanelVisible;
             set
             {
-                if (isContentVisible != value)
+                if (isCommandPanelVisible != value)
                 {
-                    isContentVisible = value;
+                    isCommandPanelVisible = value;
                     OnPropertyChanged();
                 }
             }
@@ -278,6 +279,18 @@ namespace FileManager.ViewModels
                 }
             }
         }
+        public ICommand RenameFileCommand
+        {
+            get => renameFileCommand;
+            set
+            {
+                if (renameFileCommand != value)
+                {
+                    renameFileCommand = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
 
         public GoogleDriveViewModel()
         {
@@ -293,6 +306,7 @@ namespace FileManager.ViewModels
             UploadFileCommand = new RelayCommand(UploadFileAsync);
             DeleteFileCommand = new RelayCommand(DeleteFileAsync);
             CreateNewFolderCommand = new RelayCommand(CreateNewFolderAsync);
+            RenameFileCommand = new RelayCommand(RenameFileAsync);
             stringsResourceLoader = ResourceLoader.GetForCurrentView(resources);
             IsWebViewVisible = true;
             CheckInternetConnectionAsync();
@@ -369,6 +383,7 @@ namespace FileManager.ViewModels
                 {
                     ErrorText = stringsResourceLoader.GetString(connectionErrorContent);
                     IsErrorVisible = true;
+                    IsCommandPanelVisible = false;
                     IsWebViewVisible = false;
                 }                
             }
@@ -390,7 +405,7 @@ namespace FileManager.ViewModels
                         string exchangeCode = navigationUri.Substring(navigationUri.IndexOf('=') + 1, navigationUri.IndexOf('&') - navigationUri.IndexOf('=') - 1);
                         webView.Cancel = true;
                         IsWebViewVisible = false;
-                        IsContentVisible = true;
+                        IsCommandPanelVisible = true;
                         await ExchangeCodeOnTokenAsync(exchangeCode).ConfigureAwait(true);
                         _ = GetItemsAsync().ConfigureAwait(true);
                     }
@@ -475,6 +490,7 @@ namespace FileManager.ViewModels
             IsFilesVisible = false;
             IsLoadingVisible = true;
 
+            CheckInternetConnectionAsync();
             JsonArray responseFiles = await GetFilesFromGoogleDriveAsync(folderId).ConfigureAwait(true);
 
             List<GoogleFileControlViewModel> driveFiles = new List<GoogleFileControlViewModel>();
@@ -902,10 +918,10 @@ namespace FileManager.ViewModels
             const string cancelButton = "cancelButton";
             const string createButton = "createButton";
             const string newFolder = "newFolder";
-            const string placeHolderFolderName = "placeHolderFolderName";
+            const string placeHolderFileName = "placeHolderFileName";
             const string connectionErrorContent = "connectionErrorContent";
             const string connectionError = "connectionError";
-            var parameters = new string[] { stringsResourceLoader.GetString(newFolder), stringsResourceLoader.GetString(placeHolderFolderName) };
+            var parameters = new string[] { stringsResourceLoader.GetString(newFolder), stringsResourceLoader.GetString(placeHolderFileName) };
 
             var contentDialog = new ContentDialogControl()
             {
@@ -917,13 +933,13 @@ namespace FileManager.ViewModels
             var gridItem = (ContentDialogControlViewModel)contentDialog.DataContext;
             var folderName = gridItem.InputText;
 
-            if (folderName.EndsWith(' '))
-            {
-                folderName = folderName.Remove(folderName.LastIndexOf(' '));
-            }
-
             if (result == ContentDialogResult.Primary && ItemNameValidation.Validate(folderName))
             {
+                if (folderName.EndsWith(' '))
+                {
+                    folderName = folderName.Remove(folderName.LastIndexOf(' '));
+                }
+
                 if (DateTime.Now.Subtract(lastRefreshTime).Seconds >= int.Parse(tokenResult.ExpiresIn))
                 {
                     await RefreshTokenAsync().ConfigureAwait(true);
@@ -965,6 +981,81 @@ namespace FileManager.ViewModels
                     Title = stringsResourceLoader.GetString(inputError)
                 };
                 await messageDialog.ShowAsync();
+            }
+        }
+
+        private async void RenameFileAsync(object sender)
+        {
+            const string inputError = "inputError";
+            const string invalidInput = "invalidInput";
+            const string cancelButton = "cancelButton";
+            const string rename = "rename";
+            const string yesButton = "yesButton";
+            const string placeHolderFileName = "placeHolderFileName";
+            const string connectionErrorContent = "connectionErrorContent";
+            const string connectionError = "connectionError";
+            var parameters = new string[] { stringsResourceLoader.GetString(rename), stringsResourceLoader.GetString(placeHolderFileName), selectedGridItem.DisplayName };
+
+            if (selectedGridItem != null)
+            {
+                var contentDialog = new ContentDialogControl()
+                {
+                    PrimaryButtonText = stringsResourceLoader.GetString(yesButton),
+                    SecondaryButtonText = stringsResourceLoader.GetString(cancelButton),
+                    DataContext = Activator.CreateInstance(typeof(ContentDialogControlViewModel), parameters)
+                };
+                var result = await contentDialog.ShowAsync();
+                var gridItem = (ContentDialogControlViewModel)contentDialog.DataContext;
+                var fileName = gridItem.InputText;
+
+                if (result == ContentDialogResult.Primary && ItemNameValidation.Validate(fileName))
+                {
+                    if (fileName.EndsWith(' '))
+                    {
+                        fileName = fileName.Remove(fileName.LastIndexOf(' '));
+                    }
+
+                    if (DateTime.Now.Subtract(lastRefreshTime).Seconds >= int.Parse(tokenResult.ExpiresIn))
+                    {
+                        await RefreshTokenAsync().ConfigureAwait(true);
+                    }
+
+                    var credentional = GoogleCredential.FromAccessToken(tokenResult.AccessToken).CreateScoped(DriveService.Scope.Drive);
+                    using (var service = new DriveService(new BaseClientService.Initializer()
+                    {
+                        HttpClientInitializer = credentional
+                    }))
+                    {
+                        var fileMetadata = new Google.Apis.Drive.v3.Data.File()
+                        {
+                            Name = fileName,
+                        };
+
+                        try
+                        {
+                            var itemId = selectedGridItem.Id;
+                            itemId = itemId.Substring(1, currentFolderId.Length - 2);
+                            var request = service.Files.Update(fileMetadata, itemId);
+                            await request.ExecuteAsync().ConfigureAwait(true);
+                            _ = GetItemsAsync(currentFolderId).ConfigureAwait(true);
+                        }
+                        catch (HttpRequestException)
+                        {
+                            await new MessageDialog(stringsResourceLoader.GetString(connectionErrorContent))
+                            {
+                                Title = stringsResourceLoader.GetString(connectionError)
+                            }.ShowAsync();
+                        }
+                    }
+                }
+                else if (result == ContentDialogResult.Primary && !ItemNameValidation.Validate(fileName))
+                {
+                    var messageDialog = new MessageDialog(stringsResourceLoader.GetString(invalidInput))
+                    {
+                        Title = stringsResourceLoader.GetString(inputError)
+                    };
+                    await messageDialog.ShowAsync();
+                }
             }
         }
     }
