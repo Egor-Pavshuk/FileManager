@@ -25,7 +25,6 @@ using Windows.UI.Core;
 using Windows.UI.Popups;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml.Controls;
-using static Google.Apis.Requests.BatchRequest;
 
 namespace FileManager.ViewModels
 {
@@ -297,7 +296,7 @@ namespace FileManager.ViewModels
             const string resources = "Resources";
             const string loadingText = "loadingText";
             tokenResult = new TokenResult();
-            ChangeColorMode(settings, this);            
+            ChangeColorMode(settings, this);
             downloadingFilesId = new List<string>();
             NavigationStartingCommand = new RelayCommand(NavigationStarting);
             DoubleClickedCommand = new RelayCommand(OpenFolder);
@@ -385,14 +384,14 @@ namespace FileManager.ViewModels
                     IsErrorVisible = true;
                     IsCommandPanelVisible = false;
                     IsWebViewVisible = false;
-                }                
+                }
             }
         }
 
         private async void NavigationStarting(object args)
         {
             const string responseError = "responseError";
-            const string failed = "failed";            
+            const string failed = "failed";
 
             var webView = (WebViewNavigationStartingEventArgs)args;
             if (webView != null)
@@ -518,7 +517,7 @@ namespace FileManager.ViewModels
                 {
                     continue;
                 }
-                string currentFileName = currentFile["name"].ToString();                
+                string currentFileName = currentFile["name"].ToString();
 
                 if (type.Contains("." + photo, StringComparison.Ordinal) || type.Contains("." + shortcut, StringComparison.Ordinal) || type.Contains(photo, StringComparison.Ordinal) || type.Contains(image, StringComparison.Ordinal))
                 {
@@ -589,7 +588,7 @@ namespace FileManager.ViewModels
                         }.ShowAsync();
                         break;
                     }
-                   
+
                     var result = await driveResult.Content.ReadAsStringAsync().ConfigureAwait(true);
                     var jsonParse = JsonObject.Parse(result);
                     var jsonFiles = jsonParse["files"].GetArray();

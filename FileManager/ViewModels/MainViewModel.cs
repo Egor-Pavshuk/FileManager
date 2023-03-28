@@ -102,6 +102,10 @@ namespace FileManager.ViewModels
                     googleDrivePage = currentContent;
                     CurrentTitle = resourceLoader.GetString(googleDriveNav);
                     break;
+                case "5":
+                    CurrentContent = new FtpPage();
+                    CurrentTitle = "FTP Server";
+                    break;
                 default:
                     CurrentContent = new MainTitlePage();
                     CurrentTitle = resourceLoader.GetString(mainNavigation);

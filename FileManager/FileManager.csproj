@@ -133,8 +133,12 @@
     <Compile Include="Models\TokenResult.cs" />
     <Compile Include="Validation\ItemNameValidation.cs" />
     <Compile Include="ViewModels\ContentDialogControlViewModel.cs" />
+    <Compile Include="ViewModels\FtpViewModel.cs" />
     <Compile Include="ViewModels\GoogleFileControlViewModel.cs" />
     <Compile Include="ViewModels\GoogleDriveViewModel.cs" />
+    <Compile Include="Views\FtpPage.xaml.cs">
+      <DependentUpon>FtpPage.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\GoogleDrivePage.xaml.cs">
       <DependentUpon>GoogleDrivePage.xaml</DependentUpon>
     </Compile>
@@ -217,6 +221,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="Controlls\FileControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\FtpPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

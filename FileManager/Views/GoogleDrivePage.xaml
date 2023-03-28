@@ -35,7 +35,7 @@
             <AppBarButton Icon="Delete" Label="Delete" Command="{Binding DeleteFileCommand}" IsEnabled="{Binding IsDeleteButtonAvailable, Mode=TwoWay}"/>
         </CommandBar>
 
-        <GridView Grid.Row="1" Visibility="{Binding IsFilesVisible}" ItemsSource="{Binding StorageFiles, Mode=TwoWay}" vml:DoubleTapAttachedProperties.ItemDoubleTapCommand="{Binding DoubleClickedCommand}" vml:SelectionChangedAttachedProperties.SelectionChangedCommand="{Binding SelectionChangedCommand}" vml:ItemClickAttachedProperties.ItemClickCommand="{Binding ItemClickedCommand}" IsItemClickEnabled="True" SelectedItem="{Binding SelectedGridItem, Mode=TwoWay}" Margin="14,1,15,10">
+        <GridView Grid.Row="1" Visibility="{Binding IsFilesVisible}" ItemsSource="{Binding StorageFiles, Mode=TwoWay}" vml:DoubleTapAttachedProperties.ItemDoubleTapCommand="{Binding DoubleClickedCommand}" vml:ItemClickAttachedProperties.ItemClickCommand="{Binding ItemClickedCommand}" IsItemClickEnabled="True" SelectedItem="{Binding SelectedGridItem, Mode=TwoWay}" Margin="14,1,15,10">
             <GridView.ItemTemplate>
                 <DataTemplate x:DataType="viewmodels:GoogleFileControlViewModel">
                     <Custom:GoogleFileControl/>

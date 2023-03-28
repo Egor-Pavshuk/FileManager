@@ -18,6 +18,7 @@
                 <NavigationViewItem AccessKey="3" Content="Analize" Icon="Manage" x:Name="Analize" />
                 <NavigationViewItemSeparator/>
                 <NavigationViewItem AccessKey="4" Content="Drive" Icon="Folder" x:Name="GoogleDrive" />
+                <NavigationViewItem AccessKey="5" Content="FTP" Icon="Directions" x:Name="FTPServer" />
             </NavigationView.MenuItems>
             <Frame x:Name="MainContent" Content="{Binding CurrentContent}">
                 
