@@ -47,9 +47,9 @@ namespace FileManager.ViewModels
         private bool isErrorVisible;
         private Stack<string> openedFoldersId = new Stack<string>();
         private DateTime lastRefreshTime;
-        private Collection<GoogleFileControlViewModel> storageFiles;
+        private Collection<OnlineFileControlViewModel> storageFiles;
         private List<string> downloadingFilesId;
-        private GoogleFileControlViewModel selectedGridItem;
+        private OnlineFileControlViewModel selectedGridItem;
         private TokenResult tokenResult;
         private ResourceLoader stringsResourceLoader;
         private ResourceLoader themeResourceLoader;
@@ -170,7 +170,7 @@ namespace FileManager.ViewModels
                 }
             }
         }
-        public GoogleFileControlViewModel SelectedGridItem
+        public OnlineFileControlViewModel SelectedGridItem
         {
             get => selectedGridItem;
             set
@@ -182,7 +182,7 @@ namespace FileManager.ViewModels
                 }
             }
         }
-        public Collection<GoogleFileControlViewModel> StorageFiles
+        public Collection<OnlineFileControlViewModel> StorageFiles
         {
             get => storageFiles;
             set
@@ -492,25 +492,25 @@ namespace FileManager.ViewModels
             CheckInternetConnectionAsync();
             JsonArray responseFiles = await GetFilesFromGoogleDriveAsync(folderId).ConfigureAwait(true);
 
-            List<GoogleFileControlViewModel> driveFiles = new List<GoogleFileControlViewModel>();
+            List<OnlineFileControlViewModel> driveFiles = new List<OnlineFileControlViewModel>();
 
             foreach (var driveFile in responseFiles)
             {
-                GoogleFileControlViewModel viewModel;
+                OnlineFileControlViewModel viewModel;
                 var currentFile = JsonObject.Parse(driveFile.Stringify());
                 var type = currentFile[mimeType].ToString();
 
                 if (type.Contains("." + folder, StringComparison.Ordinal))
                 {
                     string currentFileName = currentFile["name"].ToString();
-                    viewModel = new GoogleFileControlViewModel() { Id = currentFile["id"].ToString(), Image = themeResourceLoader.GetString(folder), DisplayName = currentFileName.Substring(1, currentFileName.Length - 2), Type = folder };
+                    viewModel = new OnlineFileControlViewModel() { Id = currentFile["id"].ToString(), Image = themeResourceLoader.GetString(folder), DisplayName = currentFileName.Substring(1, currentFileName.Length - 2), Type = folder };
                     driveFiles.Add(viewModel);
                 }
             }
 
             foreach (var driveFile in responseFiles)
             {
-                GoogleFileControlViewModel viewModel;
+                OnlineFileControlViewModel viewModel;
                 var currentFile = JsonObject.Parse(driveFile.Stringify());
                 var type = currentFile[mimeType].ToString();
                 if (type.Contains("." + folder, StringComparison.Ordinal))
@@ -521,24 +521,24 @@ namespace FileManager.ViewModels
 
                 if (type.Contains("." + photo, StringComparison.Ordinal) || type.Contains("." + shortcut, StringComparison.Ordinal) || type.Contains(photo, StringComparison.Ordinal) || type.Contains(image, StringComparison.Ordinal))
                 {
-                    viewModel = new GoogleFileControlViewModel() { Id = currentFile["id"].ToString(), Image = themeResourceLoader.GetString(image), DisplayName = currentFileName.Substring(1, currentFileName.Length - 2), Type = image };
+                    viewModel = new OnlineFileControlViewModel() { Id = currentFile["id"].ToString(), Image = themeResourceLoader.GetString(image), DisplayName = currentFileName.Substring(1, currentFileName.Length - 2), Type = image };
                 }
                 else if (type.Contains("." + video, StringComparison.Ordinal) || type.Contains(video, StringComparison.Ordinal))
                 {
-                    viewModel = new GoogleFileControlViewModel() { Id = currentFile["id"].ToString(), Image = themeResourceLoader.GetString(video), DisplayName = currentFileName.Substring(1, currentFileName.Length - 2), Type = video };
+                    viewModel = new OnlineFileControlViewModel() { Id = currentFile["id"].ToString(), Image = themeResourceLoader.GetString(video), DisplayName = currentFileName.Substring(1, currentFileName.Length - 2), Type = video };
                 }
                 else if (type.Contains("." + audio, StringComparison.Ordinal) || type.Contains(audio, StringComparison.Ordinal))
                 {
-                    viewModel = new GoogleFileControlViewModel() { Id = currentFile["id"].ToString(), Image = themeResourceLoader.GetString(audio), DisplayName = currentFileName.Substring(1, currentFileName.Length - 2), Type = audio };
+                    viewModel = new OnlineFileControlViewModel() { Id = currentFile["id"].ToString(), Image = themeResourceLoader.GetString(audio), DisplayName = currentFileName.Substring(1, currentFileName.Length - 2), Type = audio };
                 }
                 else
                 {
-                    viewModel = new GoogleFileControlViewModel() { Id = currentFile["id"].ToString(), Image = themeResourceLoader.GetString(file), DisplayName = currentFileName.Substring(1, currentFileName.Length - 2), Type = file };
+                    viewModel = new OnlineFileControlViewModel() { Id = currentFile["id"].ToString(), Image = themeResourceLoader.GetString(file), DisplayName = currentFileName.Substring(1, currentFileName.Length - 2), Type = file };
                 }
                 driveFiles.Add(viewModel);
             }
 
-            StorageFiles = new Collection<GoogleFileControlViewModel>(driveFiles);
+            StorageFiles = new Collection<OnlineFileControlViewModel>(driveFiles);
             CheckFilesForDownloading();
             IsLoadingVisible = false;
             IsFilesVisible = true;
@@ -613,13 +613,13 @@ namespace FileManager.ViewModels
 
         private void CheckFilesForDownloading()
         {
-            const string downloading = "Downloading";
+            const string downloadingText = "downloadingText";
             foreach (var file in storageFiles)
             {
                 if (downloadingFilesId.Exists(id => id == file.Id))
                 {
                     file.IsDownloading = true;
-                    file.DownloadStatus = downloading;
+                    file.DownloadStatus = stringsResourceLoader.GetString(downloadingText);
                 }
             }
         }
@@ -683,7 +683,7 @@ namespace FileManager.ViewModels
             if (sender != null)
             {
                 var gridItems = (GridView)sender;
-                if (gridItems.SelectedItem is GoogleFileControlViewModel selectedItem && !string.IsNullOrEmpty(selectedItem.DisplayName) && selectedItem.Type == "folder")
+                if (gridItems.SelectedItem is OnlineFileControlViewModel selectedItem && !string.IsNullOrEmpty(selectedItem.DisplayName) && selectedItem.Type == "folder")
                 {
                     if (openedFoldersId.Count == 0)
                     {
@@ -772,6 +772,7 @@ namespace FileManager.ViewModels
                         Title = stringsResourceLoader.GetString(connectionError)
                     }.ShowAsync();
                     isDownloadSuccess = false;
+                    await destinationFile.DeleteAsync();
                 }
             }
             downloadingFilesId.Remove(fileId);
@@ -790,7 +791,7 @@ namespace FileManager.ViewModels
             }
         }
 
-        private async void CloseDownloadingAsync(GoogleFileControlViewModel file)
+        private async void CloseDownloadingAsync(OnlineFileControlViewModel file)
         {
             await Task.Delay(3000).ConfigureAwait(true);
             file.IsDownloading = false;
