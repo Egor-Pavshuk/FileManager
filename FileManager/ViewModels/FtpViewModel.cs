@@ -16,6 +16,7 @@ using Windows.UI;
 using Windows.UI.Core;
 using Windows.UI.Popups;
 using Windows.UI.ViewManagement;
+using Windows.UI.Xaml.Controls;
 
 namespace FileManager.ViewModels
 {
@@ -42,6 +43,8 @@ namespace FileManager.ViewModels
         private ICommand doubleClickedCommand;
         private ICommand getParentCommand;
         private ICommand downloadFileCommand;
+        private ICommand uploadFileCommand;
+        private ICommand deleteFileCommand;
 
         public string HostLink
         {
@@ -223,6 +226,30 @@ namespace FileManager.ViewModels
                 }
             }
         }
+        public ICommand UploadFileCommand
+        {
+            get => uploadFileCommand;
+            set
+            {
+                if (uploadFileCommand != value)
+                {
+                    uploadFileCommand = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+        public ICommand DeleteFileCommand
+        {
+            get => deleteFileCommand;
+            set
+            {
+                if (deleteFileCommand != value)
+                {
+                    deleteFileCommand = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
 
 
         public FtpViewModel()
@@ -255,6 +282,8 @@ namespace FileManager.ViewModels
             DoubleClickedCommand = new RelayCommand(OpenFolder);
             GetParentCommand = new RelayCommand(GetParentAsync);
             DownloadFileCommand = new RelayCommand(DownloadFileAsync);
+            UploadFileCommand = new RelayCommand(UploadFileAsync);
+            DeleteFileCommand = new RelayCommand(DeleteFileAsync);
             HostLink = protocolName + "192.168.0.103:";
             IsLoginFormVisible = true;
             ChangeColorMode(settings, this);
@@ -326,6 +355,7 @@ namespace FileManager.ViewModels
                 request.Method = WebRequestMethods.Ftp.ListDirectory;
                 request.Credentials = new NetworkCredential(username, password);
                 var response = (FtpWebResponse)await request.GetResponseAsync().ConfigureAwait(true);
+                response.Close();
                 currentPath = HostLink;
                 IsCommandPanelVisible = true;
                 IsLoginFormVisible = false;
@@ -456,7 +486,7 @@ namespace FileManager.ViewModels
                         file.DownloadStatus = stringsResourceLoader.GetString(downloadingText);
                     }
                 }
-            }).ConfigureAwait(true);            
+            }).ConfigureAwait(true);
         }
 
         private async Task<List<string>> GetFilesFromFTPAsync(string path)
@@ -464,19 +494,20 @@ namespace FileManager.ViewModels
             FtpWebRequest request = (FtpWebRequest)WebRequest.Create(path);
             request.Method = WebRequestMethods.Ftp.ListDirectoryDetails;
             request.Credentials = new NetworkCredential(username, password);
-
             var response = (FtpWebResponse)await request.GetResponseAsync().ConfigureAwait(true);
             StreamReader streamReader = new StreamReader(response.GetResponseStream());
-            List<string> files = new List<string>();
 
+
+            List<string> files = new List<string>();
             string line = await streamReader.ReadLineAsync().ConfigureAwait(true);
             while (!string.IsNullOrEmpty(line))
             {
                 files.Add(line);
                 line = await streamReader.ReadLineAsync().ConfigureAwait(true);
             }
-            streamReader.Close();
 
+            streamReader.Close();
+            response.Close();
             return files;
         }
 
@@ -515,16 +546,16 @@ namespace FileManager.ViewModels
             const string connectionErrorContent = "connectionErrorContent";
             const string failed = "failed";
             bool isDownloadSuccess;
-
             Stream stream;
+
             try
             {
-                FtpWebRequest request = (FtpWebRequest)WebRequest.Create(filePath);
-                request.Method = WebRequestMethods.Ftp.DownloadFile;
-                request.Credentials = new NetworkCredential(username, password);
-                var response = (FtpWebResponse)await request.GetResponseAsync().ConfigureAwait(true);
+                using (WebClient client = new WebClient())
+                {
+                    client.Credentials = new NetworkCredential(username, password);
+                    stream = await client.OpenReadTaskAsync(filePath).ConfigureAwait(true);
+                }
 
-                stream = response.GetResponseStream();
                 using (var fileStream = await destinationFile.OpenStreamForWriteAsync().ConfigureAwait(true))
                 {
                     await stream.CopyToAsync(fileStream).ConfigureAwait(true);
@@ -562,6 +593,115 @@ namespace FileManager.ViewModels
             await Task.Delay(3000).ConfigureAwait(true);
             file.IsDownloading = false;
             file.DownloadStatus = string.Empty;
+        }
+
+        private async void UploadFileAsync(object sender)
+        {
+            const string failed = "failed";
+            const string sameNameError = "sameNameError";
+
+            var picker = new FileOpenPicker
+            {
+                ViewMode = PickerViewMode.Thumbnail,
+                SuggestedStartLocation = PickerLocationId.Downloads
+            };
+            picker.FileTypeFilter.Add("*");
+            StorageFile uploadFile = await picker.PickSingleFileAsync();
+
+            if (uploadFile != null)
+            {
+                if (storageFiles.FirstOrDefault(f => f.DisplayName == uploadFile.Name) == null)
+                {
+                    UploadFtpFileAsync(uploadFile, currentPath);
+                }
+                else
+                {
+                    var messageDialog = new MessageDialog(stringsResourceLoader.GetString(sameNameError))
+                    {
+                        Title = stringsResourceLoader.GetString(failed)
+                    };
+                    await messageDialog.ShowAsync();
+                }
+            }
+        }
+
+        private async void UploadFtpFileAsync(StorageFile uploadFile, string destinationPath)
+        {
+            const string connectionError = "connectionError";
+            const string connectionErrorContent = "connectionErrorContent";
+            bool isUploadSuccess;
+            Stream responseStream;
+
+            try
+            {
+                using (WebClient client = new WebClient())
+                {
+                    client.Credentials = new NetworkCredential(username, password);
+                    responseStream = await client.OpenWriteTaskAsync(new Uri(destinationPath + "/" + uploadFile.Name)).ConfigureAwait(true);
+                }
+
+                using (var fileStream = await uploadFile.OpenStreamForWriteAsync().ConfigureAwait(true))
+                {
+                    await fileStream.CopyToAsync(responseStream).ConfigureAwait(true);
+                }
+                isUploadSuccess = true;
+            }
+            catch (WebException)
+            {
+                await new MessageDialog(stringsResourceLoader.GetString(connectionErrorContent))
+                {
+                    Title = stringsResourceLoader.GetString(connectionError)
+                }.ShowAsync();
+                isUploadSuccess = false;
+            }
+
+            if (isUploadSuccess && destinationPath == currentPath)
+            {
+                _ = GetItemsAsync(currentPath).ConfigureAwait(true);
+            }
+        }
+
+        private async void DeleteFileAsync(object sender)
+        {
+            const string confirmation = "confirmation";
+            const string deleteConfirmText = "deleteConfirmText";
+            const string yesButton = "yesButton";
+            const string cancelButton = "cancelButton";
+            const string connectionErrorContent = "connectionErrorContent";
+            const string connectionError = "connectionError";
+
+            if (selectedGridItem != null && !string.IsNullOrEmpty(selectedGridItem.DisplayName))
+            {
+                var contentDialog = new ContentDialog()
+                {
+                    Title = stringsResourceLoader.GetString(confirmation),
+                    Content = stringsResourceLoader.GetString(deleteConfirmText) + $" \"{selectedGridItem.DisplayName}\"?",
+                    PrimaryButtonText = stringsResourceLoader.GetString(yesButton),
+                    CloseButtonText = stringsResourceLoader.GetString(cancelButton),
+                };
+                var confirmationResult = await contentDialog.ShowAsync();
+
+                if (confirmationResult == ContentDialogResult.Primary)
+                {
+                    try
+                    {
+                        FtpWebRequest request = (FtpWebRequest)WebRequest.Create(selectedGridItem.Path);
+                        request.Credentials = new NetworkCredential(username, password);
+                        request.Method = WebRequestMethods.Ftp.DeleteFile;
+                        FtpWebResponse response = (FtpWebResponse)await request.GetResponseAsync().ConfigureAwait(true);
+                        response.Close();
+
+                        _ = GetItemsAsync(currentPath).ConfigureAwait(true);
+                    }
+                    catch (WebException)
+                    {
+                        await new MessageDialog(stringsResourceLoader.GetString(connectionErrorContent))
+                        {
+                            Title = stringsResourceLoader.GetString(connectionError)
+                        }.ShowAsync();
+                    }
+                }
+            }
         }
     }
 }

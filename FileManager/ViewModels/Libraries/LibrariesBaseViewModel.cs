@@ -431,10 +431,10 @@ namespace FileManager.ViewModels.Libraries
 
                 if (editableItem.DisplayName != selectedGridItem.DisplayName)
                 {
-                    var editableItemDysplayName = editableItem.DisplayName;
-                    var selectedItemDysplayName = selectedGridItem.DisplayName;
+                    var editableItemDisplayName = editableItem.DisplayName;
+                    var selectedItemDisplayName = selectedGridItem.DisplayName;
 
-                    if (StorageFiles.Count(f => f.DisplayName == selectedItemDysplayName) > 1)
+                    if (StorageFiles.Count(f => f.DisplayName == selectedItemDisplayName) > 1)
                     {
                         var messageDialog = new MessageDialog(stringsResourceLoader.GetString(sameNameError))
                         {
@@ -442,7 +442,7 @@ namespace FileManager.ViewModels.Libraries
                         };
                         await messageDialog.ShowAsync();
                     }
-                    else if (!ItemNameValidation.Validate(selectedItemDysplayName))
+                    else if (!ItemNameValidation.Validate(selectedItemDisplayName))
                     {
                         var messageDialog = new MessageDialog(stringsResourceLoader.GetString(invalidInput))
                         {
@@ -463,7 +463,7 @@ namespace FileManager.ViewModels.Libraries
                         var confirmationResult = await confirmationContentDialog.ShowAsync();
 
                         if (editableItem.Type != folder &&
-                        editableItemDysplayName.Substring(editableItemDysplayName.LastIndexOf('.')) != selectedItemDysplayName.Substring(selectedItemDysplayName.LastIndexOf('.')) &&
+                        editableItemDisplayName.Substring(editableItemDisplayName.LastIndexOf('.')) != selectedItemDisplayName.Substring(selectedItemDisplayName.LastIndexOf('.')) &&
                         confirmationResult == ContentDialogResult.Primary)
                         {
                             var changeTypeContentDialog = new ContentDialog()
@@ -480,12 +480,12 @@ namespace FileManager.ViewModels.Libraries
                         if (confirmationResult == ContentDialogResult.Primary)
                         {
                             IStorageItem item = await currentFolder.GetItemAsync(editableItem.DisplayName);
-                            await item.RenameAsync(selectedItemDysplayName);
-                            selectedGridItem.Path = currentPath + "\\" + selectedItemDysplayName;
+                            await item.RenameAsync(selectedItemDisplayName);
+                            selectedGridItem.Path = currentPath + "\\" + selectedItemDisplayName;
                         }
                         else
                         {
-                            SelectedGridItem.DisplayName = editableItemDysplayName;
+                            SelectedGridItem.DisplayName = editableItemDisplayName;
                         }
 
                         saveChanges = true;
