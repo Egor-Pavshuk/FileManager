@@ -168,6 +168,9 @@
   <data name="invalidInput" xml:space="preserve">
     <value>Field must contain only letters, numbers or some symbols!</value>
   </data>
+  <data name="invalidUriFormat" xml:space="preserve">
+    <value>Invalid uri format</value>
+  </data>
   <data name="loadingText" xml:space="preserve">
     <value>Loading...</value>
   </data>

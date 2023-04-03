@@ -17,7 +17,16 @@
                 <NavigationViewItem AccessKey="2" Content="Music" Icon="MusicInfo" x:Name="Music" />
                 <NavigationViewItem AccessKey="3" Content="Analize" Icon="Manage" x:Name="Analize" />
                 <NavigationViewItemSeparator/>
-                <NavigationViewItem AccessKey="4" Content="Drive" Icon="Folder" x:Name="GoogleDrive" />
+                <NavigationViewItem AccessKey="4" Content="Google Drive" x:Name="GoogleDrive">
+                    <NavigationViewItem.Icon>
+                        <BitmapIcon UriSource="{Binding GoogleDriveIconUri}"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem AccessKey="5" Content="FTP" x:Name="FTPServer">
+                    <NavigationViewItem.Icon>
+                        <BitmapIcon UriSource="{Binding FtpIconUri}"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
             </NavigationView.MenuItems>
             <Frame x:Name="MainContent" Content="{Binding CurrentContent}">
                 

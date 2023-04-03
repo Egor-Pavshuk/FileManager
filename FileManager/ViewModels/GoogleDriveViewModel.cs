@@ -25,7 +25,6 @@ using Windows.UI.Core;
 using Windows.UI.Popups;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml.Controls;
-using static Google.Apis.Requests.BatchRequest;
 
 namespace FileManager.ViewModels
 {
@@ -46,13 +45,13 @@ namespace FileManager.ViewModels
         private bool isFilesVisible;
         private bool isBackButtonAvailable;
         private bool isErrorVisible;
-        private Stack<string> openedFoldersId = new Stack<string>();
+        private readonly Stack<string> openedFoldersId = new Stack<string>();
         private DateTime lastRefreshTime;
-        private Collection<GoogleFileControlViewModel> storageFiles;
-        private List<string> downloadingFilesId;
-        private GoogleFileControlViewModel selectedGridItem;
-        private TokenResult tokenResult;
-        private ResourceLoader stringsResourceLoader;
+        private Collection<OnlineFileControlViewModel> storageFiles;
+        private readonly List<string> downloadingFilesId;
+        private OnlineFileControlViewModel selectedGridItem;
+        private readonly TokenResult tokenResult;
+        private readonly ResourceLoader stringsResourceLoader;
         private ResourceLoader themeResourceLoader;
         private ICommand navigationStartingCommand;
         private ICommand doubleClickedCommand;
@@ -62,6 +61,7 @@ namespace FileManager.ViewModels
         private ICommand deleteFileCommand;
         private ICommand createNewFolderCommand;
         private ICommand renameFileCommand;
+        private ICommand itemClickedCommand;
 
         public Uri WebViewCurrentSource
         {
@@ -171,7 +171,7 @@ namespace FileManager.ViewModels
                 }
             }
         }
-        public GoogleFileControlViewModel SelectedGridItem
+        public OnlineFileControlViewModel SelectedGridItem
         {
             get => selectedGridItem;
             set
@@ -183,7 +183,7 @@ namespace FileManager.ViewModels
                 }
             }
         }
-        public Collection<GoogleFileControlViewModel> StorageFiles
+        public Collection<OnlineFileControlViewModel> StorageFiles
         {
             get => storageFiles;
             set
@@ -291,14 +291,38 @@ namespace FileManager.ViewModels
                 }
             }
         }
+        public ICommand ItemClickedCommand
+        {
+            get => itemClickedCommand;
+            set
+            {
+                if (itemClickedCommand != value)
+                {
+                    itemClickedCommand = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
 
         public GoogleDriveViewModel()
         {
             const string resources = "Resources";
             const string loadingText = "loadingText";
+            const string connectionErrorContent = "connectionErrorContent";
+
             tokenResult = new TokenResult();
-            ChangeColorMode(settings, this);            
+            ChangeColorMode(settings, this);
             downloadingFilesId = new List<string>();
+            if (Windows.System.Profile.AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Xbox")
+            {
+                ItemClickedCommand = new RelayCommand(OpenFolder);
+                DoubleClickedCommand = new RelayCommand((o) => { });
+            }
+            else
+            {
+                DoubleClickedCommand = new RelayCommand(OpenFolder);
+                ItemClickedCommand = new RelayCommand((o) => { });
+            }
             NavigationStartingCommand = new RelayCommand(NavigationStarting);
             DoubleClickedCommand = new RelayCommand(OpenFolder);
             GetParentCommand = new RelayCommand(GetParent);
@@ -312,6 +336,7 @@ namespace FileManager.ViewModels
             CheckInternetConnectionAsync();
             WebViewCurrentSource = new Uri(googleUri);
             LoadingText = stringsResourceLoader.GetString(loadingText);
+            ErrorText = stringsResourceLoader.GetString(connectionErrorContent);
         }
 
         protected override void ChangeColorMode(UISettings uiSettings, object sender)
@@ -372,7 +397,6 @@ namespace FileManager.ViewModels
 
         private async void CheckInternetConnectionAsync()
         {
-            const string connectionErrorContent = "connectionErrorContent";
             using (var client = new HttpClient())
             {
                 try
@@ -381,18 +405,17 @@ namespace FileManager.ViewModels
                 }
                 catch (HttpRequestException)
                 {
-                    ErrorText = stringsResourceLoader.GetString(connectionErrorContent);
                     IsErrorVisible = true;
                     IsCommandPanelVisible = false;
                     IsWebViewVisible = false;
-                }                
+                }
             }
         }
 
         private async void NavigationStarting(object args)
         {
             const string responseError = "responseError";
-            const string failed = "failed";            
+            const string failed = "failed";
 
             var webView = (WebViewNavigationStartingEventArgs)args;
             if (webView != null)
@@ -416,6 +439,12 @@ namespace FileManager.ViewModels
                             Title = stringsResourceLoader.GetString(failed) + "!"
                         }.ShowAsync();
                     }
+                }
+                else if (webView.Uri.ToString().StartsWith("https://support.google.com", StringComparison.Ordinal))
+                {
+                    webView.Cancel = true;
+                    IsWebViewVisible = false;
+                    IsErrorVisible = true;
                 }
             }
         }
@@ -493,53 +522,54 @@ namespace FileManager.ViewModels
             CheckInternetConnectionAsync();
             JsonArray responseFiles = await GetFilesFromGoogleDriveAsync(folderId).ConfigureAwait(true);
 
-            List<GoogleFileControlViewModel> driveFiles = new List<GoogleFileControlViewModel>();
+            List<OnlineFileControlViewModel> driveFiles = new List<OnlineFileControlViewModel>();
 
             foreach (var driveFile in responseFiles)
             {
-                GoogleFileControlViewModel viewModel;
                 var currentFile = JsonObject.Parse(driveFile.Stringify());
                 var type = currentFile[mimeType].ToString();
-
-                if (type.Contains("." + folder, StringComparison.Ordinal))
+                if (!type.Contains("." + folder, StringComparison.Ordinal))
                 {
-                    string currentFileName = currentFile["name"].ToString();
-                    viewModel = new GoogleFileControlViewModel() { Id = currentFile["id"].ToString(), Image = themeResourceLoader.GetString(folder), DisplayName = currentFileName.Substring(1, currentFileName.Length - 2), Type = folder };
-                    driveFiles.Add(viewModel);
+                    continue;
                 }
+
+                OnlineFileControlViewModel viewModel;              
+                string currentFileName = currentFile["name"].ToString();
+                viewModel = new OnlineFileControlViewModel() { Id = currentFile["id"].ToString(), Image = themeResourceLoader.GetString(folder), DisplayName = currentFileName.Substring(1, currentFileName.Length - 2), Type = folder };
+                driveFiles.Add(viewModel);
             }
 
             foreach (var driveFile in responseFiles)
             {
-                GoogleFileControlViewModel viewModel;
+                OnlineFileControlViewModel viewModel;
                 var currentFile = JsonObject.Parse(driveFile.Stringify());
                 var type = currentFile[mimeType].ToString();
                 if (type.Contains("." + folder, StringComparison.Ordinal))
                 {
                     continue;
                 }
-                string currentFileName = currentFile["name"].ToString();                
+                string currentFileName = currentFile["name"].ToString();
 
                 if (type.Contains("." + photo, StringComparison.Ordinal) || type.Contains("." + shortcut, StringComparison.Ordinal) || type.Contains(photo, StringComparison.Ordinal) || type.Contains(image, StringComparison.Ordinal))
                 {
-                    viewModel = new GoogleFileControlViewModel() { Id = currentFile["id"].ToString(), Image = themeResourceLoader.GetString(image), DisplayName = currentFileName.Substring(1, currentFileName.Length - 2), Type = image };
+                    viewModel = new OnlineFileControlViewModel() { Id = currentFile["id"].ToString(), Image = themeResourceLoader.GetString(image), DisplayName = currentFileName.Substring(1, currentFileName.Length - 2), Type = image };
                 }
                 else if (type.Contains("." + video, StringComparison.Ordinal) || type.Contains(video, StringComparison.Ordinal))
                 {
-                    viewModel = new GoogleFileControlViewModel() { Id = currentFile["id"].ToString(), Image = themeResourceLoader.GetString(video), DisplayName = currentFileName.Substring(1, currentFileName.Length - 2), Type = video };
+                    viewModel = new OnlineFileControlViewModel() { Id = currentFile["id"].ToString(), Image = themeResourceLoader.GetString(video), DisplayName = currentFileName.Substring(1, currentFileName.Length - 2), Type = video };
                 }
                 else if (type.Contains("." + audio, StringComparison.Ordinal) || type.Contains(audio, StringComparison.Ordinal))
                 {
-                    viewModel = new GoogleFileControlViewModel() { Id = currentFile["id"].ToString(), Image = themeResourceLoader.GetString(audio), DisplayName = currentFileName.Substring(1, currentFileName.Length - 2), Type = audio };
+                    viewModel = new OnlineFileControlViewModel() { Id = currentFile["id"].ToString(), Image = themeResourceLoader.GetString(audio), DisplayName = currentFileName.Substring(1, currentFileName.Length - 2), Type = audio };
                 }
                 else
                 {
-                    viewModel = new GoogleFileControlViewModel() { Id = currentFile["id"].ToString(), Image = themeResourceLoader.GetString(file), DisplayName = currentFileName.Substring(1, currentFileName.Length - 2), Type = file };
+                    viewModel = new OnlineFileControlViewModel() { Id = currentFile["id"].ToString(), Image = themeResourceLoader.GetString(file), DisplayName = currentFileName.Substring(1, currentFileName.Length - 2), Type = file };
                 }
                 driveFiles.Add(viewModel);
             }
 
-            StorageFiles = new Collection<GoogleFileControlViewModel>(driveFiles);
+            StorageFiles = new Collection<OnlineFileControlViewModel>(driveFiles);
             CheckFilesForDownloading();
             IsLoadingVisible = false;
             IsFilesVisible = true;
@@ -589,7 +619,7 @@ namespace FileManager.ViewModels
                         }.ShowAsync();
                         break;
                     }
-                   
+
                     var result = await driveResult.Content.ReadAsStringAsync().ConfigureAwait(true);
                     var jsonParse = JsonObject.Parse(result);
                     var jsonFiles = jsonParse["files"].GetArray();
@@ -614,13 +644,13 @@ namespace FileManager.ViewModels
 
         private void CheckFilesForDownloading()
         {
-            const string downloading = "Downloading";
+            const string downloadingText = "downloadingText";
             foreach (var file in storageFiles)
             {
                 if (downloadingFilesId.Exists(id => id == file.Id))
                 {
                     file.IsDownloading = true;
-                    file.DownloadStatus = downloading;
+                    file.DownloadStatus = stringsResourceLoader.GetString(downloadingText);
                 }
             }
         }
@@ -684,7 +714,7 @@ namespace FileManager.ViewModels
             if (sender != null)
             {
                 var gridItems = (GridView)sender;
-                if (gridItems.SelectedItem is GoogleFileControlViewModel selectedItem && !string.IsNullOrEmpty(selectedItem.DisplayName) && selectedItem.Type == "folder")
+                if (gridItems.SelectedItem is OnlineFileControlViewModel selectedItem && !string.IsNullOrEmpty(selectedItem.DisplayName) && selectedItem.Type == "folder")
                 {
                     if (openedFoldersId.Count == 0)
                     {
@@ -773,6 +803,7 @@ namespace FileManager.ViewModels
                         Title = stringsResourceLoader.GetString(connectionError)
                     }.ShowAsync();
                     isDownloadSuccess = false;
+                    await destinationFile.DeleteAsync();
                 }
             }
             downloadingFilesId.Remove(fileId);
@@ -791,7 +822,7 @@ namespace FileManager.ViewModels
             }
         }
 
-        private async void CloseDownloadingAsync(GoogleFileControlViewModel file)
+        private async void CloseDownloadingAsync(OnlineFileControlViewModel file)
         {
             await Task.Delay(3000).ConfigureAwait(true);
             file.IsDownloading = false;
@@ -921,7 +952,7 @@ namespace FileManager.ViewModels
             const string placeHolderFileName = "placeHolderFileName";
             const string connectionErrorContent = "connectionErrorContent";
             const string connectionError = "connectionError";
-            var parameters = new string[] { stringsResourceLoader.GetString(newFolder), stringsResourceLoader.GetString(placeHolderFileName) };
+            var parameters = new string[] { stringsResourceLoader.GetString(newFolder), stringsResourceLoader.GetString(placeHolderFileName), string.Empty };
 
             var contentDialog = new ContentDialogControl()
             {
@@ -935,9 +966,13 @@ namespace FileManager.ViewModels
 
             if (result == ContentDialogResult.Primary && ItemNameValidation.Validate(folderName))
             {
-                if (folderName.EndsWith(' '))
+                while (folderName.EndsWith(' '))
                 {
-                    folderName = folderName.Remove(folderName.LastIndexOf(' '));
+                    folderName = folderName.Remove(folderName.Length - 1);
+                }
+                while (folderName.StartsWith(' '))
+                {
+                    folderName = folderName.Remove(0, 1);
                 }
 
                 if (DateTime.Now.Subtract(lastRefreshTime).Seconds >= int.Parse(tokenResult.ExpiresIn))
@@ -994,10 +1029,10 @@ namespace FileManager.ViewModels
             const string placeHolderFileName = "placeHolderFileName";
             const string connectionErrorContent = "connectionErrorContent";
             const string connectionError = "connectionError";
-            var parameters = new string[] { stringsResourceLoader.GetString(rename), stringsResourceLoader.GetString(placeHolderFileName), selectedGridItem.DisplayName };
 
             if (selectedGridItem != null)
             {
+                var parameters = new string[] { stringsResourceLoader.GetString(rename), stringsResourceLoader.GetString(placeHolderFileName), selectedGridItem.DisplayName };
                 var contentDialog = new ContentDialogControl()
                 {
                     PrimaryButtonText = stringsResourceLoader.GetString(yesButton),
@@ -1010,9 +1045,13 @@ namespace FileManager.ViewModels
 
                 if (result == ContentDialogResult.Primary && ItemNameValidation.Validate(fileName))
                 {
-                    if (fileName.EndsWith(' '))
+                    while (fileName.EndsWith(' '))
                     {
-                        fileName = fileName.Remove(fileName.LastIndexOf(' '));
+                        fileName = fileName.Remove(fileName.Length - 1);
+                    }
+                    while (fileName.StartsWith(' '))
+                    {
+                        fileName = fileName.Remove(0, 1);
                     }
 
                     if (DateTime.Now.Subtract(lastRefreshTime).Seconds >= int.Parse(tokenResult.ExpiresIn))
@@ -1048,7 +1087,7 @@ namespace FileManager.ViewModels
                         }
                     }
                 }
-                else if (result == ContentDialogResult.Primary && !ItemNameValidation.Validate(fileName))
+                else if (result == ContentDialogResult.Primary)
                 {
                     var messageDialog = new MessageDialog(stringsResourceLoader.GetString(invalidInput))
                     {

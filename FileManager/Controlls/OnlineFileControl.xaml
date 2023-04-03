@@ -1,5 +1,5 @@
 ﻿<UserControl
-    x:Class="FileManager.Controlls.GoogleFileControl"
+    x:Class="FileManager.Controlls.OnlineFileControl"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:FileManager.Controlls"
@@ -7,12 +7,12 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vml="using:FileManager.VMLocator"
     vml:ViewModelLocator.AutoWireViewModel="True"
-    mc:Ignorable="d" Height="110" Width="120">
+    mc:Ignorable="d" Height="130" Width="120">
 
     <Grid>
         <StackPanel>
             <Image Source="{Binding Image, Mode=TwoWay}" Width="70" Height="60" Margin="0 10 0 0"/>
-            <TextBlock Text="{Binding DisplayName, Mode=TwoWay}" FontSize="14" Width="110" Height="20" TextWrapping="Wrap" TextAlignment="Center"/>
+            <TextBlock Text="{Binding DisplayName, Mode=TwoWay}" FontSize="14" Width="110" Height="40" TextWrapping="Wrap" TextAlignment="Center"/>
             <!--<ProgressBar Value="{Binding DownloadProgress}" Visibility="{Binding IsDownloading}" Width="110" Height="5" BorderThickness="1" Foreground="Black" BorderBrush="DarkGray"  Background="Gray"/>-->
             <TextBlock Text="{Binding DownloadStatus, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Visibility="{Binding IsDownloading}" FontSize="12" Width="110" Height="20" TextWrapping="Wrap" TextAlignment="Center"/>
         </StackPanel>

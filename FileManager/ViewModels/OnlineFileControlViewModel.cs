@@ -1,10 +1,11 @@
 ﻿namespace FileManager.ViewModels
 {
-    public class GoogleFileControlViewModel : BindableBase
+    public class OnlineFileControlViewModel : BindableBase
     {
         private string id;
         private string image;
         private string displayName;
+        private string path;
         private string type;
         private bool isDownloading;
         private int downloadProgress;
@@ -57,6 +58,18 @@
                 }
             }
         }
+        public string Path
+        {
+            get { return path; }
+            set
+            {
+                if (path != value)
+                {
+                    path = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
         public string DownloadStatus
         {
             get => downloadStatus;
@@ -93,11 +106,11 @@
                 }
             }
         }
-        public GoogleFileControlViewModel()
+        public OnlineFileControlViewModel()
         {
             DisplayName = "";
         }
-        public GoogleFileControlViewModel(string displayName)
+        public OnlineFileControlViewModel(string displayName)
         {
             DisplayName = displayName;
         }

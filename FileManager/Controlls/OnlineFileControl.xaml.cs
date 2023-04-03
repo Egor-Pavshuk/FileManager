@@ -4,9 +4,9 @@
 
 namespace FileManager.Controlls
 {
-    public sealed partial class GoogleFileControl : UserControl
+    public sealed partial class OnlineFileControl : UserControl
     {
-        public GoogleFileControl()
+        public OnlineFileControl()
         {
             this.InitializeComponent();
         }
