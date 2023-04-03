@@ -45,13 +45,13 @@ namespace FileManager.ViewModels
         private bool isFilesVisible;
         private bool isBackButtonAvailable;
         private bool isErrorVisible;
-        private Stack<string> openedFoldersId = new Stack<string>();
+        private readonly Stack<string> openedFoldersId = new Stack<string>();
         private DateTime lastRefreshTime;
         private Collection<OnlineFileControlViewModel> storageFiles;
-        private List<string> downloadingFilesId;
+        private readonly List<string> downloadingFilesId;
         private OnlineFileControlViewModel selectedGridItem;
-        private TokenResult tokenResult;
-        private ResourceLoader stringsResourceLoader;
+        private readonly TokenResult tokenResult;
+        private readonly ResourceLoader stringsResourceLoader;
         private ResourceLoader themeResourceLoader;
         private ICommand navigationStartingCommand;
         private ICommand doubleClickedCommand;
@@ -61,6 +61,7 @@ namespace FileManager.ViewModels
         private ICommand deleteFileCommand;
         private ICommand createNewFolderCommand;
         private ICommand renameFileCommand;
+        private ICommand itemClickedCommand;
 
         public Uri WebViewCurrentSource
         {
@@ -290,14 +291,38 @@ namespace FileManager.ViewModels
                 }
             }
         }
+        public ICommand ItemClickedCommand
+        {
+            get => itemClickedCommand;
+            set
+            {
+                if (itemClickedCommand != value)
+                {
+                    itemClickedCommand = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
 
         public GoogleDriveViewModel()
         {
             const string resources = "Resources";
             const string loadingText = "loadingText";
+            const string connectionErrorContent = "connectionErrorContent";
+
             tokenResult = new TokenResult();
             ChangeColorMode(settings, this);
             downloadingFilesId = new List<string>();
+            if (Windows.System.Profile.AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Xbox")
+            {
+                ItemClickedCommand = new RelayCommand(OpenFolder);
+                DoubleClickedCommand = new RelayCommand((o) => { });
+            }
+            else
+            {
+                DoubleClickedCommand = new RelayCommand(OpenFolder);
+                ItemClickedCommand = new RelayCommand((o) => { });
+            }
             NavigationStartingCommand = new RelayCommand(NavigationStarting);
             DoubleClickedCommand = new RelayCommand(OpenFolder);
             GetParentCommand = new RelayCommand(GetParent);
@@ -311,6 +336,7 @@ namespace FileManager.ViewModels
             CheckInternetConnectionAsync();
             WebViewCurrentSource = new Uri(googleUri);
             LoadingText = stringsResourceLoader.GetString(loadingText);
+            ErrorText = stringsResourceLoader.GetString(connectionErrorContent);
         }
 
         protected override void ChangeColorMode(UISettings uiSettings, object sender)
@@ -371,7 +397,6 @@ namespace FileManager.ViewModels
 
         private async void CheckInternetConnectionAsync()
         {
-            const string connectionErrorContent = "connectionErrorContent";
             using (var client = new HttpClient())
             {
                 try
@@ -380,7 +405,6 @@ namespace FileManager.ViewModels
                 }
                 catch (HttpRequestException)
                 {
-                    ErrorText = stringsResourceLoader.GetString(connectionErrorContent);
                     IsErrorVisible = true;
                     IsCommandPanelVisible = false;
                     IsWebViewVisible = false;
@@ -415,6 +439,12 @@ namespace FileManager.ViewModels
                             Title = stringsResourceLoader.GetString(failed) + "!"
                         }.ShowAsync();
                     }
+                }
+                else if (webView.Uri.ToString().StartsWith("https://support.google.com", StringComparison.Ordinal))
+                {
+                    webView.Cancel = true;
+                    IsWebViewVisible = false;
+                    IsErrorVisible = true;
                 }
             }
         }
@@ -496,16 +526,17 @@ namespace FileManager.ViewModels
 
             foreach (var driveFile in responseFiles)
             {
-                OnlineFileControlViewModel viewModel;
                 var currentFile = JsonObject.Parse(driveFile.Stringify());
                 var type = currentFile[mimeType].ToString();
-
-                if (type.Contains("." + folder, StringComparison.Ordinal))
+                if (!type.Contains("." + folder, StringComparison.Ordinal))
                 {
-                    string currentFileName = currentFile["name"].ToString();
-                    viewModel = new OnlineFileControlViewModel() { Id = currentFile["id"].ToString(), Image = themeResourceLoader.GetString(folder), DisplayName = currentFileName.Substring(1, currentFileName.Length - 2), Type = folder };
-                    driveFiles.Add(viewModel);
+                    continue;
                 }
+
+                OnlineFileControlViewModel viewModel;              
+                string currentFileName = currentFile["name"].ToString();
+                viewModel = new OnlineFileControlViewModel() { Id = currentFile["id"].ToString(), Image = themeResourceLoader.GetString(folder), DisplayName = currentFileName.Substring(1, currentFileName.Length - 2), Type = folder };
+                driveFiles.Add(viewModel);
             }
 
             foreach (var driveFile in responseFiles)
@@ -921,7 +952,7 @@ namespace FileManager.ViewModels
             const string placeHolderFileName = "placeHolderFileName";
             const string connectionErrorContent = "connectionErrorContent";
             const string connectionError = "connectionError";
-            var parameters = new string[] { stringsResourceLoader.GetString(newFolder), stringsResourceLoader.GetString(placeHolderFileName) };
+            var parameters = new string[] { stringsResourceLoader.GetString(newFolder), stringsResourceLoader.GetString(placeHolderFileName), string.Empty };
 
             var contentDialog = new ContentDialogControl()
             {
@@ -935,9 +966,13 @@ namespace FileManager.ViewModels
 
             if (result == ContentDialogResult.Primary && ItemNameValidation.Validate(folderName))
             {
-                if (folderName.EndsWith(' '))
+                while (folderName.EndsWith(' '))
                 {
-                    folderName = folderName.Remove(folderName.LastIndexOf(' '));
+                    folderName = folderName.Remove(folderName.Length - 1);
+                }
+                while (folderName.StartsWith(' '))
+                {
+                    folderName = folderName.Remove(0, 1);
                 }
 
                 if (DateTime.Now.Subtract(lastRefreshTime).Seconds >= int.Parse(tokenResult.ExpiresIn))
@@ -994,10 +1029,10 @@ namespace FileManager.ViewModels
             const string placeHolderFileName = "placeHolderFileName";
             const string connectionErrorContent = "connectionErrorContent";
             const string connectionError = "connectionError";
-            var parameters = new string[] { stringsResourceLoader.GetString(rename), stringsResourceLoader.GetString(placeHolderFileName), selectedGridItem.DisplayName };
 
             if (selectedGridItem != null)
             {
+                var parameters = new string[] { stringsResourceLoader.GetString(rename), stringsResourceLoader.GetString(placeHolderFileName), selectedGridItem.DisplayName };
                 var contentDialog = new ContentDialogControl()
                 {
                     PrimaryButtonText = stringsResourceLoader.GetString(yesButton),
@@ -1010,9 +1045,13 @@ namespace FileManager.ViewModels
 
                 if (result == ContentDialogResult.Primary && ItemNameValidation.Validate(fileName))
                 {
-                    if (fileName.EndsWith(' '))
+                    while (fileName.EndsWith(' '))
                     {
-                        fileName = fileName.Remove(fileName.LastIndexOf(' '));
+                        fileName = fileName.Remove(fileName.Length - 1);
+                    }
+                    while (fileName.StartsWith(' '))
+                    {
+                        fileName = fileName.Remove(0, 1);
                     }
 
                     if (DateTime.Now.Subtract(lastRefreshTime).Seconds >= int.Parse(tokenResult.ExpiresIn))
@@ -1048,7 +1087,7 @@ namespace FileManager.ViewModels
                         }
                     }
                 }
-                else if (result == ContentDialogResult.Primary && !ItemNameValidation.Validate(fileName))
+                else if (result == ContentDialogResult.Primary)
                 {
                     var messageDialog = new MessageDialog(stringsResourceLoader.GetString(invalidInput))
                     {

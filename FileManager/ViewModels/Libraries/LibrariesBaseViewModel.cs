@@ -424,9 +424,13 @@ namespace FileManager.ViewModels.Libraries
 
             if (selectedGridItem != null && selectedGridItem.IsEditMode)
             {
-                if (selectedGridItem.DisplayName.EndsWith(' '))
+                while (selectedGridItem.DisplayName.EndsWith(' '))
                 {
-                    SelectedGridItem.DisplayName = selectedGridItem.DisplayName.Remove(selectedGridItem.DisplayName.Length - 1);
+                    selectedGridItem.DisplayName = selectedGridItem.DisplayName.Remove(selectedGridItem.DisplayName.Length - 1);
+                }
+                while (selectedGridItem.DisplayName.StartsWith(' '))
+                {
+                    selectedGridItem.DisplayName = selectedGridItem.DisplayName.Remove(0, 1);
                 }
 
                 if (editableItem.DisplayName != selectedGridItem.DisplayName)
@@ -568,8 +572,12 @@ namespace FileManager.ViewModels.Libraries
                         files.Add(file);
                     }
                     StorageFiles = files;
-                    IStorageItem item = await currentFolder.GetItemAsync(itemName);
-                    await item.DeleteAsync();
+
+                    IStorageItem item = await currentFolder.TryGetItemAsync(itemName);
+                    if (item != null)
+                    {
+                        await item.DeleteAsync();
+                    }
 
                     SelectedGridItem = null;
                 }
@@ -580,9 +588,22 @@ namespace FileManager.ViewModels.Libraries
         {
             const string folder = "folder";
             const string newFolderName = "New folder";
+            int newFolderNumber = 0;
+            int countOfFolders = storageFiles.Where(f => f.Type == folder).Count();
+            for (int i = 0; i < countOfFolders; i++)
+            {
+                if (!storageFiles.Where(f => f.DisplayName == newFolderName + $" {i + 1}").Any())
+                {
+                    newFolderNumber = i;
+                    break;
+                }
+                else
+                {
+                    newFolderNumber++;
+                }
+            }
 
-            int countOfNewFolders = StorageFiles.Where(f => f.Type == folder && f.DisplayName.StartsWith(newFolderName)).Count();
-            currentFolder.CreateFolderAsync($"{newFolderName} {countOfNewFolders + 1}").Completed +=
+            currentFolder.CreateFolderAsync($"{newFolderName} {newFolderNumber + 1}").Completed +=
                 async (i, s) =>
             await CoreApplication.MainView.CoreWindow.Dispatcher
                 .RunAsync(CoreDispatcherPriority.Normal,
@@ -597,9 +618,9 @@ namespace FileManager.ViewModels.Libraries
                     var newFolder = new FileControlViewModel()
                     {
                         Image = themeResourceLoader.GetString(folder),
-                        DisplayName = $"{newFolderName} {countOfNewFolders + 1}",
+                        DisplayName = $"{newFolderName} {newFolderNumber + 1}",
                         Type = folder,
-                        Path = currentFolder.Path + $"\\{newFolderName} {countOfNewFolders + 1}"
+                        Path = currentFolder.Path + $"\\{newFolderName} {newFolderNumber + 1}"
                     };
 
                     files.Insert(files.FindLastIndex(f => f.Type == folder) + 1, newFolder);

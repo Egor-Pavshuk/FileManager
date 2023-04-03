@@ -28,11 +28,11 @@
                             Command="{Binding GetParentCommand}"/>
             </CommandBar.Content>
 
-            <AppBarButton Icon="NewFolder" Label="New folder" Command="{Binding CreateNewFolderCommand}" IsEnabled="{Binding IsNewFolderButtonAvailable, Mode=TwoWay}"/>
-            <AppBarButton Icon="Rename" Label="Rename" Command="{Binding RenameFileCommand}" IsEnabled="{Binding IsNewFolderButtonAvailable, Mode=TwoWay}"/>
-            <AppBarButton Icon="Download" Label="Rename" Command="{Binding DownloadFileCommand, Mode=OneWay}" IsEnabled="{Binding IsNewFolderButtonAvailable, Mode=TwoWay}"/>
-            <AppBarButton Icon="Upload" Label="Save" Command="{Binding UploadFileCommand, Mode=OneWay}" IsEnabled="{Binding IsNewFolderButtonAvailable, Mode=TwoWay}"/>
-            <AppBarButton Icon="Delete" Label="Delete" Command="{Binding DeleteFileCommand}" IsEnabled="{Binding IsDeleteButtonAvailable, Mode=TwoWay}"/>
+            <AppBarButton Icon="NewFolder" Label="New folder" Command="{Binding CreateNewFolderCommand}"/>
+            <AppBarButton Icon="Rename" Label="Rename" Command="{Binding RenameFileCommand}"/>
+            <AppBarButton Icon="Download" Label="Download" Command="{Binding DownloadFileCommand, Mode=OneWay}"/>
+            <AppBarButton Icon="Upload" Label="Upload" Command="{Binding UploadFileCommand, Mode=OneWay}"/>
+            <AppBarButton Icon="Delete" Label="Delete" Command="{Binding DeleteFileCommand}"/>
         </CommandBar>
 
         <StackPanel Grid.Row="1" Orientation="Vertical" Visibility="{Binding IsLoginFormVisible}">
@@ -45,13 +45,13 @@
                 <TextBox PlaceholderText="Enter username" Text="{Binding Username, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" FontSize="28" Width="400" Height="57" Margin="10,20,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal">
-                <TextBlock Text="Enter passvord:" Width="340" Height="51" FontSize="32" HorizontalAlignment="Left" Margin="27,20,0,0" VerticalAlignment="Top"/>
+                <TextBlock Text="Enter password:" Width="340" Height="51" FontSize="32" HorizontalAlignment="Left" Margin="27,20,0,0" VerticalAlignment="Top"/>
                 <PasswordBox PlaceholderText="Enter password" Password="{Binding Password, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" FontSize="28" Width="400" Height="57" Margin="10,20,0,0" HorizontalAlignment="Left"  VerticalAlignment="Top"/>
             </StackPanel>
             <Button Content="Connect" Command="{Binding ConnectCommand}" FontSize="32" Width="230" Height="70" Margin="0,20,0,0" HorizontalAlignment="Center" VerticalAlignment="Top"/>
         </StackPanel>
 
-        <GridView Grid.Row="1" ItemsSource="{Binding StorageFiles}" Visibility="{Binding IsFilesVisible}" vml:DoubleTapAttachedProperties.ItemDoubleTapCommand="{Binding DoubleClickedCommand}" IsItemClickEnabled="True" SelectedItem="{Binding SelectedGridItem, Mode=TwoWay}">
+        <GridView Grid.Row="1" ItemsSource="{Binding StorageFiles}" Visibility="{Binding IsFilesVisible}" vml:DoubleTapAttachedProperties.ItemDoubleTapCommand="{Binding DoubleClickedCommand}" vml:ItemClickAttachedProperties.ItemClickCommand="{Binding ItemClickedCommand}" IsItemClickEnabled="True" SelectedItem="{Binding SelectedGridItem, Mode=TwoWay}">
             <GridView.ItemTemplate>
                 <DataTemplate x:DataType="viewmodels:OnlineFileControlViewModel">
                     <custom:OnlineFileControl/>
