@@ -7,3 +7,4 @@
 <p>The application theme changes depending on the system theme.</p>
 <p>Here is implemented a section that displays the battery status, the amount of free memory on the disk, and the amount of RAM used by the application.</p>
 <p>Also is implemented functional for working with Google Drive such as viewing, downloading, uploading, deleting files and creating new folders.</p>
+<p>In last updates implemented functional for working with FTP server, which is similar to Google Drive functional.</p>
