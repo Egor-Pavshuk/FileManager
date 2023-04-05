@@ -20,6 +20,26 @@ namespace FileManager.ViewModels.Libraries
 {
     public class LibrariesBaseViewModel : BindableBase
     {
+        private const string Resources = "Resources";
+        private const string Image = "image";
+        private const string Video = "video";
+        private const string Audio = "audio";
+        private const string Folder = "folder";
+        private const string File = "file";
+        private const string ImagesDark = "ImagesDark";
+        private const string ImagesLight = "ImagesLight";
+        private const string SameNameError = "sameNameError";
+        private const string InputError = "inputError";
+        private const string InvalidInput = "invalidInput";
+        private const string CancelButton = "cancelButton";
+        private const string Confirmation = "confirmation";
+        private const string DeleteConfirmText = "deleteConfirmText";
+        private const string YesButton = "yesButton";
+        private const string RenameConfirmText = "renameConfirmText";
+        private const string Warning = "warning";
+        private const string ChangeTypeConfirmText = "changeTypeConfirmText";
+        private const string NewFolderName = "New folder";
+
         private bool isBackButtonAvailable;
         private bool isDeleteButtonAvailable;
         private bool isNewFolderButtonAvailable;
@@ -224,7 +244,6 @@ namespace FileManager.ViewModels.Libraries
 
         public LibrariesBaseViewModel(string libraryName)
         {
-            const string resources = "Resources";
             if (Windows.System.Profile.AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Xbox")
             {
                 ItemClickedCommand = new RelayCommand(OpenFileXboxAsync);
@@ -256,7 +275,7 @@ namespace FileManager.ViewModels.Libraries
             ChangeColorMode(settings, this);
             SelectionChangedCommand = new RelayCommand(GridSelectionChanged);
 
-            stringsResourceLoader = ResourceLoader.GetForCurrentView(resources);
+            stringsResourceLoader = ResourceLoader.GetForCurrentView(Resources);
 
             GetParentCommand = new RelayCommand(GetParentAsync);
             RemoveFileCommand = new RelayCommand(RemoveFileAsync);
@@ -266,25 +285,17 @@ namespace FileManager.ViewModels.Libraries
 
         protected override void ChangeColorMode(UISettings uiSettings, object sender)
         {
-            const string image = "image";
-            const string video = "video";
-            const string audio = "audio";
-            const string folder = "folder";
-            const string file = "file";
-            const string imagesDark = "ImagesDark";
-            const string imagesLight = "ImagesLight";
-
             var currentBackgroundColor = uiSettings?.GetColorValue(UIColorType.Background);
             if (backgroundColor != currentBackgroundColor || storageFiles == null)
             {
                 if (currentBackgroundColor == Colors.Black)
                 {
-                    themeResourceLoader = ResourceLoader.GetForViewIndependentUse(imagesDark);
+                    themeResourceLoader = ResourceLoader.GetForViewIndependentUse(ImagesDark);
                     backgroundColor = Colors.Black;
                 }
                 else
                 {
-                    themeResourceLoader = ResourceLoader.GetForViewIndependentUse(imagesLight);
+                    themeResourceLoader = ResourceLoader.GetForViewIndependentUse(ImagesLight);
                     backgroundColor = Colors.White;
                 }
 
@@ -298,20 +309,20 @@ namespace FileManager.ViewModels.Libraries
                         {
                             switch (storageFile.Type)
                             {
-                                case image:
-                                    storageFile.Image = themeResourceLoader.GetString(image);
+                                case Image:
+                                    storageFile.Image = themeResourceLoader.GetString(Image);
                                     break;
-                                case video:
-                                    storageFile.Image = themeResourceLoader.GetString(video);
+                                case Video:
+                                    storageFile.Image = themeResourceLoader.GetString(Video);
                                     break;
-                                case audio:
-                                    storageFile.Image = themeResourceLoader.GetString(audio);
+                                case Audio:
+                                    storageFile.Image = themeResourceLoader.GetString(Audio);
                                     break;
-                                case folder:
-                                    storageFile.Image = themeResourceLoader.GetString(folder);
+                                case Folder:
+                                    storageFile.Image = themeResourceLoader.GetString(Folder);
                                     break;
                                 default:
-                                    storageFile.Image = themeResourceLoader.GetString(file);
+                                    storageFile.Image = themeResourceLoader.GetString(File);
                                     break;
                             }
                         }
@@ -322,12 +333,6 @@ namespace FileManager.ViewModels.Libraries
 
         private async Task GetItemsAsync()
         {
-            const string image = "image";
-            const string video = "video";
-            const string audio = "audio";
-            const string folder = "folder";
-            const string file = "file";
-
             if (currentFolder.IsEqual(KnownFolders.PicturesLibrary) || currentFolder.IsEqual(KnownFolders.VideosLibrary) || currentFolder.IsEqual(KnownFolders.MusicLibrary))
             {
                 StorageItems = await currentFolder.GetItemsAsync();
@@ -342,7 +347,7 @@ namespace FileManager.ViewModels.Libraries
             {
                 if (item.IsOfType(StorageItemTypes.Folder))
                 {
-                    var fileControl = new FileControlViewModel() { Image = themeResourceLoader.GetString(folder), DisplayName = item.Name, Path = item.Path, Type = folder };
+                    var fileControl = new FileControlViewModel() { Image = themeResourceLoader.GetString(Folder), DisplayName = item.Name, Path = item.Path, Type = Folder };
                     fileControls.Add(fileControl);
                 }
             }
@@ -351,21 +356,21 @@ namespace FileManager.ViewModels.Libraries
             foreach (var item in storageFiles)
             {
                 FileControlViewModel viewModel;
-                if (item.ContentType.Contains(image, StringComparison.Ordinal))
+                if (item.ContentType.Contains(Image, StringComparison.Ordinal))
                 {
-                    viewModel = new FileControlViewModel() { Image = themeResourceLoader.GetString(image), DisplayName = item.Name, Path = item.Path, Type = image };
+                    viewModel = new FileControlViewModel() { Image = themeResourceLoader.GetString(Image), DisplayName = item.Name, Path = item.Path, Type = Image };
                 }
-                else if (item.ContentType.Contains(video, StringComparison.Ordinal))
+                else if (item.ContentType.Contains(Video, StringComparison.Ordinal))
                 {
-                    viewModel = new FileControlViewModel() { Image = themeResourceLoader.GetString(video), DisplayName = item.Name, Path = item.Path, Type = video };
+                    viewModel = new FileControlViewModel() { Image = themeResourceLoader.GetString(Video), DisplayName = item.Name, Path = item.Path, Type = Video };
                 }
-                else if (item.ContentType.Contains(audio, StringComparison.Ordinal))
+                else if (item.ContentType.Contains(Audio, StringComparison.Ordinal))
                 {
-                    viewModel = new FileControlViewModel() { Image = themeResourceLoader.GetString(audio), DisplayName = item.Name, Path = item.Path, Type = audio };
+                    viewModel = new FileControlViewModel() { Image = themeResourceLoader.GetString(Audio), DisplayName = item.Name, Path = item.Path, Type = Audio };
                 }
                 else
                 {
-                    viewModel = new FileControlViewModel() { Image = themeResourceLoader.GetString(file), DisplayName = item.Name, Path = item.Path, Type = file };
+                    viewModel = new FileControlViewModel() { Image = themeResourceLoader.GetString(File), DisplayName = item.Name, Path = item.Path, Type = File };
                 }
 
                 fileControls.Add(viewModel);
@@ -410,16 +415,6 @@ namespace FileManager.ViewModels.Libraries
 
         private async void SaveChangesAsync(object sender)
         {
-            const string sameNameError = "sameNameError";
-            const string inputError = "inputError";
-            const string invalidInput = "invalidInput";
-            const string confirmation = "confirmation";
-            const string renameConfirmText = "renameConfirmText";
-            const string yesButton = "yesButton";
-            const string cancelButton = "cancelButton";
-            const string warning = "warning";
-            const string changeTypeConfirmText = "changeTypeConfirmText";
-            const string folder = "folder";
             bool saveChanges = false;
 
             if (selectedGridItem != null && selectedGridItem.IsEditMode)
@@ -440,17 +435,17 @@ namespace FileManager.ViewModels.Libraries
 
                     if (StorageFiles.Count(f => f.DisplayName == selectedItemDisplayName) > 1)
                     {
-                        var messageDialog = new MessageDialog(stringsResourceLoader.GetString(sameNameError))
+                        var messageDialog = new MessageDialog(stringsResourceLoader.GetString(SameNameError))
                         {
-                            Title = stringsResourceLoader.GetString(inputError)
+                            Title = stringsResourceLoader.GetString(InputError)
                         };
                         await messageDialog.ShowAsync();
                     }
                     else if (!ItemNameValidation.Validate(selectedItemDisplayName))
                     {
-                        var messageDialog = new MessageDialog(stringsResourceLoader.GetString(invalidInput))
+                        var messageDialog = new MessageDialog(stringsResourceLoader.GetString(InvalidInput))
                         {
-                            Title = stringsResourceLoader.GetString(inputError)
+                            Title = stringsResourceLoader.GetString(InputError)
                         };
                         await messageDialog.ShowAsync();
                     }
@@ -458,24 +453,24 @@ namespace FileManager.ViewModels.Libraries
                     {
                         var confirmationContentDialog = new ContentDialog()
                         {
-                            Title = stringsResourceLoader.GetString(confirmation),
-                            Content = stringsResourceLoader.GetString(renameConfirmText),
-                            PrimaryButtonText = stringsResourceLoader.GetString(yesButton),
-                            CloseButtonText = stringsResourceLoader.GetString(cancelButton),
+                            Title = stringsResourceLoader.GetString(Confirmation),
+                            Content = stringsResourceLoader.GetString(RenameConfirmText),
+                            PrimaryButtonText = stringsResourceLoader.GetString(YesButton),
+                            CloseButtonText = stringsResourceLoader.GetString(CancelButton),
                         };
 
                         var confirmationResult = await confirmationContentDialog.ShowAsync();
 
-                        if (editableItem.Type != folder &&
+                        if (editableItem.Type != Folder &&
                         editableItemDisplayName.Substring(editableItemDisplayName.LastIndexOf('.')) != selectedItemDisplayName.Substring(selectedItemDisplayName.LastIndexOf('.')) &&
                         confirmationResult == ContentDialogResult.Primary)
                         {
                             var changeTypeContentDialog = new ContentDialog()
                             {
-                                Title = stringsResourceLoader.GetString(warning),
-                                Content = stringsResourceLoader.GetString(changeTypeConfirmText),
-                                PrimaryButtonText = stringsResourceLoader.GetString(yesButton),
-                                CloseButtonText = stringsResourceLoader.GetString(cancelButton),
+                                Title = stringsResourceLoader.GetString(Warning),
+                                Content = stringsResourceLoader.GetString(ChangeTypeConfirmText),
+                                PrimaryButtonText = stringsResourceLoader.GetString(YesButton),
+                                CloseButtonText = stringsResourceLoader.GetString(CancelButton),
                             };
 
                             confirmationResult = await changeTypeContentDialog.ShowAsync();
@@ -545,19 +540,14 @@ namespace FileManager.ViewModels.Libraries
 
         private async void RemoveFileAsync(object sender)
         {
-            const string confirmation = "confirmation";
-            const string deleteConfirmText = "deleteConfirmText";
-            const string yesButton = "yesButton";
-            const string cancelButton = "cancelButton";
-
             if (SelectedGridItem != null && SelectedGridItem.IsReadOnlyMode)
             {
                 var contentDialog = new ContentDialog()
                 {
-                    Title = stringsResourceLoader.GetString(confirmation),
-                    Content = stringsResourceLoader.GetString(deleteConfirmText) + $" \"{selectedGridItem.DisplayName}\"?",
-                    PrimaryButtonText = stringsResourceLoader.GetString(yesButton),
-                    CloseButtonText = stringsResourceLoader.GetString(cancelButton),
+                    Title = stringsResourceLoader.GetString(Confirmation),
+                    Content = stringsResourceLoader.GetString(DeleteConfirmText) + $" \"{selectedGridItem.DisplayName}\"?",
+                    PrimaryButtonText = stringsResourceLoader.GetString(YesButton),
+                    CloseButtonText = stringsResourceLoader.GetString(CancelButton),
                 };
 
                 var confirmationResult = await contentDialog.ShowAsync();
@@ -586,13 +576,11 @@ namespace FileManager.ViewModels.Libraries
 
         private void CreateFolder(object sender)
         {
-            const string folder = "folder";
-            const string newFolderName = "New folder";
             int newFolderNumber = 0;
-            int countOfFolders = storageFiles.Where(f => f.Type == folder).Count();
+            int countOfFolders = storageFiles.Where(f => f.Type == Folder).Count();
             for (int i = 0; i < countOfFolders; i++)
             {
-                if (!storageFiles.Where(f => f.DisplayName == newFolderName + $" {i + 1}").Any())
+                if (!storageFiles.Where(f => f.DisplayName == NewFolderName + $" {i + 1}").Any())
                 {
                     newFolderNumber = i;
                     break;
@@ -603,7 +591,7 @@ namespace FileManager.ViewModels.Libraries
                 }
             }
 
-            currentFolder.CreateFolderAsync($"{newFolderName} {newFolderNumber + 1}").Completed +=
+            currentFolder.CreateFolderAsync($"{NewFolderName} {newFolderNumber + 1}").Completed +=
                 async (i, s) =>
             await CoreApplication.MainView.CoreWindow.Dispatcher
                 .RunAsync(CoreDispatcherPriority.Normal,
@@ -617,13 +605,13 @@ namespace FileManager.ViewModels.Libraries
 
                     var newFolder = new FileControlViewModel()
                     {
-                        Image = themeResourceLoader.GetString(folder),
-                        DisplayName = $"{newFolderName} {newFolderNumber + 1}",
-                        Type = folder,
-                        Path = currentFolder.Path + $"\\{newFolderName} {newFolderNumber + 1}"
+                        Image = themeResourceLoader.GetString(Folder),
+                        DisplayName = $"{NewFolderName} {newFolderNumber + 1}",
+                        Type = Folder,
+                        Path = currentFolder.Path + $"\\{NewFolderName} {newFolderNumber + 1}"
                     };
 
-                    files.Insert(files.FindLastIndex(f => f.Type == folder) + 1, newFolder);
+                    files.Insert(files.FindLastIndex(f => f.Type == Folder) + 1, newFolder);
                     StorageFiles = new Collection<FileControlViewModel>(files);
                     SelectedGridItem = newFolder;
                 });
@@ -631,8 +619,6 @@ namespace FileManager.ViewModels.Libraries
 
         private async void OpenFileXboxAsync(object sender)
         {
-            const string folder = "folder";
-
             if (editableItem != null)
             {
                 GridSelectionChanged(sender);
@@ -643,7 +629,7 @@ namespace FileManager.ViewModels.Libraries
                 var gridItems = (GridView)sender;
                 if (gridItems.SelectedItem is FileControlViewModel selectedItem && !string.IsNullOrEmpty(selectedItem.DisplayName))
                 {
-                    if (selectedItem.Type != folder)
+                    if (selectedItem.Type != Folder)
                     {
                         var file = await currentFolder.GetFileAsync(selectedItem.DisplayName);
 
@@ -670,8 +656,6 @@ namespace FileManager.ViewModels.Libraries
 
         private async void OpenFileWindowsAsync(object sender)
         {
-            const string folder = "folder";
-
             if (editableItem != null)
             {
                 GridSelectionChanged(sender);
@@ -682,7 +666,7 @@ namespace FileManager.ViewModels.Libraries
                 var gridItems = (GridView)sender;
                 if (gridItems.SelectedItem is FileControlViewModel selectedItem && !string.IsNullOrEmpty(selectedItem.DisplayName))
                 {
-                    if (selectedItem.Type != folder)
+                    if (selectedItem.Type != Folder)
                     {
                         var file = await currentFolder.GetFileAsync(selectedItem.DisplayName);
 

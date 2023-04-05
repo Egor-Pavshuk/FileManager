@@ -5,6 +5,8 @@ namespace FileManager.ViewModels
     public class MainTitleViewModel : BindableBase
     {
         private ResourceLoader resourceLoader;
+        private const string Resourses = "Resources";
+        private const string WelcomeTitle = "welcomeTitle";
         private string title;
         public string Title
         {
@@ -20,8 +22,8 @@ namespace FileManager.ViewModels
         }
         public MainTitleViewModel()
         {
-            resourceLoader = ResourceLoader.GetForCurrentView("Resources");
-            Title = resourceLoader.GetString("welcomeTitle");
+            resourceLoader = ResourceLoader.GetForCurrentView(Resourses);
+            Title = resourceLoader.GetString(WelcomeTitle);
         }
     }
 }

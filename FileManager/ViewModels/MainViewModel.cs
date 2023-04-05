@@ -7,12 +7,17 @@ namespace FileManager.ViewModels
 {
     public class MainViewModel : BindableBase
     {
-        private const string imageNavigation = "ImageNav";
-        private const string videoNavigation = "VideoNav";
-        private const string musicNavigation = "MusicNav";
-        private const string infoNavigation = "InformationNav";
-        private const string mainNavigation = "MainPage";
-        private const string googleDriveNav = "GoogleDriveNav";
+        private const string ImageNavigation = "ImageNav";
+        private const string VideoNavigation = "VideoNav";
+        private const string MusicNavigation = "MusicNav";
+        private const string InfoNavigation = "InformationNav";
+        private const string MainNavigation = "MainPage";
+        private const string GoogleDriveNav = "GoogleDriveNav";
+        private const string Resourses = "Resources";
+        private const string MainPage = "MainPage";
+        private const string FtpServer = "ftpServer";
+        private const string GoogleDriveIconPath = "ms-appx:///Images/googleDrive.png";
+        private const string FtpIconPath = "ms-appx:///Images/ftpFolder.png";
         private Page currentContent;
         private Page googleDrivePage;
         private string currentTitle;
@@ -85,10 +90,10 @@ namespace FileManager.ViewModels
         public MainViewModel()
         {
             currentContent = new MainTitlePage();
-            resourceLoader = ResourceLoader.GetForCurrentView("Resources");
-            CurrentTitle = resourceLoader.GetString("MainPage");
-            GoogleDriveIconUri = new Uri("ms-appx:///Images/googleDrive.png");
-            FtpIconUri = new Uri("ms-appx:///Images/ftpFolder.png");
+            resourceLoader = ResourceLoader.GetForCurrentView(Resourses);
+            CurrentTitle = resourceLoader.GetString(MainPage);
+            GoogleDriveIconUri = new Uri(GoogleDriveIconPath);
+            FtpIconUri = new Uri(FtpIconPath);
         }
 
         private void SelectionChanged()
@@ -97,19 +102,19 @@ namespace FileManager.ViewModels
             {
                 case "0":
                     CurrentContent = new PicturesLibraryPage();
-                    CurrentTitle = resourceLoader.GetString(imageNavigation);
+                    CurrentTitle = resourceLoader.GetString(ImageNavigation);
                     break;
                 case "1":
                     CurrentContent = new VideosLibraryPage();
-                    CurrentTitle = resourceLoader.GetString(videoNavigation);
+                    CurrentTitle = resourceLoader.GetString(VideoNavigation);
                     break;
                 case "2":
                     CurrentContent = new MusicsLibraryPage();
-                    CurrentTitle = resourceLoader.GetString(musicNavigation);
+                    CurrentTitle = resourceLoader.GetString(MusicNavigation);
                     break;
                 case "3":
                     CurrentContent = new InformationPage();
-                    CurrentTitle = resourceLoader.GetString(infoNavigation);
+                    CurrentTitle = resourceLoader.GetString(InfoNavigation);
                     break;
                 case "4":
                     if (googleDrivePage != null)
@@ -129,15 +134,15 @@ namespace FileManager.ViewModels
                         CurrentContent = new GoogleDrivePage();
                     }
                     googleDrivePage = currentContent;
-                    CurrentTitle = resourceLoader.GetString(googleDriveNav);
+                    CurrentTitle = resourceLoader.GetString(GoogleDriveNav);
                     break;
                 case "5":
                     CurrentContent = new FtpPage();
-                    CurrentTitle = "FTP Server";
+                    CurrentTitle = resourceLoader.GetString(FtpServer);
                     break;
                 default:
                     CurrentContent = new MainTitlePage();
-                    CurrentTitle = resourceLoader.GetString(mainNavigation);
+                    CurrentTitle = resourceLoader.GetString(MainNavigation);
                     break;
             }
         }

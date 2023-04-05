@@ -11,8 +11,18 @@ namespace FileManager.ViewModels
 {
     public class InformationViewModel : BindableBase
     {
-        private const string batteries = "Batteries";
-        private const string resources = "Resources";
+        private const string Batteries = "Batteries";
+        private const string Resources = "Resources";
+        private const string FullBattery = "fullBattery";
+        private const string BatteryCharge = "batteryCharge";
+        private const string Battery = "battery";
+        private const string Halfbattery = "halfBattery";
+        private const string LowBattery = "lowBattery";
+        private const string EmptyBattery = "emptyBattery";
+        private const string BatteryAttention = "batteryAttention";
+        private const string MemoryUsage = "memoryUsage";
+        private const string FreeSpace = "freeSpace";
+        private const string FreeSpaceKey = "System.FreeSpace";
         private string batteryImage;
         private double batteryLevel;
         private string freeSpaceGb;
@@ -82,8 +92,8 @@ namespace FileManager.ViewModels
         }
         public InformationViewModel()
         {
-            batteryResourceLoader = ResourceLoader.GetForCurrentView(batteries);
-            stringsResourceLoader = ResourceLoader.GetForCurrentView(resources);
+            batteryResourceLoader = ResourceLoader.GetForCurrentView(Batteries);
+            stringsResourceLoader = ResourceLoader.GetForCurrentView(Resources);
             BatteryTrigger();
             MemoryTrigger();
             UpdateMemoryStatus().ConfigureAwait(true);
@@ -107,14 +117,6 @@ namespace FileManager.ViewModels
 
         private async Task UpdateBatteryStatus()
         {
-            const string fullBattery = "fullBattery";
-            const string batteryCharge = "batteryCharge";
-            const string battery = "battery";
-            const string halfbattery = "halfBattery";
-            const string lowBattery = "lowBattery";
-            const string emptyBattery = "emptyBattery";
-            const string batteryAttention = "batteryAttention";
-
             await CoreApplication.MainView.CoreWindow.Dispatcher
                 .RunAsync(CoreDispatcherPriority.Normal,
             () =>
@@ -138,35 +140,35 @@ namespace FileManager.ViewModels
                 switch (batteryReport.Status)
                 {
                     case BatteryStatus.Idle:
-                        BatteryImage = batteryResourceLoader.GetString(fullBattery);
+                        BatteryImage = batteryResourceLoader.GetString(FullBattery);
                         break;
                     case BatteryStatus.Charging:
-                        BatteryImage = batteryResourceLoader.GetString(batteryCharge);
+                        BatteryImage = batteryResourceLoader.GetString(BatteryCharge);
                         break;
                     case BatteryStatus.Discharging:
                         if (batteryLevel <= 100 && BatteryLevel > 76)
                         {
-                            BatteryImage = batteryResourceLoader.GetString(fullBattery);
+                            BatteryImage = batteryResourceLoader.GetString(FullBattery);
                         }
                         else if (BatteryLevel <= 76 && BatteryLevel > 51)
                         {
-                            BatteryImage = batteryResourceLoader.GetString(battery);
+                            BatteryImage = batteryResourceLoader.GetString(Battery);
                         }
                         else if (BatteryLevel <= 51 && BatteryLevel > 31)
                         {
-                            BatteryImage = batteryResourceLoader.GetString(halfbattery);
+                            BatteryImage = batteryResourceLoader.GetString(Halfbattery);
                         }
                         else if (BatteryLevel <= 31 && BatteryLevel > 21)
                         {
-                            BatteryImage = batteryResourceLoader.GetString(lowBattery);
+                            BatteryImage = batteryResourceLoader.GetString(LowBattery);
                         }
                         else
                         {
-                            BatteryImage = batteryResourceLoader.GetString(emptyBattery);
+                            BatteryImage = batteryResourceLoader.GetString(EmptyBattery);
                         }
                         break;
                     default:
-                        BatteryImage = batteryResourceLoader.GetString(batteryAttention);
+                        BatteryImage = batteryResourceLoader.GetString(BatteryAttention);
                         break;
                 }
             });
@@ -174,7 +176,6 @@ namespace FileManager.ViewModels
 
         private async Task UpdateMemoryStatus()
         {
-            const string memoryUsage = "memoryUsage";
             await CoreApplication.MainView.CoreWindow.Dispatcher
                 .RunAsync(CoreDispatcherPriority.Normal,
             () =>
@@ -183,22 +184,20 @@ namespace FileManager.ViewModels
                 var usageInKB = usageInB / 1024.0;
                 var usageInMB = usageInKB / 1024.0;
 
-                RamMemoryUsed = stringsResourceLoader.GetString(memoryUsage) + $": {Math.Round(usageInMB, 2)} Mb";
+                RamMemoryUsed = stringsResourceLoader.GetString(MemoryUsage) + $": {Math.Round(usageInMB, 2)} Mb";
             });
         }
 
         private async void GetFreeSpace()
         {
-            const string freeSpace = "freeSpace";
-            const string freeSpaceKey = "System.FreeSpace";
-            var retrieveProperties = await ApplicationData.Current.LocalFolder.Properties.RetrievePropertiesAsync(new string[] { freeSpaceKey });
-            var freeSpaceRemaining = retrieveProperties[freeSpaceKey];
+            var retrieveProperties = await ApplicationData.Current.LocalFolder.Properties.RetrievePropertiesAsync(new string[] { FreeSpaceKey });
+            var freeSpaceRemaining = retrieveProperties[FreeSpaceKey];
 
             var sizeInKB = (ulong)freeSpaceRemaining / 1024.0;
             var sizeInMB = sizeInKB / 1024.0;
             var sizeInGb = sizeInMB / 1024.0;
 
-            FreeSpaceGb = stringsResourceLoader.GetString(freeSpace) + $": {Math.Round(sizeInGb, 2)} Gb";
+            FreeSpaceGb = stringsResourceLoader.GetString(FreeSpace) + $": {Math.Round(sizeInGb, 2)} Gb";
         }
     }
 }

@@ -21,6 +21,7 @@ namespace FileManager.ViewModels
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
         }
-        protected virtual void ChangeColorMode(UISettings settings, object sender) { }
+        protected virtual void ChangeColorMode(UISettings settings, object sender)
+        { }
     }
 }
