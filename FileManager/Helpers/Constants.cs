@@ -64,5 +64,7 @@
         public const string MemoryUsage = "memoryUsage";
         public const string FreeSpace = "freeSpace";
         public const string FreeSpaceKey = "System.FreeSpace";
+        public const string RamIcon = "ramIcon";
+        public const string DiskStorageIcon = "diskStorage";
     }
 }

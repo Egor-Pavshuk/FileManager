@@ -120,6 +120,9 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controlls\InformationControl.xaml.cs">
+      <DependentUpon>InformationControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Helpers\Constants.cs" />
     <Compile Include="Controlls\ContentDialogControl.xaml.cs">
       <DependentUpon>ContentDialogControl.xaml</DependentUpon>
@@ -135,6 +138,10 @@
     <Compile Include="Validation\ItemNameValidation.cs" />
     <Compile Include="ViewModels\ContentDialogControlViewModel.cs" />
     <Compile Include="ViewModels\FtpViewModel.cs" />
+    <Compile Include="ViewModels\Information\BatteryControlViewModel.cs" />
+    <Compile Include="ViewModels\Information\InformationControlViewModel.cs" />
+    <Compile Include="ViewModels\Information\MemoryControlViewModel.cs" />
+    <Compile Include="ViewModels\Information\SpaceControlViewModel.cs" />
     <Compile Include="ViewModels\OnlineFileControlViewModel.cs" />
     <Compile Include="ViewModels\GoogleDriveViewModel.cs" />
     <Compile Include="Views\FtpPage.xaml.cs">
@@ -149,7 +156,7 @@
     <Compile Include="Helpers\DoubleTapAttachedProperties.cs" />
     <Compile Include="VMLocator\ViewModelLocator.cs" />
     <Compile Include="ViewModels\BindableBase.cs" />
-    <Compile Include="ViewModels\InformationViewModel.cs" />
+    <Compile Include="ViewModels\Information\InformationViewModel.cs" />
     <Compile Include="ViewModels\MainTitleViewModel.cs" />
     <Compile Include="Views\InformationPage.xaml.cs">
       <DependentUpon>InformationPage.xaml</DependentUpon>
@@ -216,6 +223,10 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Page Include="Controlls\ContentDialogControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controlls\InformationControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

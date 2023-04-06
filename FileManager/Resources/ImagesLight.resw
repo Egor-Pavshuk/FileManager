@@ -120,6 +120,9 @@
   <data name="audio" xml:space="preserve">
     <value>/Images/FileIcons/AudioLight.png</value>
   </data>
+  <data name="diskStorage" xml:space="preserve">
+    <value>/Images/DiskStorage/diskStorage.png</value>
+  </data>
   <data name="file" xml:space="preserve">
     <value>/Images/FIleIcons/FileLight.png</value>
   </data>
@@ -128,6 +131,9 @@
   </data>
   <data name="image" xml:space="preserve">
     <value>/Images/FileIcons/ImageLight.png</value>
+  </data>
+  <data name="ramIcon" xml:space="preserve">
+    <value>/Images/ram.png</value>
   </data>
   <data name="video" xml:space="preserve">
     <value>/Images/FileIcons/VideoLight.png</value>

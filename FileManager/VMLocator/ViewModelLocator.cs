@@ -1,9 +1,12 @@
-﻿using FileManager.ViewModels;
-using FileManager.Views;
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Reflection;
 using Windows.UI.Xaml;
+using FileManager.ViewModels;
+using FileManager.ViewModels.Information;
+using FileManager.Views;
 
 namespace FileManager.VMLocator
 {
@@ -35,24 +38,30 @@ namespace FileManager.VMLocator
             if (view is FrameworkElement frameworkElement)
             {
                 var viewModelType = FindViewModel(frameworkElement.GetType());
-                switch (frameworkElement.GetType().Name)
+                var typesWithoutActivation = new List<Type>()
                 {
-                    case nameof(PicturesLibraryPage):
-                        frameworkElement.DataContext = Activator.CreateInstance(viewModelType, "Pictures");
-                        break;
-                    case nameof(VideosLibraryPage):
-                        frameworkElement.DataContext = Activator.CreateInstance(viewModelType, "Videos");
-                        break;
-                    case nameof(MusicsLibraryPage):
-                        frameworkElement.DataContext = Activator.CreateInstance(viewModelType, "Music");
-                        break;
-                    default:
-                        if (viewModelType != typeof(FileControlViewModel) && viewModelType != typeof(OnlineFileControlViewModel))
-                        {
+                    typeof(FileControlViewModel),
+                    typeof(OnlineFileControlViewModel),
+                    typeof(InformationControlViewModel)
+                };
+                if (!typesWithoutActivation.Any(t => t == viewModelType))
+                {
+                    switch (frameworkElement.GetType().Name)
+                    {
+                        case nameof(PicturesLibraryPage):
+                            frameworkElement.DataContext = Activator.CreateInstance(viewModelType, "Pictures");
+                            break;
+                        case nameof(VideosLibraryPage):
+                            frameworkElement.DataContext = Activator.CreateInstance(viewModelType, "Videos");
+                            break;
+                        case nameof(MusicsLibraryPage):
+                            frameworkElement.DataContext = Activator.CreateInstance(viewModelType, "Music");
+                            break;
+                        default:
                             frameworkElement.DataContext = Activator.CreateInstance(viewModelType);
-                        }
-                        break;
-                }
+                            break;
+                    }
+                }                
             }
         }
 
@@ -61,11 +70,16 @@ namespace FileManager.VMLocator
             string viewName = string.Empty;
 
             if (viewType.FullName.EndsWith("Page"))
-            {
+            {                
                 viewName = viewType.FullName
                     .Replace("Page", string.Empty, StringComparison.Ordinal)
                     .Replace("Views", "ViewModels", StringComparison.Ordinal);
 
+                if (viewType.FullName.Contains("Information", StringComparison.Ordinal))
+                {
+                    viewName = viewName
+                    .Replace("ViewModels", "ViewModels.Information", StringComparison.Ordinal);
+                }
                 if (viewName.Contains("Library", StringComparison.Ordinal))
                 {
                     viewName = viewName.Replace(viewName.Substring(viewName.LastIndexOf('.') + 1), "Libraries.LibrariesBase", StringComparison.Ordinal);
@@ -73,8 +87,16 @@ namespace FileManager.VMLocator
             }
             else if (viewType.FullName.EndsWith("Control"))
             {
-                viewName = viewType.FullName
+                if (viewType.FullName.Contains("Information", StringComparison.Ordinal))
+                {
+                    viewName = viewType.FullName
+                    .Replace("Controlls", "ViewModels.Information", StringComparison.Ordinal);
+                }
+                else
+                {
+                    viewName = viewType.FullName
                     .Replace("Controlls", "ViewModels", StringComparison.Ordinal);
+                }
             }
 
             var viewAssemblyName = viewType.GetTypeInfo().Assembly.FullName;
