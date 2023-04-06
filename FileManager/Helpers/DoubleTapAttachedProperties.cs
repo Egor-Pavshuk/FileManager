@@ -3,7 +3,7 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 
-namespace FileManager.VMLocator
+namespace FileManager.Helpers
 {
     public static class DoubleTapAttachedProperties
     {

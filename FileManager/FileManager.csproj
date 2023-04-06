@@ -143,10 +143,10 @@
     <Compile Include="Views\GoogleDrivePage.xaml.cs">
       <DependentUpon>GoogleDrivePage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="VMLocator\ItemClickAttachedProperties.cs" />
-    <Compile Include="VMLocator\OnNavigateWebViewAttachedProperties.cs" />
-    <Compile Include="VMLocator\SelectionChangedAttachedProperties.cs" />
-    <Compile Include="VMLocator\DoubleTapAttachedProperties.cs" />
+    <Compile Include="Helpers\ItemClickAttachedProperties.cs" />
+    <Compile Include="Helpers\OnNavigateWebViewAttachedProperties.cs" />
+    <Compile Include="Helpers\SelectionChangedAttachedProperties.cs" />
+    <Compile Include="Helpers\DoubleTapAttachedProperties.cs" />
     <Compile Include="VMLocator\ViewModelLocator.cs" />
     <Compile Include="ViewModels\BindableBase.cs" />
     <Compile Include="ViewModels\InformationViewModel.cs" />
