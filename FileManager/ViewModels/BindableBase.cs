@@ -7,9 +7,9 @@ namespace FileManager.ViewModels
 {
     public class BindableBase : INotifyPropertyChanged
     {
+        public event PropertyChangedEventHandler PropertyChanged;
         protected Color backgroundColor;
         protected UISettings settings;
-        public event PropertyChangedEventHandler PropertyChanged;
 
         public BindableBase()
         {

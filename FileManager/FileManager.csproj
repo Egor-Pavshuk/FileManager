@@ -120,6 +120,7 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Helpers\Constants.cs" />
     <Compile Include="Controlls\ContentDialogControl.xaml.cs">
       <DependentUpon>ContentDialogControl.xaml</DependentUpon>
     </Compile>

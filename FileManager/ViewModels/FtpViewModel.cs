@@ -1,5 +1,6 @@
 ﻿using FileManager.Commands;
 using FileManager.Controlls;
+using FileManager.Helpers;
 using FileManager.Validation;
 using System;
 using System.Collections.Generic;
@@ -25,32 +26,9 @@ namespace FileManager.ViewModels
     public class FtpViewModel : BindableBase
     {
         private const string ProtocolName = "ftp://";
-        private const string Resources = "Resources";
-        private const string Loading = "loadingText";
-        private const string Image = "image";
-        private const string Video = "video";
-        private const string Audio = "audio";
-        private const string Folder = "folder";
-        private const string File = "file";
-        private const string ImagesDark = "ImagesDark";
-        private const string ImagesLight = "ImagesLight";
-        private const string ConnectionError = "connectionError";
-        private const string ConnectionErrorContent = "connectionErrorContent";
-        private const string Failed = "failed";
-        private const string InvalidUriFormat = "invalidUriFormat";
-        private const string DownloadingText = "downloadingText";
-        private const string DownloadCompleted = "downloadCompleted";
-        private const string SameNameError = "sameNameError";
-        private const string InputError = "inputError";
-        private const string InvalidInput = "invalidInput";
-        private const string CancelButton = "cancelButton";
-        private const string CreateButton = "createButton";
-        private const string NewFolder = "newFolder";
-        private const string PlaceHolderFileName = "placeHolderFileName";
-        private const string Confirmation = "confirmation";
-        private const string DeleteConfirmText = "deleteConfirmText";
-        private const string YesButton = "yesButton";
-        private const string Rename = "rename";
+        private readonly List<string> downloadingFilesPath;
+        private readonly Dictionary<string, string> knownTypes;
+        private readonly ResourceLoader stringsResourceLoader;
         private string hostLink;
         private string username;
         private string password;
@@ -61,11 +39,8 @@ namespace FileManager.ViewModels
         private bool isLoginFormVisible;
         private bool isCommandPanelVisible;
         private bool isBackButtonAvailable;
-        private readonly List<string> downloadingFilesPath;
-        private readonly Dictionary<string, string> knownTypes;
         private OnlineFileControlViewModel selectedGridItem;
         private ResourceLoader themeResourceLoader;
-        private readonly ResourceLoader stringsResourceLoader;
         private Collection<OnlineFileControlViewModel> storageFiles;
         private ICommand connectCommand;
         private ICommand doubleClickedCommand;
@@ -323,23 +298,23 @@ namespace FileManager.ViewModels
         {            
             knownTypes = new Dictionary<string, string>()
             {
-                { ".jpg", Image },
-                { ".jpeg", Image },
-                { ".jfif", Image },
-                { ".gif", Image },
-                { ".png", Image },
-                { ".mp4", Video },
-                { ".avi", Video },
-                { ".wmv", Video },
-                { ".amv", Video },
-                { ".mp3", Audio },
-                { ".ogg", Audio },
-                { ".wma", Audio },
-                { ".wav", Audio },
+                { ".jpg", Constants.Image },
+                { ".jpeg", Constants.Image },
+                { ".jfif", Constants.Image },
+                { ".gif", Constants.Image },
+                { ".png", Constants.Image },
+                { ".mp4", Constants.Video },
+                { ".avi", Constants.Video },
+                { ".wmv", Constants.Video },
+                { ".amv", Constants.Video },
+                { ".mp3", Constants.Audio },
+                { ".ogg", Constants.Audio },
+                { ".wma", Constants.Audio },
+                { ".wav", Constants.Audio },
             };
             downloadingFilesPath = new List<string>();
-            stringsResourceLoader = ResourceLoader.GetForCurrentView(Resources);
-            LoadingText = stringsResourceLoader.GetString(Loading);
+            stringsResourceLoader = ResourceLoader.GetForCurrentView(Constants.Resources);
+            LoadingText = stringsResourceLoader.GetString(Constants.Loading);
             if (Windows.System.Profile.AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Xbox")
             {
                 ItemClickedCommand = new RelayCommand(OpenFolder);
@@ -369,12 +344,12 @@ namespace FileManager.ViewModels
             {
                 if (currentBackgroundColor == Colors.Black)
                 {
-                    themeResourceLoader = ResourceLoader.GetForViewIndependentUse(ImagesDark);
+                    themeResourceLoader = ResourceLoader.GetForViewIndependentUse(Constants.ImagesDark);
                     backgroundColor = Colors.Black;
                 }
                 else
                 {
-                    themeResourceLoader = ResourceLoader.GetForViewIndependentUse(ImagesLight);
+                    themeResourceLoader = ResourceLoader.GetForViewIndependentUse(Constants.ImagesLight);
                     backgroundColor = Colors.White;
                 }
 
@@ -388,20 +363,20 @@ namespace FileManager.ViewModels
                         {
                             switch (storageFile.Type)
                             {
-                                case Image:
-                                    storageFile.Image = themeResourceLoader.GetString(Image);
+                                case Constants.Image:
+                                    storageFile.Image = themeResourceLoader.GetString(Constants.Image);
                                     break;
-                                case Video:
-                                    storageFile.Image = themeResourceLoader.GetString(Video);
+                                case Constants.Video:
+                                    storageFile.Image = themeResourceLoader.GetString(Constants.Video);
                                     break;
-                                case Audio:
-                                    storageFile.Image = themeResourceLoader.GetString(Audio);
+                                case Constants.Audio:
+                                    storageFile.Image = themeResourceLoader.GetString(Constants.Audio);
                                     break;
-                                case Folder:
-                                    storageFile.Image = themeResourceLoader.GetString(Folder);
+                                case Constants.Folder:
+                                    storageFile.Image = themeResourceLoader.GetString(Constants.Folder);
                                     break;
                                 default:
-                                    storageFile.Image = themeResourceLoader.GetString(File);
+                                    storageFile.Image = themeResourceLoader.GetString(Constants.File);
                                     break;
                             }
                         }
@@ -429,9 +404,9 @@ namespace FileManager.ViewModels
             }
             catch (WebException)
             {
-                await new MessageDialog(stringsResourceLoader.GetString(ConnectionErrorContent))
+                await new MessageDialog(stringsResourceLoader.GetString(Constants.ConnectionErrorContent))
                 {
-                    Title = stringsResourceLoader.GetString(ConnectionError)
+                    Title = stringsResourceLoader.GetString(Constants.ConnectionError)
                 }.ShowAsync();
 
                 IsLoadingVisible = false;
@@ -439,9 +414,9 @@ namespace FileManager.ViewModels
             }
             catch (UriFormatException)
             {
-                await new MessageDialog(stringsResourceLoader.GetString(InvalidUriFormat))
+                await new MessageDialog(stringsResourceLoader.GetString(Constants.InvalidUriFormat))
                 {
-                    Title = stringsResourceLoader.GetString(Failed)
+                    Title = stringsResourceLoader.GetString(Constants.Failed)
                 }.ShowAsync();
 
                 IsLoadingVisible = false;
@@ -486,9 +461,9 @@ namespace FileManager.ViewModels
 
                 items.Add(new OnlineFileControlViewModel()
                 {
-                    Image = themeResourceLoader.GetString(Folder),
+                    Image = themeResourceLoader.GetString(Constants.Folder),
                     DisplayName = elementName,
-                    Type = Folder,
+                    Type = Constants.Folder,
                     Path = currentPath + "/" + elementName
                 });
             }
@@ -515,7 +490,7 @@ namespace FileManager.ViewModels
                     {
                         Image = themeResourceLoader.GetString(value),
                         DisplayName = elementName,
-                        Type = File,
+                        Type = Constants.File,
                         Path = currentPath + "/" + elementName
                     });
                 }
@@ -523,9 +498,9 @@ namespace FileManager.ViewModels
                 {
                     items.Add(new OnlineFileControlViewModel()
                     {
-                        Image = themeResourceLoader.GetString(File),
+                        Image = themeResourceLoader.GetString(Constants.File),
                         DisplayName = elementName,
-                        Type = File,
+                        Type = Constants.File,
                         Path = currentPath + "/" + elementName
                     });
                 }
@@ -548,14 +523,14 @@ namespace FileManager.ViewModels
             {
                 foreach (var file in storageFiles)
                 {
-                    if (file.Type == Folder)
+                    if (file.Type == Constants.Folder)
                     {
                         continue;
                     }
                     if (downloadingFilesPath.Exists(p => p == file.Path))
                     {
                         file.IsDownloading = true;
-                        file.DownloadStatus = stringsResourceLoader.GetString(DownloadingText);
+                        file.DownloadStatus = stringsResourceLoader.GetString(Constants.DownloadingText);
                     }
                 }
             }).ConfigureAwait(true);
@@ -585,7 +560,7 @@ namespace FileManager.ViewModels
 
         private async void DownloadFileAsync(object sender)
         {
-            if (selectedGridItem != null && !string.IsNullOrEmpty(selectedGridItem.DisplayName) && selectedGridItem.Type != Folder)
+            if (selectedGridItem != null && !string.IsNullOrEmpty(selectedGridItem.DisplayName) && selectedGridItem.Type != Constants.Folder)
             {
                 var picker = new FolderPicker
                 {
@@ -601,7 +576,7 @@ namespace FileManager.ViewModels
                         selectedGridItem.DisplayName, CreationCollisionOption.GenerateUniqueName);
 
                     SelectedGridItem.IsDownloading = true;
-                    SelectedGridItem.DownloadStatus = stringsResourceLoader.GetString(DownloadingText);
+                    SelectedGridItem.DownloadStatus = stringsResourceLoader.GetString(Constants.DownloadingText);
                     downloadingFilesPath.Add(selectedGridItem.Path);
 
                     _ = DownloadFtpFileAsync(destinationFile, selectedGridItem.Path);
@@ -630,9 +605,9 @@ namespace FileManager.ViewModels
             }
             catch (WebException)
             {
-                await new MessageDialog(stringsResourceLoader.GetString(ConnectionErrorContent))
+                await new MessageDialog(stringsResourceLoader.GetString(Constants.ConnectionErrorContent))
                 {
-                    Title = stringsResourceLoader.GetString(ConnectionError)
+                    Title = stringsResourceLoader.GetString(Constants.ConnectionError)
                 }.ShowAsync();
                 isDownloadSuccess = false;
                 await destinationFile.DeleteAsync();
@@ -644,11 +619,11 @@ namespace FileManager.ViewModels
             {
                 if (isDownloadSuccess)
                 {
-                    downloadingFile.DownloadStatus = stringsResourceLoader.GetString(DownloadCompleted);
+                    downloadingFile.DownloadStatus = stringsResourceLoader.GetString(Constants.DownloadCompleted);
                 }
                 else
                 {
-                    downloadingFile.DownloadStatus = stringsResourceLoader.GetString(Failed);
+                    downloadingFile.DownloadStatus = stringsResourceLoader.GetString(Constants.Failed);
                 }
                 _ = CloseDownloadingAsync(downloadingFile);
             }
@@ -679,9 +654,9 @@ namespace FileManager.ViewModels
                 }
                 else
                 {
-                    var messageDialog = new MessageDialog(stringsResourceLoader.GetString(SameNameError))
+                    var messageDialog = new MessageDialog(stringsResourceLoader.GetString(Constants.SameNameError))
                     {
-                        Title = stringsResourceLoader.GetString(Failed)
+                        Title = stringsResourceLoader.GetString(Constants.Failed)
                     };
                     await messageDialog.ShowAsync();
                 }
@@ -709,9 +684,9 @@ namespace FileManager.ViewModels
             }
             catch (WebException)
             {
-                await new MessageDialog(stringsResourceLoader.GetString(ConnectionErrorContent))
+                await new MessageDialog(stringsResourceLoader.GetString(Constants.ConnectionErrorContent))
                 {
-                    Title = stringsResourceLoader.GetString(ConnectionError)
+                    Title = stringsResourceLoader.GetString(Constants.ConnectionError)
                 }.ShowAsync();
                 isUploadSuccess = false;
             }
@@ -728,10 +703,10 @@ namespace FileManager.ViewModels
             {
                 var contentDialog = new ContentDialog()
                 {
-                    Title = stringsResourceLoader.GetString(Confirmation),
-                    Content = stringsResourceLoader.GetString(DeleteConfirmText) + $" \"{selectedGridItem.DisplayName}\"?",
-                    PrimaryButtonText = stringsResourceLoader.GetString(YesButton),
-                    CloseButtonText = stringsResourceLoader.GetString(CancelButton),
+                    Title = stringsResourceLoader.GetString(Constants.Confirmation),
+                    Content = stringsResourceLoader.GetString(Constants.DeleteConfirmText) + $" \"{selectedGridItem.DisplayName}\"?",
+                    PrimaryButtonText = stringsResourceLoader.GetString(Constants.YesButton),
+                    CloseButtonText = stringsResourceLoader.GetString(Constants.CancelButton),
                 };
                 var confirmationResult = await contentDialog.ShowAsync();
 
@@ -742,7 +717,7 @@ namespace FileManager.ViewModels
                         FtpWebRequest request = (FtpWebRequest)WebRequest.Create(selectedGridItem.Path);
                         request.Credentials = new NetworkCredential(username, password);
 
-                        if (selectedGridItem.Type == Folder)
+                        if (selectedGridItem.Type == Constants.Folder)
                         {
                             request.Method = WebRequestMethods.Ftp.RemoveDirectory;
                         }
@@ -758,9 +733,9 @@ namespace FileManager.ViewModels
                     }
                     catch (WebException)
                     {
-                        await new MessageDialog(stringsResourceLoader.GetString(ConnectionErrorContent))
+                        await new MessageDialog(stringsResourceLoader.GetString(Constants.ConnectionErrorContent))
                         {
-                            Title = stringsResourceLoader.GetString(ConnectionError)
+                            Title = stringsResourceLoader.GetString(Constants.ConnectionError)
                         }.ShowAsync();
                     }
                 }
@@ -769,12 +744,17 @@ namespace FileManager.ViewModels
 
         private async void CreateNewFolderAsync(object sender)
         {
-            var parameters = new string[] { stringsResourceLoader.GetString(NewFolder), stringsResourceLoader.GetString(PlaceHolderFileName), string.Empty };
+            var parameters = new string[] 
+            { 
+                stringsResourceLoader.GetString(Constants.NewFolder), 
+                stringsResourceLoader.GetString(Constants.PlaceHolderFileName), 
+                string.Empty 
+            };
 
             var contentDialog = new ContentDialogControl()
             {
-                PrimaryButtonText = stringsResourceLoader.GetString(CreateButton),
-                SecondaryButtonText = stringsResourceLoader.GetString(CancelButton),
+                PrimaryButtonText = stringsResourceLoader.GetString(Constants.CreateButton),
+                SecondaryButtonText = stringsResourceLoader.GetString(Constants.CancelButton),
                 DataContext = Activator.CreateInstance(typeof(ContentDialogControlViewModel), parameters)
             };
             var result = await contentDialog.ShowAsync();
@@ -806,17 +786,17 @@ namespace FileManager.ViewModels
                     }
                     catch (WebException)
                     {
-                        await new MessageDialog(stringsResourceLoader.GetString(ConnectionErrorContent))
+                        await new MessageDialog(stringsResourceLoader.GetString(Constants.ConnectionErrorContent))
                         {
-                            Title = stringsResourceLoader.GetString(ConnectionError)
+                            Title = stringsResourceLoader.GetString(Constants.ConnectionError)
                         }.ShowAsync();
                     }
                 }
                 else
                 {
-                    var messageDialog = new MessageDialog(stringsResourceLoader.GetString(SameNameError))
+                    var messageDialog = new MessageDialog(stringsResourceLoader.GetString(Constants.SameNameError))
                     {
-                        Title = stringsResourceLoader.GetString(Failed)
+                        Title = stringsResourceLoader.GetString(Constants.Failed)
                     };
                     await messageDialog.ShowAsync();
                 }
@@ -824,9 +804,9 @@ namespace FileManager.ViewModels
             }
             else if (result == ContentDialogResult.Primary)
             {
-                var messageDialog = new MessageDialog(stringsResourceLoader.GetString(InvalidInput))
+                var messageDialog = new MessageDialog(stringsResourceLoader.GetString(Constants.InvalidInput))
                 {
-                    Title = stringsResourceLoader.GetString(InputError)
+                    Title = stringsResourceLoader.GetString(Constants.InputError)
                 };
                 await messageDialog.ShowAsync();
             }
@@ -836,11 +816,16 @@ namespace FileManager.ViewModels
         {
             if (selectedGridItem != null)
             {
-                var parameters = new string[] { stringsResourceLoader.GetString(Rename), stringsResourceLoader.GetString(PlaceHolderFileName), selectedGridItem.DisplayName };
+                var parameters = new string[] 
+                { 
+                    stringsResourceLoader.GetString(Constants.Rename), 
+                    stringsResourceLoader.GetString(Constants.PlaceHolderFileName), 
+                    selectedGridItem.DisplayName 
+                };
                 var contentDialog = new ContentDialogControl()
                 {
-                    PrimaryButtonText = stringsResourceLoader.GetString(YesButton),
-                    SecondaryButtonText = stringsResourceLoader.GetString(CancelButton),
+                    PrimaryButtonText = stringsResourceLoader.GetString(Constants.YesButton),
+                    SecondaryButtonText = stringsResourceLoader.GetString(Constants.CancelButton),
                     DataContext = Activator.CreateInstance(typeof(ContentDialogControlViewModel), parameters)
                 };
                 var result = await contentDialog.ShowAsync();
@@ -873,26 +858,26 @@ namespace FileManager.ViewModels
                         }
                         catch (WebException)
                         {
-                            await new MessageDialog(stringsResourceLoader.GetString(ConnectionErrorContent))
+                            await new MessageDialog(stringsResourceLoader.GetString(Constants.ConnectionErrorContent))
                             {
-                                Title = stringsResourceLoader.GetString(ConnectionError)
+                                Title = stringsResourceLoader.GetString(Constants.ConnectionError)
                             }.ShowAsync();
                         }
                     }
                     else
                     {
-                        var messageDialog = new MessageDialog(stringsResourceLoader.GetString(SameNameError))
+                        var messageDialog = new MessageDialog(stringsResourceLoader.GetString(Constants.SameNameError))
                         {
-                            Title = stringsResourceLoader.GetString(Failed)
+                            Title = stringsResourceLoader.GetString(Constants.Failed)
                         };
                         await messageDialog.ShowAsync();
                     }
                 }
                 else if (result == ContentDialogResult.Primary)
                 {
-                    var messageDialog = new MessageDialog(stringsResourceLoader.GetString(InvalidInput))
+                    var messageDialog = new MessageDialog(stringsResourceLoader.GetString(Constants.InvalidInput))
                     {
-                        Title = stringsResourceLoader.GetString(InputError)
+                        Title = stringsResourceLoader.GetString(Constants.InputError)
                     };
                     await messageDialog.ShowAsync();
                 }

@@ -1,12 +1,11 @@
-﻿using Windows.ApplicationModel.Resources;
+﻿using FileManager.Helpers;
+using Windows.ApplicationModel.Resources;
 
 namespace FileManager.ViewModels
 {
     public class MainTitleViewModel : BindableBase
     {
-        private ResourceLoader resourceLoader;
-        private const string Resourses = "Resources";
-        private const string WelcomeTitle = "welcomeTitle";
+        private readonly ResourceLoader resourceLoader;
         private string title;
         public string Title
         {
@@ -22,8 +21,8 @@ namespace FileManager.ViewModels
         }
         public MainTitleViewModel()
         {
-            resourceLoader = ResourceLoader.GetForCurrentView(Resourses);
-            Title = resourceLoader.GetString(WelcomeTitle);
+            resourceLoader = ResourceLoader.GetForCurrentView(Constants.Resourses);
+            Title = resourceLoader.GetString(Constants.WelcomeTitle);
         }
     }
 }
