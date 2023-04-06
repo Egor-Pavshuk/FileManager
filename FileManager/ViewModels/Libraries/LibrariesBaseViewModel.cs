@@ -227,12 +227,12 @@ namespace FileManager.ViewModels.Libraries
         {
             if (Windows.System.Profile.AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Xbox")
             {
-                ItemClickedCommand = new RelayCommand(OpenFileXboxAsync);
+                ItemClickedCommand = new RelayCommand(OpenFileAsync);
                 DoubleClickedCommand = new RelayCommand((o) => { });
             }
             else
             {
-                DoubleClickedCommand = new RelayCommand(OpenFileWindowsAsync);
+                DoubleClickedCommand = new RelayCommand(OpenFileAsync);
                 ItemClickedCommand = new RelayCommand((o) => { });
             }
 
@@ -628,44 +628,7 @@ namespace FileManager.ViewModels.Libraries
                 });
         }
 
-        private async void OpenFileXboxAsync(object sender)
-        {
-            if (editableItem != null)
-            {
-                GridSelectionChanged(sender);
-            }
-
-            if (sender != null)
-            {
-                var gridItems = (GridView)sender;
-                if (gridItems.SelectedItem is FileControlViewModel selectedItem && !string.IsNullOrEmpty(selectedItem.DisplayName))
-                {
-                    if (selectedItem.Type != Constants.Folder)
-                    {
-                        var file = await currentFolder.GetFileAsync(selectedItem.DisplayName);
-
-                        if (file != null)
-                        {
-                            await Launcher.LaunchFileAsync(file);
-                        }
-                    }
-                    else
-                    {
-                        IsBackButtonAvailable = true;
-                        IsDeleteButtonAvailable = true;
-                        IsNewFolderButtonAvailable = true;
-
-                        CurrentPath = selectedItem.Path;
-                        var newCurrentFolder = await StorageFolder.GetFolderFromPathAsync(CurrentPath);
-                        currentFolder = newCurrentFolder;
-
-                        await GetItemsAsync().ConfigureAwait(true);
-                    }
-                }
-            }
-        }
-
-        private async void OpenFileWindowsAsync(object sender)
+        private async void OpenFileAsync(object sender)
         {
             if (editableItem != null)
             {
