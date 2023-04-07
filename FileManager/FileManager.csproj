@@ -135,6 +135,8 @@
     </Compile>
     <Compile Include="Commands\RelayCommand.cs" />
     <Compile Include="Models\TokenResult.cs" />
+    <Compile Include="Services\FtpService.cs" />
+    <Compile Include="Services\GoogleDriveService.cs" />
     <Compile Include="Validation\ItemNameValidation.cs" />
     <Compile Include="ViewModels\ContentDialogControlViewModel.cs" />
     <Compile Include="ViewModels\FtpViewModel.cs" />

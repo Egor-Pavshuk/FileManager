@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Linq;
 using Windows.System;
 
 namespace FileManager.ViewModels.Information
@@ -32,18 +33,24 @@ namespace FileManager.ViewModels.Information
 
         public void BatteryTrigger()
         {
-            Windows.Devices.Power.Battery.AggregateBattery.ReportUpdated
-            += async (sender, args) => await InformationControls[0].UpdateBatteryStatus().ConfigureAwait(true);
+            var batteryControls = InformationControls.Where(c => c.GetType() == typeof(BatteryControlViewModel));
+            foreach (var batteryControl in batteryControls)
+            {
+                Windows.Devices.Power.Battery.AggregateBattery.ReportUpdated
+            += async (sender, args) => await batteryControl.UpdateBatteryStatus().ConfigureAwait(true);
+            }
         }
 
         public void MemoryTrigger()
         {
-            MemoryManager.AppMemoryUsageDecreased
-            += async (sender, args) => await InformationControls[1].UpdateMemoryStatus().ConfigureAwait(true);
-            MemoryManager.AppMemoryUsageIncreased
-            += async (sender, args) => await InformationControls[1].UpdateMemoryStatus().ConfigureAwait(true);
+            var memoryControls = InformationControls.Where(c => c.GetType() == typeof(MemoryControlViewModel));
+            foreach (var memoryControl in memoryControls)
+            {
+                MemoryManager.AppMemoryUsageDecreased
+                    += async (sender, args) => await memoryControl.UpdateMemoryStatus().ConfigureAwait(true);
+                MemoryManager.AppMemoryUsageIncreased
+                    += async (sender, args) => await memoryControl.UpdateMemoryStatus().ConfigureAwait(true);
+            }
         }
-
-
     }
 }

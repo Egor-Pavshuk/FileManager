@@ -10,9 +10,9 @@ namespace FileManager.ViewModels.Information
         protected readonly ResourceLoader batteryResourceLoader;
         protected readonly ResourceLoader themeResourceLoader;
         private bool isProgressBarVisible;
+        private double progressBarValue;
         private string background;
         private string image;
-        private double progressBarValue;
         private string text;
 
         public string Background

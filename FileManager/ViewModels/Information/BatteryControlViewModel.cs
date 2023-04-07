@@ -9,6 +9,11 @@ namespace FileManager.ViewModels.Information
 {
     public class BatteryControlViewModel : InformationControlViewModel
     {
+        private const int FullBattery = 100;
+        private const int BitDischargedBattery = 76;
+        private const int HalfBattery = 51;
+        private const int ThirdBattery = 31;
+        private const int LowBattery = 21;
         public BatteryControlViewModel()
         {
             Background = "#FFF4B717";
@@ -47,19 +52,19 @@ namespace FileManager.ViewModels.Information
                         Image = batteryResourceLoader.GetString(Constants.BatteryCharge);
                         break;
                     case BatteryStatus.Discharging:
-                        if (ProgressBarValue <= 100 && ProgressBarValue > 76)
+                        if (ProgressBarValue <= FullBattery && ProgressBarValue > BitDischargedBattery)
                         {
                             Image = batteryResourceLoader.GetString(Constants.FullBattery);
                         }
-                        else if (ProgressBarValue <= 76 && ProgressBarValue > 51)
+                        else if (ProgressBarValue <= BitDischargedBattery && ProgressBarValue > HalfBattery)
                         {
                             Image = batteryResourceLoader.GetString(Constants.Battery);
                         }
-                        else if (ProgressBarValue <= 51 && ProgressBarValue > 31)
+                        else if (ProgressBarValue <= HalfBattery && ProgressBarValue > ThirdBattery)
                         {
                             Image = batteryResourceLoader.GetString(Constants.Halfbattery);
                         }
-                        else if (ProgressBarValue <= 31 && ProgressBarValue > 21)
+                        else if (ProgressBarValue <= ThirdBattery && ProgressBarValue > LowBattery)
                         {
                             Image = batteryResourceLoader.GetString(Constants.LowBattery);
                         }

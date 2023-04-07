@@ -66,5 +66,6 @@
         public const string FreeSpaceKey = "System.FreeSpace";
         public const string RamIcon = "ramIcon";
         public const string DiskStorageIcon = "diskStorage";
+        public const string Success = "Success";
     }
 }
