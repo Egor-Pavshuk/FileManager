@@ -1,4 +1,6 @@
-﻿namespace FileManager.Models
+﻿using System;
+
+namespace FileManager.Models
 {
     public class TokenResult
     {
@@ -7,5 +9,6 @@
         public string ExpiresIn { get; set; }
         public string Scope { get; set; }
         public string TokenType { get; set; }
+        public DateTime LastRefreshTime { get; set; }
     }
 }

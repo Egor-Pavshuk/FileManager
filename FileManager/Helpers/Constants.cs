@@ -67,5 +67,8 @@
         public const string RamIcon = "ramIcon";
         public const string DiskStorageIcon = "diskStorage";
         public const string Success = "Success";
+        public const string RefreshToken = "refresh_token";
+        public const string TokenType = "token_type";
+        public const string Scope = "scope";
     }
 }
