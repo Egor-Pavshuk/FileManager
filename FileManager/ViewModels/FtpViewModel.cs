@@ -417,8 +417,7 @@ namespace FileManager.ViewModels
 
         private void OpenFolder(object sender)
         {
-            const string Folder = "folder";
-            if (selectedGridItem != null && selectedGridItem.Type == Folder)
+            if (selectedGridItem != null && selectedGridItem.Type == Constants.Folder)
             {
                 currentPath = selectedGridItem.Path;
                 _ = GetItemsAsync(selectedGridItem.Path);

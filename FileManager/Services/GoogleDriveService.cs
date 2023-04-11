@@ -3,9 +3,12 @@ using FileManager.Models;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Drive.v3;
 using Google.Apis.Services;
+using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -48,13 +51,13 @@ namespace FileManager.Services
                     if (accessToken != null)
                     {
                         var response = await client.PostAsync(Constants.AuthEndpoint, content).ConfigureAwait(true);
-                        string responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(true);
-                        JsonObject responseObject = JsonObject.Parse(responseContent);
-                        accessToken.AccessToken = responseObject.GetNamedString(Constants.AccessToken);
-                        accessToken.RefreshToken = responseObject.GetNamedString(Constants.RefreshToken);
-                        accessToken.TokenType = responseObject.GetNamedString(Constants.TokenType);
-                        accessToken.ExpiresIn = responseObject.GetNamedValue(Constants.ExpiresIn).ToString();
-                        accessToken.Scope = responseObject.GetNamedString(Constants.Scope);
+                        string responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(true);                       
+                        var token = JsonConvert.DeserializeObject<TokenResult>(responseContent);
+                        accessToken.Access_token = token.Access_token;
+                        accessToken.Refresh_token = token.Refresh_token;
+                        accessToken.Token_type = token.Token_type;
+                        accessToken.Expires_in = token.Expires_in;
+                        accessToken.Scope = token.Scope;
                         accessToken.LastRefreshTime = DateTime.Now;
                         result = Constants.Success;
                     }
@@ -70,9 +73,9 @@ namespace FileManager.Services
             }
             return result;
         }
-        public async Task<JsonArray> GetFilesAsync(string q, string tokenType, string accessToken)
+        public async Task<List<GoogleDriveFile>> GetFilesAsync(string q, string tokenType, string accessToken)
         {
-            JsonArray driveFiles = new JsonArray();
+            List<GoogleDriveFile> driveFiles = new List<GoogleDriveFile>();
             string nextPageToken = string.Empty;
             HttpResponseMessage driveResult;
 
@@ -91,25 +94,32 @@ namespace FileManager.Services
                         break;
                     }
                     var result = await driveResult.Content.ReadAsStringAsync().ConfigureAwait(true);
-                    var jsonParse = JsonObject.Parse(result);
-                    var jsonFiles = jsonParse["files"].GetArray();
-                    foreach (var resultFile in jsonFiles)
-                    {
-                        driveFiles.Add(resultFile);
-                    }
-                    if (jsonParse.TryGetValue("nextPageToken", out IJsonValue value))
-                    {
-                        nextPageToken = value.ToString();
-                        nextPageToken = nextPageToken.Substring(1, nextPageToken.Length - 2);
-                    }
-                    else
-                    {
-                        nextPageToken = string.Empty;
-                    }
+                    var jsonResult = JsonConvert.DeserializeObject<DriveResult>(result);
+                    nextPageToken = jsonResult.NextPageToken;
+                    driveFiles.AddRange(jsonResult.Files);
 
                 } while (!string.IsNullOrEmpty(nextPageToken));
             }
             return driveFiles;
+        }
+        public async Task<string> GetRootFolderIdAsync(string tokenType, string accessToken)
+        {
+            string result;
+            using (HttpClient client = new HttpClient())
+            {
+                try
+                {
+                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(tokenType, accessToken);
+                    var rootFolderResult = await client.GetAsync($"https://www.googleapis.com/drive/v3/files/root").ConfigureAwait(true);
+                    var rootFolderString = await rootFolderResult.Content.ReadAsStringAsync().ConfigureAwait(true);
+                    result = JsonConvert.DeserializeObject<GoogleDriveFile>(rootFolderString).Id;
+                }
+                catch (HttpRequestException)
+                {
+                    result = Constants.Failed;
+                }
+            }
+            return result;
         }
         public async Task<string> DownloadFileAsync(Uri source, StorageFolder destinationFolder, string fileName, string tokenType, string accessToken)
         {
@@ -264,15 +274,15 @@ namespace FileManager.Services
             {
                 if (accessToken != null)
                 {
-                    string request = string.Join('&', $"&client_id={clientId}", $"client_secret={secret}", "grant_type=refresh_token", $"refresh_token={accessToken.RefreshToken}");
+                    string request = string.Join('&', $"&client_id={clientId}", $"client_secret={secret}", "grant_type=refresh_token", $"refresh_token={accessToken.Refresh_token}");
                     StringContent content = new StringContent(request, Encoding.UTF8, Constants.UrlencodedContentType);
                     try
                     {
                         response = await client.PostAsync(Constants.AuthEndpoint, content).ConfigureAwait(true);
                         string responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(true);
-                        JsonObject responseObject = JsonObject.Parse(responseContent);
-                        accessToken.AccessToken = responseObject.GetNamedString(Constants.AccessToken);
-                        accessToken.ExpiresIn = responseObject.GetNamedValue(Constants.ExpiresIn).ToString();
+                        var token = JsonConvert.DeserializeObject<TokenResult>(responseContent);
+                        accessToken.Access_token = token.Access_token;
+                        accessToken.Expires_in = token.Expires_in;
                         accessToken.LastRefreshTime = DateTime.Now;
                         result = Constants.Success;
                     }

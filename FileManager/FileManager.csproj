@@ -134,6 +134,8 @@
       <DependentUpon>FileControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Commands\RelayCommand.cs" />
+    <Compile Include="Models\DriveResult.cs" />
+    <Compile Include="Models\GoogleDriveFile.cs" />
     <Compile Include="Models\TokenResult.cs" />
     <Compile Include="Services\FtpService.cs" />
     <Compile Include="Services\GoogleDriveService.cs" />
@@ -287,6 +289,9 @@
     </PackageReference>
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform">
       <Version>6.2.14</Version>
+    </PackageReference>
+    <PackageReference Include="Newtonsoft.Json">
+      <Version>13.0.3</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
