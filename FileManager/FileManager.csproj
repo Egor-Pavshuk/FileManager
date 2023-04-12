@@ -137,6 +137,7 @@
     </Compile>
     <Compile Include="Commands\RelayCommand.cs" />
     <Compile Include="Models\DriveResult.cs" />
+    <Compile Include="Models\FtpFile.cs" />
     <Compile Include="Models\GoogleDriveFile.cs" />
     <Compile Include="Models\TokenResult.cs" />
     <Compile Include="Services\FtpService.cs" />

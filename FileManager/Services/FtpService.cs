@@ -6,6 +6,8 @@ using System.Net;
 using System.Threading.Tasks;
 using Windows.Storage;
 using FileManager.Helpers;
+using FileManager.Models;
+using System.Text.RegularExpressions;
 
 namespace FileManager.Services
 {
@@ -34,7 +36,7 @@ namespace FileManager.Services
 
             return connectionResult;
         }
-        public async Task<List<string>> GetFilesAsync(string path, string username, string password)
+        public async Task<List<FtpFile>> GetFilesAsync(string path, string username, string password)
         {
             var fileName = path?.Split("/").Last();
             if (fileName.Contains("#", StringComparison.Ordinal))
@@ -47,19 +49,42 @@ namespace FileManager.Services
             request.Credentials = new NetworkCredential(username, password);
             var response = (FtpWebResponse)await request.GetResponseAsync().ConfigureAwait(true);
             StreamReader streamReader = new StreamReader(response.GetResponseStream());
-
-
-            List<string> files = new List<string>();
+            List<FtpFile> files = new List<FtpFile>();
             string line = await streamReader.ReadLineAsync().ConfigureAwait(true);
             while (!string.IsNullOrEmpty(line))
             {
-                files.Add(line);
+                files.Add(GetFtpFile(line));
                 line = await streamReader.ReadLineAsync().ConfigureAwait(true);
             }
-
             streamReader.Close();
             response.Close();
             return files;
+        }
+        private FtpFile GetFtpFile(string line)
+        {
+            var elements = line.Split(" ").ToList();
+            elements.RemoveAll(f => string.IsNullOrEmpty(f));
+            int indexOfTime = elements.IndexOf(elements.FirstOrDefault(e => Regex.IsMatch(e, @"[0-2][0-9][:][0-5][0-9]")));
+            var elementName = string.Join(" ", elements.GetRange(indexOfTime + 1, elements.Count - indexOfTime - 1));
+            string fileType = elements[0];
+            if (fileType != "drwxr-xr-x")
+            {
+                int startIndexOfExtension = elementName.LastIndexOf('.');
+                if (startIndexOfExtension >= 0)
+                {
+                    fileType = elementName.Substring(startIndexOfExtension);
+                }                
+            }            
+            string size = elements[indexOfTime - 3];
+            string creationTime = string.Join(" ", elements[indexOfTime - 2], elements[indexOfTime - 1]);
+            var ftpFile = new FtpFile()
+            {
+                Type = fileType,
+                Name = elementName,
+                Size = size,
+                CreationTime = creationTime
+            };
+            return ftpFile;
         }
         public async Task<string> DownloadFileAsync(StorageFolder downloadFolder, string filePath, string username, string password)
         {

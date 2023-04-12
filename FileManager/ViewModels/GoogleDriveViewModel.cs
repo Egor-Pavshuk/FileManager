@@ -431,23 +431,17 @@ namespace FileManager.ViewModels
             List<OnlineFileControlViewModel> driveFiles = new List<OnlineFileControlViewModel>();
             foreach (var driveFile in responseFiles)
             {
-                if (OnlineFileControlCreator.GetFileControlType(driveFile.MimeType) != Constants.Folder)
-                {
-                    continue;
-                }
                 var viewModel = OnlineFileControlCreator.CreateFileControl(themeResourceLoader, driveFile.Id, driveFile.Name, driveFile.MimeType);
-                driveFiles.Add(viewModel);
-            }
-            foreach (var driveFile in responseFiles)
-            {                
-                if (OnlineFileControlCreator.GetFileControlType(driveFile.MimeType) == Constants.Folder)
+                if (viewModel.Type == Constants.Folder)
                 {
-                    continue;
+                    var lastIndexOfFolder = driveFiles.FindLastIndex(f => f.Type == Constants.Folder);
+                    driveFiles.Insert(lastIndexOfFolder + 1, viewModel);
                 }
-                var viewModel = OnlineFileControlCreator.CreateFileControl(themeResourceLoader, driveFile.Id, driveFile.Name, driveFile.MimeType);
-                driveFiles.Add(viewModel);
+                else
+                {
+                    driveFiles.Add(viewModel);
+                }                
             }
-
             StorageFiles = new Collection<OnlineFileControlViewModel>(driveFiles);
             CheckFilesForDownloading();
             IsLoadingVisible = false;

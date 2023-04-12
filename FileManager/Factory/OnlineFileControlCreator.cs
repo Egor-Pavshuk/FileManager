@@ -1,6 +1,7 @@
 ﻿using FileManager.Helpers;
 using FileManager.ViewModels.OnlineFileControls;
 using System.Collections.Generic;
+using System.IO;
 using Windows.ApplicationModel.Resources;
 
 namespace FileManager.Factory
@@ -32,9 +33,10 @@ namespace FileManager.Factory
                 { "video/x-ms-wmv", Constants.Video },
                 { "video/mp4", Constants.Video },
                 { "image/png", Constants.Image },
+                { "drwxr-xr-x", Constants.Folder },
             };
 
-        public static OnlineFileControlViewModel CreateFileControl(ResourceLoader themeResourceLoader, string id, string name, string type)
+        public static OnlineFileControlViewModel CreateFileControl(ResourceLoader themeResourceLoader, string id, string name, string type, string path = "")
         {
             OnlineFileControlViewModel fileControl;
             knownTypes.TryGetValue(type, out string controlType);
@@ -54,21 +56,12 @@ namespace FileManager.Factory
                     break;
                 default:
                     fileControl = new DocumentFileControlViewModel(themeResourceLoader);
-                    controlType = Constants.File;
                     break;
             }
             fileControl.Id = id;
             fileControl.DisplayName = name;
-            fileControl.Type = controlType;
+            fileControl.Path = path;
             return fileControl;
-        }
-        public static string GetFileControlType(string type)
-        {
-            if (!knownTypes.TryGetValue(type, out string controlType))
-            {
-                controlType = string.Empty;
-            }
-            return controlType;
         }
     }
 }

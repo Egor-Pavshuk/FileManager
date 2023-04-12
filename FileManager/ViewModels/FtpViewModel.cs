@@ -20,6 +20,8 @@ using FileManager.Helpers;
 using FileManager.Services;
 using FileManager.Validation;
 using FileManager.ViewModels.OnlineFileControls;
+using FileManager.Factory;
+using FileManager.Models;
 
 namespace FileManager.ViewModels
 {
@@ -363,24 +365,7 @@ namespace FileManager.ViewModels
                     {
                         foreach (var storageFile in storageFiles)
                         {
-                            switch (storageFile.Type)
-                            {
-                                case Constants.Image:
-                                    storageFile.Image = themeResourceLoader.GetString(Constants.Image);
-                                    break;
-                                case Constants.Video:
-                                    storageFile.Image = themeResourceLoader.GetString(Constants.Video);
-                                    break;
-                                case Constants.Audio:
-                                    storageFile.Image = themeResourceLoader.GetString(Constants.Audio);
-                                    break;
-                                case Constants.Folder:
-                                    storageFile.Image = themeResourceLoader.GetString(Constants.Folder);
-                                    break;
-                                default:
-                                    storageFile.Image = themeResourceLoader.GetString(Constants.File);
-                                    break;
-                            }
+                            storageFile.ChangeColorMode(themeResourceLoader);
                         }
                     }).AsTask().ConfigureAwait(true);
                 }
@@ -437,65 +422,20 @@ namespace FileManager.ViewModels
 
             var ftpFiles = await ftpService.GetFilesAsync(path, username, password).ConfigureAwait(true);
             List<OnlineFileControlViewModel> items = new List<OnlineFileControlViewModel>();
-
-            foreach (var ftpFile in ftpFiles)
+            foreach (var file in ftpFiles)
             {
-                var elements = ftpFile.Split(" ").ToList();
-                int indexOfName = elements.IndexOf(elements.FirstOrDefault(e => Regex.IsMatch(e, @"[0-2][0-9][:][0-5][0-9]"))) + 1;
-                var elementName = string.Join(" ", elements.GetRange(indexOfName, elements.Count - indexOfName));
-                if (elements[0] != "drwxr-xr-x")
+                var filePath = string.Join("/", path, file.Name);
+                var viewModel = OnlineFileControlCreator.CreateFileControl(themeResourceLoader, file.Id, file.Name, file.Type, filePath);
+                if (viewModel.Type == Constants.Folder)
                 {
-                    continue;
-                }
-
-                items.Add(new OnlineFileControlViewModel()
-                {
-                    Image = themeResourceLoader.GetString(Constants.Folder),
-                    DisplayName = elementName,
-                    Type = Constants.Folder,
-                    Path = currentPath + "/" + elementName
-                });
-            }
-
-            foreach (var ftpFile in ftpFiles)
-            {
-                var elements = ftpFile.Split(" ").ToList();
-                int indexOfName = elements.IndexOf(elements.FirstOrDefault(e => Regex.IsMatch(e, @"[0-2][0-9][:][0-5][0-9]"))) + 1;
-                var elementName = string.Join(" ", elements.GetRange(indexOfName, elements.Count - indexOfName));
-                if (elements[0] == "drwxr-xr-x")
-                {
-                    continue;
-                }
-
-                int startIndexOfExtension = elementName.LastIndexOf('.');
-                string fileExtension = string.Empty;
-                if (startIndexOfExtension >= 0)
-                {
-                    fileExtension = elementName.Substring(startIndexOfExtension);
-                }
-                if (knownTypes.TryGetValue(fileExtension, out string value))
-                {
-                    items.Add(new OnlineFileControlViewModel()
-                    {
-                        Image = themeResourceLoader.GetString(value),
-                        DisplayName = elementName,
-                        Type = Constants.File,
-                        Path = currentPath + "/" + elementName
-                    });
+                    var lastIndexOfFolder = items.FindLastIndex(f => f.Type == Constants.Folder);
+                    items.Insert(lastIndexOfFolder + 1, viewModel);
                 }
                 else
                 {
-                    items.Add(new OnlineFileControlViewModel()
-                    {
-                        Image = themeResourceLoader.GetString(Constants.File),
-                        DisplayName = elementName,
-                        Type = Constants.File,
-                        Path = currentPath + "/" + elementName
-                    });
+                    items.Add(viewModel);
                 }
-
             }
-
             StorageFiles = new Collection<OnlineFileControlViewModel>(items);
             _ = CheckFilesForDownloadingAsync();
             IsLoadingVisible = false;
