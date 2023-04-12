@@ -4,25 +4,14 @@ using FileManager.Helpers;
 using FileManager.Models;
 using FileManager.Services;
 using FileManager.Validation;
-using Google.Apis.Auth.OAuth2;
-using Google.Apis.Drive.v3;
-using Google.Apis.Services;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.IO;
 using System.Linq;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Net.Sockets;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Windows.ApplicationModel.Core;
 using Windows.ApplicationModel.Resources;
-using Windows.Data.Json;
 using Windows.Storage;
 using Windows.Storage.Pickers;
 using Windows.UI;
@@ -635,7 +624,7 @@ namespace FileManager.ViewModels
             string result;
             string errorContent;
             string errorTitle;
-            string fileId = selectedGridItem.Id;            
+            string fileId = selectedGridItem.Id;
             if (selectedGridItem != null && !string.IsNullOrEmpty(selectedGridItem.DisplayName) && selectedGridItem.Type != Constants.Folder)
             {
                 StorageFolder downloadFolder = await GetDestinationFolderAsync().ConfigureAwait(true);
@@ -646,9 +635,9 @@ namespace FileManager.ViewModels
                 SelectedGridItem.IsDownloading = true;
                 SelectedGridItem.DownloadStatus = stringsResourceLoader.GetString(Constants.DownloadingText);
                 downloadingFilesId.Add(SelectedGridItem.Id);
-                Uri source = new Uri(string.Join("", GoogleDownloadUri, 
-                    selectedGridItem.Id.Substring(1, selectedGridItem.Id.Length - 2), "?alt=media"));
-                result = await googleDriveService.DownloadFileAsync(source, downloadFolder, selectedGridItem.DisplayName, 
+                Uri source = new Uri(string.Join("", GoogleDownloadUri,
+                    selectedGridItem.Id, "?alt=media"));
+                result = await googleDriveService.DownloadFileAsync(source, downloadFolder, selectedGridItem.DisplayName,
                     tokenResult.Token_type, tokenResult.Access_token).ConfigureAwait(true);
                 downloadingFilesId.Remove(fileId);
                 var downloadingFile = storageFiles.FirstOrDefault(f => f.Id == fileId);
@@ -695,7 +684,7 @@ namespace FileManager.ViewModels
             string folderId = currentFolderId;
             var parents = new Collection<string>()
             {
-                currentFolderId.Substring(1, currentFolderId.Length - 2)
+                currentFolderId
             };
             var picker = new FileOpenPicker
             {
@@ -709,7 +698,7 @@ namespace FileManager.ViewModels
                 if (DateTime.Now.Subtract(tokenResult.LastRefreshTime).Seconds >= int.Parse(tokenResult.Expires_in))
                 {
                     await RefreshTokenAsync().ConfigureAwait(true);
-                }                
+                }
                 result = await googleDriveService.UploadFileAsync(uploadFile, parents, tokenResult.Access_token).ConfigureAwait(true);
                 if (result == Constants.Success)
                 {
@@ -769,17 +758,17 @@ namespace FileManager.ViewModels
 
         private async void CreateNewFolderAsync(object sender)
         {
-            string dialogTitle = stringsResourceLoader.GetString(Constants.Rename);
+            string dialogTitle = stringsResourceLoader.GetString(Constants.NewFolder);
             string placeHolder = stringsResourceLoader.GetString(Constants.PlaceHolderFileName);
-            string inputText = selectedGridItem.DisplayName;
-            string primaryButton = stringsResourceLoader.GetString(Constants.YesButton);
+            string inputText = string.Empty;
+            string primaryButton = stringsResourceLoader.GetString(Constants.CreateButton);
             string secondaryButton = stringsResourceLoader.GetString(Constants.CancelButton);
             string result;
             string errorContent;
             string errorTitle;
             var parents = new Collection<string>()
             {
-                currentFolderId.Substring(1, currentFolderId.Length - 2)
+                currentFolderId
             };
             var contentDialog = CreateInputContentDialog(dialogTitle, placeHolder, inputText, primaryButton, secondaryButton);
             var dialogResult = await contentDialog.ShowAsync();
@@ -791,7 +780,7 @@ namespace FileManager.ViewModels
                 if (DateTime.Now.Subtract(tokenResult.LastRefreshTime).Seconds >= int.Parse(tokenResult.Expires_in))
                 {
                     await RefreshTokenAsync().ConfigureAwait(true);
-                }                
+                }
                 result = await googleDriveService.CreateNewFolderAsync(folderName, parents, tokenResult.Access_token).ConfigureAwait(true);
                 if (result == Constants.Success)
                 {
@@ -829,7 +818,7 @@ namespace FileManager.ViewModels
                 var gridItem = (ContentDialogControlViewModel)contentDialog.DataContext;
                 var fileName = gridItem.InputText;
                 fileName = ValidateItemName(fileName);
-                
+
                 if (dialogResult == ContentDialogResult.Primary && !string.IsNullOrEmpty(fileName))
                 {
                     if (DateTime.Now.Subtract(tokenResult.LastRefreshTime).Seconds >= int.Parse(tokenResult.Expires_in))

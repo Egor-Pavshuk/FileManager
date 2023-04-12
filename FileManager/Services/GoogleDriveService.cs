@@ -8,12 +8,10 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
-using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
-using Windows.Data.Json;
 using Windows.Storage;
 using static Google.Apis.Drive.v3.FilesResource;
 
@@ -51,7 +49,7 @@ namespace FileManager.Services
                     if (accessToken != null)
                     {
                         var response = await client.PostAsync(Constants.AuthEndpoint, content).ConfigureAwait(true);
-                        string responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(true);                       
+                        string responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(true);
                         var token = JsonConvert.DeserializeObject<TokenResult>(responseContent);
                         accessToken.Access_token = token.Access_token;
                         accessToken.Refresh_token = token.Refresh_token;
@@ -191,7 +189,7 @@ namespace FileManager.Services
             {
                 if (fileId != null)
                 {
-                    request = service.Files.Delete(fileId.Substring(1, fileId.Length - 2));
+                    request = service.Files.Delete(fileId);
                     try
                     {
                         await request.ExecuteAsync().ConfigureAwait(true);
@@ -251,10 +249,6 @@ namespace FileManager.Services
 
                 try
                 {
-                    if (itemId != null)
-                    {
-                        itemId = itemId.AsSpan().Slice(1, itemId.Length - 2).ToString();
-                    }
                     var request = service.Files.Update(fileMetadata, itemId);
                     await request.ExecuteAsync().ConfigureAwait(true);
                     result = Constants.Success;
