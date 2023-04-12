@@ -7,6 +7,7 @@ using Windows.UI.Xaml;
 using FileManager.ViewModels;
 using FileManager.ViewModels.Information;
 using FileManager.Views;
+using FileManager.ViewModels.OnlineFileControls;
 
 namespace FileManager.VMLocator
 {
@@ -44,7 +45,7 @@ namespace FileManager.VMLocator
                     typeof(OnlineFileControlViewModel),
                     typeof(InformationControlViewModel)
                 };
-                if (!typesWithoutActivation.Any(t => t == viewModelType))
+                if (!typesWithoutActivation.Any(t => t == viewModelType) && viewModelType != null)
                 {
                     switch (frameworkElement.GetType().Name)
                     {

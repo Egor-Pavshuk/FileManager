@@ -1,14 +1,7 @@
-﻿using FileManager.Commands;
-using FileManager.Controlls;
-using FileManager.Helpers;
-using FileManager.Services;
-using FileManager.Validation;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.IO;
 using System.Linq;
-using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -21,6 +14,12 @@ using Windows.UI.Core;
 using Windows.UI.Popups;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml.Controls;
+using FileManager.Commands;
+using FileManager.Controlls;
+using FileManager.Helpers;
+using FileManager.Services;
+using FileManager.Validation;
+using FileManager.ViewModels.OnlineFileControls;
 
 namespace FileManager.ViewModels
 {
@@ -297,7 +296,7 @@ namespace FileManager.ViewModels
 
 
         public FtpViewModel()
-        {            
+        {
             knownTypes = new Dictionary<string, string>()
             {
                 { ".jpg", Constants.Image },
@@ -538,7 +537,7 @@ namespace FileManager.ViewModels
                 {
                     SelectedGridItem.IsDownloading = true;
                     SelectedGridItem.DownloadStatus = stringsResourceLoader.GetString(Constants.DownloadingText);
-                    downloadingFilesPath.Add(selectedGridItem.Path); 
+                    downloadingFilesPath.Add(selectedGridItem.Path);
                     result = await ftpService.DownloadFileAsync(downloadFolder, filePath, username, password).ConfigureAwait(true);
                     downloadingFilesPath.Remove(filePath);
                     var downloadingFile = storageFiles.FirstOrDefault(f => f.Path == filePath);
@@ -659,7 +658,7 @@ namespace FileManager.ViewModels
             var folderName = gridItem.InputText;
             folderName = ValidateItemName(folderName);
             if (dialogResult == ContentDialogResult.Primary && !string.IsNullOrEmpty(folderName))
-            {              
+            {
                 if (storageFiles.FirstOrDefault(f => f.DisplayName == folderName) == null)
                 {
                     creatingResult = await ftpService.CreateNewFolderAsync(currentPath, folderName, username, password).ConfigureAwait(true);
@@ -675,7 +674,7 @@ namespace FileManager.ViewModels
                 }
                 else
                 {
-                    await ShowMessageDialogAsync(stringsResourceLoader.GetString(Constants.SameNameError), 
+                    await ShowMessageDialogAsync(stringsResourceLoader.GetString(Constants.SameNameError),
                         stringsResourceLoader.GetString(Constants.Failed)).ConfigureAwait(true);
                 }
 
@@ -703,7 +702,7 @@ namespace FileManager.ViewModels
                 var newFileName = gridItem.InputText;
                 newFileName = ValidateItemName(newFileName);
                 if (dialogResult == ContentDialogResult.Primary && !string.IsNullOrEmpty(newFileName))
-                {                                      
+                {
                     if (storageFiles.FirstOrDefault(f => f.DisplayName == newFileName) == null)
                     {
                         result = await ftpService.RenameFileAsync(currentPath, selectedGridItem.DisplayName, newFileName, username, password).ConfigureAwait(true);

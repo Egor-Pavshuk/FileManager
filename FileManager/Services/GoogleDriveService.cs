@@ -1,10 +1,4 @@
-﻿using FileManager.Helpers;
-using FileManager.Models;
-using Google.Apis.Auth.OAuth2;
-using Google.Apis.Drive.v3;
-using Google.Apis.Services;
-using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -14,6 +8,12 @@ using System.Text;
 using System.Threading.Tasks;
 using Windows.Storage;
 using static Google.Apis.Drive.v3.FilesResource;
+using FileManager.Helpers;
+using FileManager.Models;
+using Google.Apis.Auth.OAuth2;
+using Google.Apis.Drive.v3;
+using Google.Apis.Services;
+using Newtonsoft.Json;
 
 namespace FileManager.Services
 {

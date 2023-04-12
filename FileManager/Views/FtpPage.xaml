@@ -4,7 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:helper="using:FileManager.Helpers"
     xmlns:custom="using:FileManager.Controlls"
-    xmlns:viewmodels="using:FileManager.ViewModels"
+    xmlns:viewmodels="using:FileManager.ViewModels.OnlineFileControls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vml="using:FileManager.VMLocator" 

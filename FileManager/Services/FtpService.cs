@@ -1,18 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
-using System.Text;
 using System.Threading.Tasks;
-using Windows.UI.Popups;
-using FileManager.Helpers;
-using System.IO;
 using Windows.Storage;
-using Windows.UI.Xaml.Controls;
-using FileManager.Controlls;
-using FileManager.Validation;
-using FileManager.ViewModels;
-using System.Globalization;
+using FileManager.Helpers;
 
 namespace FileManager.Services
 {

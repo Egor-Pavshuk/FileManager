@@ -1,10 +1,4 @@
-﻿using FileManager.Commands;
-using FileManager.Controlls;
-using FileManager.Helpers;
-using FileManager.Models;
-using FileManager.Services;
-using FileManager.Validation;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -19,6 +13,14 @@ using Windows.UI.Core;
 using Windows.UI.Popups;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml.Controls;
+using FileManager.Commands;
+using FileManager.Controlls;
+using FileManager.Helpers;
+using FileManager.Models;
+using FileManager.Services;
+using FileManager.Validation;
+using FileManager.ViewModels.OnlineFileControls;
+using FileManager.Factory;
 
 namespace FileManager.ViewModels
 {
@@ -353,24 +355,7 @@ namespace FileManager.ViewModels
                     {
                         foreach (var storageFile in storageFiles)
                         {
-                            switch (storageFile.Type)
-                            {
-                                case Constants.Image:
-                                    storageFile.Image = themeResourceLoader.GetString(Constants.Image);
-                                    break;
-                                case Constants.Video:
-                                    storageFile.Image = themeResourceLoader.GetString(Constants.Video);
-                                    break;
-                                case Constants.Audio:
-                                    storageFile.Image = themeResourceLoader.GetString(Constants.Audio);
-                                    break;
-                                case Constants.Folder:
-                                    storageFile.Image = themeResourceLoader.GetString(Constants.Folder);
-                                    break;
-                                default:
-                                    storageFile.Image = themeResourceLoader.GetString(Constants.File);
-                                    break;
-                            }
+                            storageFile.ChangeColorMode(themeResourceLoader);
                         }
                     }).AsTask().ConfigureAwait(true);
                 }
@@ -444,75 +429,22 @@ namespace FileManager.ViewModels
             _ = CheckInternetConnectionAsync();
             List<GoogleDriveFile> responseFiles = await GetFilesFromGoogleDriveAsync(folderId).ConfigureAwait(true);
             List<OnlineFileControlViewModel> driveFiles = new List<OnlineFileControlViewModel>();
-
             foreach (var driveFile in responseFiles)
             {
-                if (!driveFile.MimeType.Contains("." + Constants.Folder, StringComparison.Ordinal))
+                if (OnlineFileControlCreator.GetFileControlType(driveFile.MimeType) != Constants.Folder)
                 {
                     continue;
                 }
-
-                OnlineFileControlViewModel viewModel;
-                string currentFileName = driveFile.Name;
-                viewModel = new OnlineFileControlViewModel()
-                {
-                    Id = driveFile.Id,
-                    Image = themeResourceLoader.GetString(Constants.Folder),
-                    DisplayName = currentFileName,
-                    Type = Constants.Folder
-                };
+                var viewModel = OnlineFileControlCreator.CreateFileControl(themeResourceLoader, driveFile.Id, driveFile.Name, driveFile.MimeType);
                 driveFiles.Add(viewModel);
             }
-
             foreach (var driveFile in responseFiles)
-            {
-                OnlineFileControlViewModel viewModel;
-                if (driveFile.MimeType.Contains("." + Constants.Folder, StringComparison.Ordinal))
+            {                
+                if (OnlineFileControlCreator.GetFileControlType(driveFile.MimeType) == Constants.Folder)
                 {
                     continue;
                 }
-                string currentFileName = driveFile.Name;
-
-                if (driveFile.MimeType.Contains("." + Constants.Photo, StringComparison.Ordinal) || driveFile.MimeType.Contains("." + Constants.Shortcut, StringComparison.Ordinal) || driveFile.MimeType.Contains(Constants.Photo, StringComparison.Ordinal) || driveFile.MimeType.Contains(Constants.Image, StringComparison.Ordinal))
-                {
-                    viewModel = new OnlineFileControlViewModel()
-                    {
-                        Id = driveFile.Id,
-                        Image = themeResourceLoader.GetString(Constants.Image),
-                        DisplayName = currentFileName,
-                        Type = Constants.Image
-                    };
-                }
-                else if (driveFile.MimeType.Contains("." + Constants.Video, StringComparison.Ordinal) || driveFile.MimeType.Contains(Constants.Video, StringComparison.Ordinal))
-                {
-                    viewModel = new OnlineFileControlViewModel()
-                    {
-                        Id = driveFile.Id,
-                        Image = themeResourceLoader.GetString(Constants.Video),
-                        DisplayName = currentFileName,
-                        Type = Constants.Video
-                    };
-                }
-                else if (driveFile.MimeType.Contains("." + Constants.Audio, StringComparison.Ordinal) || driveFile.MimeType.Contains(Constants.Audio, StringComparison.Ordinal))
-                {
-                    viewModel = new OnlineFileControlViewModel()
-                    {
-                        Id = driveFile.Id,
-                        Image = themeResourceLoader.GetString(Constants.Audio),
-                        DisplayName = currentFileName,
-                        Type = Constants.Audio
-                    };
-                }
-                else
-                {
-                    viewModel = new OnlineFileControlViewModel()
-                    {
-                        Id = driveFile.Id,
-                        Image = themeResourceLoader.GetString(Constants.File),
-                        DisplayName = currentFileName,
-                        Type = Constants.File
-                    };
-                }
+                var viewModel = OnlineFileControlCreator.CreateFileControl(themeResourceLoader, driveFile.Id, driveFile.Name, driveFile.MimeType);
                 driveFiles.Add(viewModel);
             }
 

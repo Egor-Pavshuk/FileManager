@@ -5,7 +5,7 @@
     xmlns:helper="using:FileManager.Helpers"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:viewmodels="using:FileManager.ViewModels"
+    xmlns:viewmodels="using:FileManager.ViewModels.OnlineFileControls"
     xmlns:vml="using:FileManager.VMLocator" 
     xmlns:Custom="using:FileManager.Controlls"
     vml:ViewModelLocator.AutoWireViewModel="True"
