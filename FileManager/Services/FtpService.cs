@@ -123,7 +123,6 @@ namespace FileManager.Services
         {
             string uploadingResult;
             Stream responseStream;
-
             try
             {
                 using (WebClient client = new WebClient())
@@ -131,7 +130,6 @@ namespace FileManager.Services
                     client.Credentials = new NetworkCredential(username, password);
                     responseStream = await client.OpenWriteTaskAsync(new Uri(destinationPath + "/" + uploadFile?.Name)).ConfigureAwait(true);
                 }
-
                 using (var fileStream = await uploadFile.OpenStreamForWriteAsync().ConfigureAwait(true))
                 {
                     await fileStream.CopyToAsync(responseStream).ConfigureAwait(true);
@@ -139,6 +137,10 @@ namespace FileManager.Services
                 uploadingResult = Constants.Success;
             }
             catch (WebException)
+            {
+                uploadingResult = Constants.Failed;
+            }
+            catch(FileLoadException)
             {
                 uploadingResult = Constants.Failed;
             }
