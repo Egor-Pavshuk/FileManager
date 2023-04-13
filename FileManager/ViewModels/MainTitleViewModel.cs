@@ -19,6 +19,7 @@ namespace FileManager.ViewModels
                 }
             }
         }
+
         public MainTitleViewModel()
         {
             resourceLoader = ResourceLoader.GetForCurrentView(Constants.Resourses);

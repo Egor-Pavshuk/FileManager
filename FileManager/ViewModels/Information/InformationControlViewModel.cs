@@ -75,6 +75,7 @@ namespace FileManager.ViewModels.Information
                 }
             }
         }
+
         public InformationControlViewModel()
         {
             batteryResourceLoader = ResourceLoader.GetForCurrentView(Constants.Batteries);

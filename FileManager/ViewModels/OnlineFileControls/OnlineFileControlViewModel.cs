@@ -108,6 +108,7 @@ namespace FileManager.ViewModels.OnlineFileControls
                 }
             }
         }
+
         public OnlineFileControlViewModel()
         {
             DisplayName = "";

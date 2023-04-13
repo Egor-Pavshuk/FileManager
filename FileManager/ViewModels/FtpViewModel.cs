@@ -295,7 +295,6 @@ namespace FileManager.ViewModels
             }
         }
 
-
         public FtpViewModel()
         {
             knownTypes = new Dictionary<string, string>()

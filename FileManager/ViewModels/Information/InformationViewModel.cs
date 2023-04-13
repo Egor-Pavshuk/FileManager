@@ -19,6 +19,7 @@ namespace FileManager.ViewModels.Information
                 }
             }
         }
+
         public InformationViewModel()
         {
             InformationControls = new Collection<InformationControlViewModel>

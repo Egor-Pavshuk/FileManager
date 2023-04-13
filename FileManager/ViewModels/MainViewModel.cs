@@ -79,6 +79,7 @@ namespace FileManager.ViewModels
                 }
             }
         }
+
         public MainViewModel()
         {
             currentContent = new MainTitlePage();

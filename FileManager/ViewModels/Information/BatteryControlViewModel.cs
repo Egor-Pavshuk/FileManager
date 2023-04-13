@@ -14,6 +14,7 @@ namespace FileManager.ViewModels.Information
         private const int HalfBattery = 51;
         private const int ThirdBattery = 31;
         private const int LowBattery = 21;
+
         public BatteryControlViewModel()
         {
             Background = "#FFF4B717";
