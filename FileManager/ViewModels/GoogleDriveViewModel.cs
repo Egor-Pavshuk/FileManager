@@ -21,6 +21,7 @@ using FileManager.Services;
 using FileManager.Validation;
 using FileManager.ViewModels.OnlineFileControls;
 using FileManager.Factory;
+using Autofac;
 
 namespace FileManager.ViewModels
 {
@@ -781,17 +782,17 @@ namespace FileManager.ViewModels
         }
         private ContentDialogControl CreateInputContentDialog(string title, string placeHolder, string inputText, string primaryButton, string secondaryButton)
         {
-            var parameters = new string[]
+            var parameters = new List<NamedParameter>()
                 {
-                    title,
-                    placeHolder,
-                    inputText
+                    new NamedParameter("title", title),
+                    new NamedParameter("placeHolder", placeHolder),
+                    new NamedParameter("inputText", inputText)
                 };
             var contentDialog = new ContentDialogControl()
             {
                 PrimaryButtonText = primaryButton,
                 SecondaryButtonText = secondaryButton,
-                DataContext = Activator.CreateInstance(typeof(ContentDialogControlViewModel), parameters)
+                DataContext = App.Container.Resolve<ContentDialogControlViewModel>(parameters)
             };
             return contentDialog;
         }

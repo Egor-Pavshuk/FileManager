@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Windows.ApplicationModel.Core;
@@ -14,14 +13,14 @@ using Windows.UI.Core;
 using Windows.UI.Popups;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml.Controls;
+using Autofac;
 using FileManager.Commands;
 using FileManager.Controlls;
+using FileManager.Factory;
 using FileManager.Helpers;
 using FileManager.Services;
 using FileManager.Validation;
 using FileManager.ViewModels.OnlineFileControls;
-using FileManager.Factory;
-using FileManager.Models;
 
 namespace FileManager.ViewModels
 {
@@ -679,17 +678,17 @@ namespace FileManager.ViewModels
         }
         private ContentDialogControl CreateInputContentDialog(string title, string placeHolder, string inputText, string primaryButton, string secondaryButton)
         {
-            var parameters = new string[]
+            var parameters = new List<NamedParameter>()
                 {
-                    title,
-                    placeHolder,
-                    inputText
+                    new NamedParameter("title", title),
+                    new NamedParameter("placeHolder", placeHolder),
+                    new NamedParameter("inputText", inputText)
                 };
             var contentDialog = new ContentDialogControl()
             {
                 PrimaryButtonText = primaryButton,
                 SecondaryButtonText = secondaryButton,
-                DataContext = Activator.CreateInstance(typeof(ContentDialogControlViewModel), parameters)
+                DataContext = App.Container.Resolve<ContentDialogControlViewModel>(parameters)
             };
             return contentDialog;
         }

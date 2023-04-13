@@ -1,7 +1,4 @@
-﻿using FileManager.Commands;
-using FileManager.Helpers;
-using FileManager.Validation;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -16,6 +13,9 @@ using Windows.UI.Core;
 using Windows.UI.Popups;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml.Controls;
+using FileManager.Commands;
+using FileManager.Helpers;
+using FileManager.Validation;
 
 namespace FileManager.ViewModels.Libraries
 {
@@ -223,7 +223,7 @@ namespace FileManager.ViewModels.Libraries
             }
         }
 
-        public LibrariesBaseViewModel(string libraryName)
+        public LibrariesBaseViewModel(StorageFolder library)
         {
             if (Windows.System.Profile.AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Xbox")
             {
@@ -235,24 +235,9 @@ namespace FileManager.ViewModels.Libraries
                 DoubleClickedCommand = new RelayCommand(OpenFileAsync);
                 ItemClickedCommand = new RelayCommand((o) => { });
             }
-
-            switch (libraryName)
-            {
-                case "Pictures":
-                    defaultFolder = KnownFolders.PicturesLibrary;
-                    break;
-                case "Videos":
-                    defaultFolder = KnownFolders.VideosLibrary;
-                    break;
-                case "Music":
-                    defaultFolder = KnownFolders.MusicLibrary;
-                    break;
-                default:
-                    break;
-            }
-            currentFolder = defaultFolder;
+            defaultFolder = library;
+            currentFolder = library;
             GetItemsAsync().ConfigureAwait(true);
-
             ChangeColorMode(settings, this);
             SelectionChangedCommand = new RelayCommand(GridSelectionChanged);
 
@@ -342,46 +327,30 @@ namespace FileManager.ViewModels.Libraries
             IReadOnlyList<StorageFile> storageFiles = await currentFolder.GetFilesAsync();
             foreach (var item in storageFiles)
             {
-                FileControlViewModel viewModel;
+                FileControlViewModel viewModel = new FileControlViewModel()
+                {
+                    DisplayName = item.Name,
+                    Path = item.Path,
+                };
                 if (item.ContentType.Contains(Constants.Image, StringComparison.Ordinal))
                 {
-                    viewModel = new FileControlViewModel() 
-                    { 
-                        Image = themeResourceLoader.GetString(Constants.Image), 
-                        DisplayName = item.Name, 
-                        Path = item.Path, 
-                        Type = Constants.Image 
-                    };
+                    viewModel.Image = themeResourceLoader.GetString(Constants.Image);
+                    viewModel.Type = Constants.Image;
                 }
                 else if (item.ContentType.Contains(Constants.Video, StringComparison.Ordinal))
                 {
-                    viewModel = new FileControlViewModel() 
-                    { 
-                        Image = themeResourceLoader.GetString(Constants.Video), 
-                        DisplayName = item.Name, 
-                        Path = item.Path, 
-                        Type = Constants.Video 
-                    };
+                    viewModel.Image = themeResourceLoader.GetString(Constants.Video);
+                    viewModel.Type = Constants.Video;
                 }
                 else if (item.ContentType.Contains(Constants.Audio, StringComparison.Ordinal))
                 {
-                    viewModel = new FileControlViewModel() 
-                    { 
-                        Image = themeResourceLoader.GetString(Constants.Audio), 
-                        DisplayName = item.Name, 
-                        Path = item.Path, 
-                        Type = Constants.Audio 
-                    };
+                    viewModel.Image = themeResourceLoader.GetString(Constants.Audio);
+                    viewModel.Type = Constants.Image;
                 }
                 else
                 {
-                    viewModel = new FileControlViewModel() 
-                    { 
-                        Image = themeResourceLoader.GetString(Constants.File), 
-                        DisplayName = item.Name, 
-                        Path = item.Path, 
-                        Type = Constants.File 
-                    };
+                    viewModel.Image = themeResourceLoader.GetString(Constants.File);
+                    viewModel.Type = Constants.File;
                 }
 
                 fileControls.Add(viewModel);
@@ -491,7 +460,7 @@ namespace FileManager.ViewModels.Libraries
                         {
                             IStorageItem item = await currentFolder.GetItemAsync(editableItem.DisplayName);
                             await item.RenameAsync(selectedItemDisplayName);
-                            selectedGridItem.Path = currentPath + "\\" + selectedItemDisplayName;
+                            selectedGridItem.Path = string.Join("\\", currentPath, selectedItemDisplayName);
                         }
                         else
                         {
@@ -619,7 +588,7 @@ namespace FileManager.ViewModels.Libraries
                         Image = themeResourceLoader.GetString(Constants.Folder),
                         DisplayName = $"{Constants.NewFolderName} {newFolderNumber + 1}",
                         Type = Constants.Folder,
-                        Path = currentFolder.Path + $"\\{Constants.NewFolderName} {newFolderNumber + 1}"
+                        Path = string.Join("\\", currentFolder.Path, $"{Constants.NewFolderName} {newFolderNumber + 1}")
                     };
 
                     files.Insert(files.FindLastIndex(f => f.Type == Constants.Folder) + 1, newFolder);

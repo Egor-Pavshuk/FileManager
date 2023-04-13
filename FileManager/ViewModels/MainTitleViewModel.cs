@@ -1,5 +1,5 @@
-﻿using FileManager.Helpers;
-using Windows.ApplicationModel.Resources;
+﻿using Windows.ApplicationModel.Resources;
+using FileManager.Helpers;
 
 namespace FileManager.ViewModels
 {

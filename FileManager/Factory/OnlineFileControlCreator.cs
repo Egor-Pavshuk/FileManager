@@ -1,8 +1,7 @@
-﻿using FileManager.Helpers;
-using FileManager.ViewModels.OnlineFileControls;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.Collections.Generic;
 using Windows.ApplicationModel.Resources;
+using FileManager.Helpers;
+using FileManager.ViewModels.OnlineFileControls;
 
 namespace FileManager.Factory
 {

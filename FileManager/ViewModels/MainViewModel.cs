@@ -1,8 +1,8 @@
-﻿using FileManager.Helpers;
-using FileManager.Views;
-using System;
+﻿using System;
 using Windows.ApplicationModel.Resources;
 using Windows.UI.Xaml.Controls;
+using FileManager.Helpers;
+using FileManager.Views;
 
 namespace FileManager.ViewModels
 {

@@ -8,6 +8,11 @@ using FileManager.ViewModels;
 using FileManager.ViewModels.Information;
 using FileManager.Views;
 using FileManager.ViewModels.OnlineFileControls;
+using FileManager;
+using System.ComponentModel;
+using Autofac;
+using FileManager.Controlls;
+using FileManager.ViewModels.Libraries;
 
 namespace FileManager.VMLocator
 {
@@ -41,25 +46,25 @@ namespace FileManager.VMLocator
                 var viewModelType = FindViewModel(frameworkElement.GetType());
                 var typesWithoutActivation = new List<Type>()
                 {
-                    typeof(FileControlViewModel),
-                    typeof(OnlineFileControlViewModel),
-                    typeof(InformationControlViewModel)
+                    typeof(FileControl),
+                    typeof(OnlineFileControl),
+                    typeof(InformationControl)
                 };
-                if (!typesWithoutActivation.Any(t => t == viewModelType) && viewModelType != null)
+                if (!typesWithoutActivation.Any(t => t == frameworkElement.GetType()))
                 {
                     switch (frameworkElement.GetType().Name)
                     {
                         case nameof(PicturesLibraryPage):
-                            frameworkElement.DataContext = Activator.CreateInstance(viewModelType, "Pictures");
+                            frameworkElement.DataContext = App.Container.Resolve<PicturesLibraryViewModel>();
                             break;
                         case nameof(VideosLibraryPage):
-                            frameworkElement.DataContext = Activator.CreateInstance(viewModelType, "Videos");
+                            frameworkElement.DataContext = App.Container.Resolve<VideosLibraryViewModel>();
                             break;
                         case nameof(MusicsLibraryPage):
-                            frameworkElement.DataContext = Activator.CreateInstance(viewModelType, "Music");
+                            frameworkElement.DataContext = App.Container.Resolve<MusicsLibraryViewModel>();
                             break;
                         default:
-                            frameworkElement.DataContext = Activator.CreateInstance(viewModelType);
+                            frameworkElement.DataContext = App.Container.Resolve(viewModelType);
                             break;
                     }
                 }                
@@ -88,16 +93,8 @@ namespace FileManager.VMLocator
             }
             else if (viewType.FullName.EndsWith("Control"))
             {
-                if (viewType.FullName.Contains("Information", StringComparison.Ordinal))
-                {
-                    viewName = viewType.FullName
-                    .Replace("Controlls", "ViewModels.Information", StringComparison.Ordinal);
-                }
-                else
-                {
-                    viewName = viewType.FullName
+                viewName = viewType.FullName
                     .Replace("Controlls", "ViewModels", StringComparison.Ordinal);
-                }
             }
 
             var viewAssemblyName = viewType.GetTypeInfo().Assembly.FullName;
