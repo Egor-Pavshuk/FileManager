@@ -10,6 +10,8 @@ using FileManager.ViewModels;
 using FileManager.ViewModels.Information;
 using FileManager.ViewModels.Libraries;
 using FileManager.Views;
+using FileManager.Dependencies;
+using FileManager.Controlls;
 
 namespace FileManager
 {
@@ -27,24 +29,27 @@ namespace FileManager
         {
             this.InitializeComponent();
             Container = ConfigureServices();
+            VMDependencies.Container = Container;
             this.Suspending += OnSuspending;
         }
         private IContainer ConfigureServices()
         {
             var containerBuilder = new ContainerBuilder();
-            containerBuilder.RegisterType<PicturesLibraryViewModel>()
-                .AsSelf();
-            containerBuilder.RegisterType<VideosLibraryViewModel>()
-                .AsSelf();
-            containerBuilder.RegisterType<MusicsLibraryViewModel>()
-                .AsSelf();
             containerBuilder.RegisterType<ContentDialogControlViewModel>()
                 .AsSelf().WithParameters(new List<NamedParameter>
                 {
                     new NamedParameter("title", "title"),
                     new NamedParameter("placeHolder", "placeHolder"),
+                    new NamedParameter("primaryButtonText", "primaryButtonText"),
+                    new NamedParameter("secondaryButtonText", "secondaryButtonText"),
                     new NamedParameter("inputText", "inputText"),
                 });
+            containerBuilder.RegisterType<PicturesLibraryViewModel>()
+                .AsSelf();
+            containerBuilder.RegisterType<VideosLibraryViewModel>()
+                .AsSelf();
+            containerBuilder.RegisterType<MusicsLibraryViewModel>()
+                .AsSelf();            
             containerBuilder.RegisterType<MainViewModel>()
                 .AsSelf();
             containerBuilder.RegisterType<MainTitleViewModel>()
@@ -55,6 +60,18 @@ namespace FileManager
                 .AsSelf();
             containerBuilder.RegisterType<InformationViewModel>()
                 .AsSelf();
+            containerBuilder.RegisterType<MainPage>().AsSelf();
+            containerBuilder.RegisterType<MainTitlePage>().AsSelf();
+            containerBuilder.RegisterType<GoogleDrivePage>().AsSelf();
+            containerBuilder.RegisterType<ContentDialogControl>().AsSelf();
+            containerBuilder.RegisterType<PicturesLibraryPage>().AsSelf();
+            containerBuilder.RegisterType<VideosLibraryPage>().AsSelf();
+            containerBuilder.RegisterType<MusicsLibraryPage>().AsSelf();
+            containerBuilder.RegisterType<InformationPage>().AsSelf();
+            containerBuilder.RegisterType<FtpPage>().AsSelf();
+            VMDependencies.ConfigureServices(typeof(MainPage), typeof(MainTitlePage), typeof(FtpPage), typeof(GoogleDrivePage),
+                typeof(InformationPage), typeof(MusicsLibraryPage), typeof(PicturesLibraryPage), typeof(VideosLibraryPage),
+                typeof(ContentDialogControl));
             var container = containerBuilder.Build();
             return container;
         }
