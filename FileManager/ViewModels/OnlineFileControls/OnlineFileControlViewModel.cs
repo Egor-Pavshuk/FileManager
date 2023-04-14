@@ -1,4 +1,6 @@
-﻿namespace FileManager.ViewModels
+﻿using Windows.ApplicationModel.Resources;
+
+namespace FileManager.ViewModels.OnlineFileControls
 {
     public class OnlineFileControlViewModel : BindableBase
     {
@@ -106,6 +108,7 @@
                 }
             }
         }
+
         public OnlineFileControlViewModel()
         {
             DisplayName = "";
@@ -114,5 +117,6 @@
         {
             DisplayName = displayName;
         }
+        public virtual void ChangeColorMode(ResourceLoader themeResourceLoader) { }
     }
 }

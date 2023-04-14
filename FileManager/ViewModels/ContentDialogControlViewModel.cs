@@ -67,6 +67,7 @@
                 }
             }
         }
+
         public ContentDialogControlViewModel()
         {
             Title = string.Empty;

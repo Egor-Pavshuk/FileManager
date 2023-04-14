@@ -1,9 +1,18 @@
-﻿using FileManager.ViewModels;
-using FileManager.Views;
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Reflection;
 using Windows.UI.Xaml;
+using FileManager.ViewModels;
+using FileManager.ViewModels.Information;
+using FileManager.Views;
+using FileManager.ViewModels.OnlineFileControls;
+using FileManager;
+using System.ComponentModel;
+using Autofac;
+using FileManager.Controlls;
+using FileManager.ViewModels.Libraries;
 
 namespace FileManager.VMLocator
 {
@@ -35,24 +44,30 @@ namespace FileManager.VMLocator
             if (view is FrameworkElement frameworkElement)
             {
                 var viewModelType = FindViewModel(frameworkElement.GetType());
-                switch (frameworkElement.GetType().Name)
+                var typesWithoutActivation = new List<Type>()
                 {
-                    case nameof(PicturesLibraryPage):
-                        frameworkElement.DataContext = Activator.CreateInstance(viewModelType, "Pictures");
-                        break;
-                    case nameof(VideosLibraryPage):
-                        frameworkElement.DataContext = Activator.CreateInstance(viewModelType, "Videos");
-                        break;
-                    case nameof(MusicsLibraryPage):
-                        frameworkElement.DataContext = Activator.CreateInstance(viewModelType, "Music");
-                        break;
-                    default:
-                        if (viewModelType != typeof(FileControlViewModel) && viewModelType != typeof(OnlineFileControlViewModel))
-                        {
-                            frameworkElement.DataContext = Activator.CreateInstance(viewModelType);
-                        }
-                        break;
-                }
+                    typeof(FileControl),
+                    typeof(OnlineFileControl),
+                    typeof(InformationControl)
+                };
+                if (!typesWithoutActivation.Any(t => t == frameworkElement.GetType()))
+                {
+                    switch (frameworkElement.GetType().Name)
+                    {
+                        case nameof(PicturesLibraryPage):
+                            frameworkElement.DataContext = App.Container.Resolve<PicturesLibraryViewModel>();
+                            break;
+                        case nameof(VideosLibraryPage):
+                            frameworkElement.DataContext = App.Container.Resolve<VideosLibraryViewModel>();
+                            break;
+                        case nameof(MusicsLibraryPage):
+                            frameworkElement.DataContext = App.Container.Resolve<MusicsLibraryViewModel>();
+                            break;
+                        default:
+                            frameworkElement.DataContext = App.Container.Resolve(viewModelType);
+                            break;
+                    }
+                }                
             }
         }
 
@@ -61,11 +76,16 @@ namespace FileManager.VMLocator
             string viewName = string.Empty;
 
             if (viewType.FullName.EndsWith("Page"))
-            {
+            {                
                 viewName = viewType.FullName
                     .Replace("Page", string.Empty, StringComparison.Ordinal)
                     .Replace("Views", "ViewModels", StringComparison.Ordinal);
 
+                if (viewType.FullName.Contains("Information", StringComparison.Ordinal))
+                {
+                    viewName = viewName
+                    .Replace("ViewModels", "ViewModels.Information", StringComparison.Ordinal);
+                }
                 if (viewName.Contains("Library", StringComparison.Ordinal))
                 {
                     viewName = viewName.Replace(viewName.Substring(viewName.LastIndexOf('.') + 1), "Libraries.LibrariesBase", StringComparison.Ordinal);

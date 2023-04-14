@@ -1,10 +1,15 @@
-﻿using FileManager.Views;
-using System;
+﻿using System;
+using System.Collections.Generic;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
+using Autofac;
+using FileManager.ViewModels;
+using FileManager.ViewModels.Information;
+using FileManager.ViewModels.Libraries;
+using FileManager.Views;
 
 namespace FileManager
 {
@@ -17,12 +22,42 @@ namespace FileManager
         /// Initializes the singleton application object.  This is the first line of authored code
         /// executed, and as such is the logical equivalent of main() or WinMain().
         /// </summary>
+        public static IContainer Container { get; set; }
         public App()
         {
             this.InitializeComponent();
+            Container = ConfigureServices();
             this.Suspending += OnSuspending;
         }
-
+        private IContainer ConfigureServices()
+        {
+            var containerBuilder = new ContainerBuilder();
+            containerBuilder.RegisterType<PicturesLibraryViewModel>()
+                .AsSelf();
+            containerBuilder.RegisterType<VideosLibraryViewModel>()
+                .AsSelf();
+            containerBuilder.RegisterType<MusicsLibraryViewModel>()
+                .AsSelf();
+            containerBuilder.RegisterType<ContentDialogControlViewModel>()
+                .AsSelf().WithParameters(new List<NamedParameter>
+                {
+                    new NamedParameter("title", "title"),
+                    new NamedParameter("placeHolder", "placeHolder"),
+                    new NamedParameter("inputText", "inputText"),
+                });
+            containerBuilder.RegisterType<MainViewModel>()
+                .AsSelf();
+            containerBuilder.RegisterType<MainTitleViewModel>()
+                .AsSelf();
+            containerBuilder.RegisterType<GoogleDriveViewModel>()
+                .AsSelf();
+            containerBuilder.RegisterType<FtpViewModel>()
+                .AsSelf();
+            containerBuilder.RegisterType<InformationViewModel>()
+                .AsSelf();
+            var container = containerBuilder.Build();
+            return container;
+        }
         /// <summary>
         /// Invoked when the application is launched normally by the end user.  Other entry points
         /// will be used such as when the application is launched to open a specific file.

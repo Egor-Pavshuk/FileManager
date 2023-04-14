@@ -2,9 +2,9 @@
     x:Class="FileManager.Views.FtpPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:FileManager"
+    xmlns:helper="using:FileManager.Helpers"
     xmlns:custom="using:FileManager.Controlls"
-    xmlns:viewmodels="using:FileManager.ViewModels"
+    xmlns:viewmodels="using:FileManager.ViewModels.OnlineFileControls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vml="using:FileManager.VMLocator" 
@@ -51,7 +51,7 @@
             <Button Content="Connect" Command="{Binding ConnectCommand}" FontSize="32" Width="230" Height="70" Margin="0,20,0,0" HorizontalAlignment="Center" VerticalAlignment="Top"/>
         </StackPanel>
 
-        <GridView Grid.Row="1" ItemsSource="{Binding StorageFiles}" Visibility="{Binding IsFilesVisible}" vml:DoubleTapAttachedProperties.ItemDoubleTapCommand="{Binding DoubleClickedCommand}" vml:ItemClickAttachedProperties.ItemClickCommand="{Binding ItemClickedCommand}" IsItemClickEnabled="True" SelectedItem="{Binding SelectedGridItem, Mode=TwoWay}">
+        <GridView Grid.Row="1" ItemsSource="{Binding StorageFiles}" Visibility="{Binding IsFilesVisible}" helper:DoubleTapAttachedProperties.ItemDoubleTapCommand="{Binding DoubleClickedCommand}" helper:ItemClickAttachedProperties.ItemClickCommand="{Binding ItemClickedCommand}" IsItemClickEnabled="True" SelectedItem="{Binding SelectedGridItem, Mode=TwoWay}">
             <GridView.ItemTemplate>
                 <DataTemplate x:DataType="viewmodels:OnlineFileControlViewModel">
                     <custom:OnlineFileControl/>

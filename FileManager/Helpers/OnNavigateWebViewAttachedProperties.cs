@@ -2,7 +2,7 @@
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 
-namespace FileManager.VMLocator
+namespace FileManager.Helpers
 {
     public static class NavigationStartingAttachedProperties
     {

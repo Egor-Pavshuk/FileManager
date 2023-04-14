@@ -1,23 +1,11 @@
-﻿using FileManager.Commands;
-using FileManager.Controlls;
-using FileManager.Models;
-using FileManager.Validation;
-using Google.Apis.Auth.OAuth2;
-using Google.Apis.Drive.v3;
-using Google.Apis.Services;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.IO;
 using System.Linq;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Windows.ApplicationModel.Core;
 using Windows.ApplicationModel.Resources;
-using Windows.Data.Json;
 using Windows.Storage;
 using Windows.Storage.Pickers;
 using Windows.UI;
@@ -25,16 +13,29 @@ using Windows.UI.Core;
 using Windows.UI.Popups;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml.Controls;
+using FileManager.Commands;
+using FileManager.Controlls;
+using FileManager.Helpers;
+using FileManager.Models;
+using FileManager.Services;
+using FileManager.Validation;
+using FileManager.ViewModels.OnlineFileControls;
+using FileManager.Factory;
+using Autofac;
 
 namespace FileManager.ViewModels
 {
     public class GoogleDriveViewModel : BindableBase
     {
-        private const string authEndpoint = "https://oauth2.googleapis.com/token";
-        private const string scope = "https://www.googleapis.com/auth/drive";
-        private const string clientId = "148004585806-56makt200p390b18n2q21ugq71tb2msg.apps.googleusercontent.com";
-        private const string secret = "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";
-        private const string googleUri = "https://accounts.google.com/o/oauth2/auth?client_id=" + clientId + "&redirect_uri=" + "https://localhost/" + "&response_type=code&scope=" + scope;
+        private const string ClientId = "148004585806-56makt200p390b18n2q21ugq71tb2msg.apps.googleusercontent.com";
+        private const string Secret = "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";
+        private const string GoogleUri = "https://accounts.google.com/o/oauth2/auth?client_id=" + ClientId + "&redirect_uri=" + "https://localhost/" + "&response_type=code&scope=" + Constants.DriveScope;
+        private const string GoogleDownloadUri = "https://www.googleapis.com/drive/v3/files/";
+        private readonly TokenResult tokenResult;
+        private readonly ResourceLoader stringsResourceLoader;
+        private readonly Stack<string> openedFoldersId = new Stack<string>();
+        private readonly List<string> downloadingFilesId;
+        private readonly GoogleDriveService googleDriveService;
         private string loadingText;
         private string errorText;
         private string currentFolderId;
@@ -45,13 +46,8 @@ namespace FileManager.ViewModels
         private bool isFilesVisible;
         private bool isBackButtonAvailable;
         private bool isErrorVisible;
-        private readonly Stack<string> openedFoldersId = new Stack<string>();
-        private DateTime lastRefreshTime;
         private Collection<OnlineFileControlViewModel> storageFiles;
-        private readonly List<string> downloadingFilesId;
         private OnlineFileControlViewModel selectedGridItem;
-        private readonly TokenResult tokenResult;
-        private readonly ResourceLoader stringsResourceLoader;
         private ResourceLoader themeResourceLoader;
         private ICommand navigationStartingCommand;
         private ICommand doubleClickedCommand;
@@ -306,13 +302,10 @@ namespace FileManager.ViewModels
 
         public GoogleDriveViewModel()
         {
-            const string resources = "Resources";
-            const string loadingText = "loadingText";
-            const string connectionErrorContent = "connectionErrorContent";
-
             tokenResult = new TokenResult();
             ChangeColorMode(settings, this);
             downloadingFilesId = new List<string>();
+            googleDriveService = new GoogleDriveService();
             if (Windows.System.Profile.AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Xbox")
             {
                 ItemClickedCommand = new RelayCommand(OpenFolder);
@@ -331,35 +324,27 @@ namespace FileManager.ViewModels
             DeleteFileCommand = new RelayCommand(DeleteFileAsync);
             CreateNewFolderCommand = new RelayCommand(CreateNewFolderAsync);
             RenameFileCommand = new RelayCommand(RenameFileAsync);
-            stringsResourceLoader = ResourceLoader.GetForCurrentView(resources);
+            stringsResourceLoader = ResourceLoader.GetForCurrentView(Constants.Resources);
             IsWebViewVisible = true;
-            CheckInternetConnectionAsync();
-            WebViewCurrentSource = new Uri(googleUri);
-            LoadingText = stringsResourceLoader.GetString(loadingText);
-            ErrorText = stringsResourceLoader.GetString(connectionErrorContent);
+            _ = CheckInternetConnectionAsync();
+            WebViewCurrentSource = new Uri(GoogleUri);
+            LoadingText = stringsResourceLoader.GetString(Constants.Loading);
+            ErrorText = stringsResourceLoader.GetString(Constants.ConnectionErrorContent);
         }
 
         protected override void ChangeColorMode(UISettings uiSettings, object sender)
         {
-            const string image = "image";
-            const string video = "video";
-            const string audio = "audio";
-            const string folder = "folder";
-            const string file = "file";
-            const string imagesDark = "ImagesDark";
-            const string imagesLight = "ImagesLight";
-
             var currentBackgroundColor = uiSettings?.GetColorValue(UIColorType.Background);
             if (backgroundColor != currentBackgroundColor || storageFiles == null)
             {
                 if (currentBackgroundColor == Colors.Black)
                 {
-                    themeResourceLoader = ResourceLoader.GetForViewIndependentUse(imagesDark);
+                    themeResourceLoader = ResourceLoader.GetForViewIndependentUse(Constants.ImagesDark);
                     backgroundColor = Colors.Black;
                 }
                 else
                 {
-                    themeResourceLoader = ResourceLoader.GetForViewIndependentUse(imagesLight);
+                    themeResourceLoader = ResourceLoader.GetForViewIndependentUse(Constants.ImagesLight);
                     backgroundColor = Colors.White;
                 }
 
@@ -371,53 +356,30 @@ namespace FileManager.ViewModels
                     {
                         foreach (var storageFile in storageFiles)
                         {
-                            switch (storageFile.Type)
-                            {
-                                case image:
-                                    storageFile.Image = themeResourceLoader.GetString(image);
-                                    break;
-                                case video:
-                                    storageFile.Image = themeResourceLoader.GetString(video);
-                                    break;
-                                case audio:
-                                    storageFile.Image = themeResourceLoader.GetString(audio);
-                                    break;
-                                case folder:
-                                    storageFile.Image = themeResourceLoader.GetString(folder);
-                                    break;
-                                default:
-                                    storageFile.Image = themeResourceLoader.GetString(file);
-                                    break;
-                            }
+                            storageFile.ChangeColorMode(themeResourceLoader);
                         }
                     }).AsTask().ConfigureAwait(true);
                 }
             }
         }
 
-        private async void CheckInternetConnectionAsync()
+        private async Task CheckInternetConnectionAsync()
         {
-            using (var client = new HttpClient())
+            string result = await googleDriveService.CheckInternetConnectionAsync(GoogleUri).ConfigureAwait(true);
+            if (result == Constants.Failed)
             {
-                try
-                {
-                    var result = await client.GetAsync(googleUri).ConfigureAwait(true);
-                }
-                catch (HttpRequestException)
-                {
-                    IsErrorVisible = true;
-                    IsCommandPanelVisible = false;
-                    IsWebViewVisible = false;
-                }
+                IsErrorVisible = true;
+                IsCommandPanelVisible = false;
+                IsWebViewVisible = false;
             }
         }
 
         private async void NavigationStarting(object args)
         {
-            const string responseError = "responseError";
-            const string failed = "failed";
-
             var webView = (WebViewNavigationStartingEventArgs)args;
+            string exchangeCode;
+            string errorContent;
+            string errorTitle;
             if (webView != null)
             {
                 if (webView.Uri.ToString().StartsWith("https://localhost/", StringComparison.Ordinal))
@@ -425,7 +387,7 @@ namespace FileManager.ViewModels
                     string navigationUri = webView.Uri.ToString();
                     if (navigationUri.Contains("code=", StringComparison.Ordinal))
                     {
-                        string exchangeCode = navigationUri.Substring(navigationUri.IndexOf('=') + 1, navigationUri.IndexOf('&') - navigationUri.IndexOf('=') - 1);
+                        exchangeCode = navigationUri.Split('=')[1].Split('&')[0];
                         webView.Cancel = true;
                         IsWebViewVisible = false;
                         IsCommandPanelVisible = true;
@@ -434,10 +396,9 @@ namespace FileManager.ViewModels
                     }
                     else
                     {
-                        await new MessageDialog(stringsResourceLoader.GetString(responseError) + ".")
-                        {
-                            Title = stringsResourceLoader.GetString(failed) + "!"
-                        }.ShowAsync();
+                        errorContent = stringsResourceLoader.GetString(Constants.ResponseError);
+                        errorTitle = stringsResourceLoader.GetString(Constants.Failed);
+                        _ = ShowMessageDialogAsync(errorContent, errorTitle);
                     }
                 }
                 else if (webView.Uri.ToString().StartsWith("https://support.google.com", StringComparison.Ordinal))
@@ -451,261 +412,105 @@ namespace FileManager.ViewModels
 
         private async Task ExchangeCodeOnTokenAsync(string exchangeCode)
         {
-            const string responseError = "responseError";
-            const string failed = "failed";
-            const string connectionError = "connectionError";
-            const string connectionErrorContent = "connectionErrorContent";
-
-            using (HttpClient client = new HttpClient())
+            string errorContent;
+            string errorTitle;
+            string result = await googleDriveService.ExchangeCodeOnTokenAsync(exchangeCode, ClientId, Secret, tokenResult).ConfigureAwait(true);
+            if (result == Constants.Failed)
             {
-                string request = new StringBuilder()
-                    .Append($"code={exchangeCode}")
-                    .Append($"&client_id={clientId}")
-                    .Append($"&client_secret={secret}")
-                    .Append("&redirect_uri=https://localhost/")
-                    .Append("&grant_type=authorization_code")
-                    .Append("&access_type=offline")
-                    .ToString();
-                StringContent content = new StringContent(request, Encoding.UTF8, "application/x-www-form-urlencoded");
-
-                try
-                {
-                    var response = await client.PostAsync(authEndpoint, content).ConfigureAwait(true);
-
-                    if (response.IsSuccessStatusCode)
-                    {
-                        string responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(true);
-                        JsonObject responseObject = JsonObject.Parse(responseContent);
-                        tokenResult.AccessToken = responseObject.GetNamedString("access_token");
-                        tokenResult.RefreshToken = responseObject.GetNamedString("refresh_token");
-                        tokenResult.TokenType = responseObject.GetNamedString("token_type");
-                        tokenResult.ExpiresIn = responseObject.GetNamedValue("expires_in").ToString();
-                        tokenResult.Scope = responseObject.GetNamedString("scope");
-                        lastRefreshTime = DateTime.Now;
-                    }
-                    else
-                    {
-                        await new MessageDialog(stringsResourceLoader.GetString(responseError) + response.StatusCode)
-                        {
-                            Title = stringsResourceLoader.GetString(failed) + "!"
-                        }.ShowAsync();
-                    }
-                }
-                catch (HttpRequestException)
-                {
-                    await new MessageDialog(stringsResourceLoader.GetString(connectionErrorContent))
-                    {
-                        Title = stringsResourceLoader.GetString(connectionError)
-                    }.ShowAsync();
-                }
-                finally
-                {
-                    content.Dispose();
-                }
+                errorContent = stringsResourceLoader.GetString(Constants.ConnectionErrorContent);
+                errorTitle = stringsResourceLoader.GetString(Constants.ConnectionError);
+                _ = ShowMessageDialogAsync(errorContent, errorTitle);
             }
         }
 
         private async Task GetItemsAsync(string folderId = "")
         {
-            const string image = "image";
-            const string photo = "photo";
-            const string shortcut = "shortcut";
-            const string video = "video";
-            const string audio = "audio";
-            const string folder = "folder";
-            const string file = "file";
-            const string mimeType = "mimeType";
-
             IsFilesVisible = false;
             IsLoadingVisible = true;
-
-            CheckInternetConnectionAsync();
-            JsonArray responseFiles = await GetFilesFromGoogleDriveAsync(folderId).ConfigureAwait(true);
-
+            _ = CheckInternetConnectionAsync();
+            List<GoogleDriveFile> responseFiles = await GetFilesFromGoogleDriveAsync(folderId).ConfigureAwait(true);
             List<OnlineFileControlViewModel> driveFiles = new List<OnlineFileControlViewModel>();
-
             foreach (var driveFile in responseFiles)
             {
-                var currentFile = JsonObject.Parse(driveFile.Stringify());
-                var type = currentFile[mimeType].ToString();
-                if (!type.Contains("." + folder, StringComparison.Ordinal))
+                var viewModel = OnlineFileControlCreator.CreateFileControl(themeResourceLoader, driveFile.Id, driveFile.Name, driveFile.MimeType);
+                if (viewModel.Type == Constants.Folder)
                 {
-                    continue;
-                }
-
-                OnlineFileControlViewModel viewModel;              
-                string currentFileName = currentFile["name"].ToString();
-                viewModel = new OnlineFileControlViewModel() { Id = currentFile["id"].ToString(), Image = themeResourceLoader.GetString(folder), DisplayName = currentFileName.Substring(1, currentFileName.Length - 2), Type = folder };
-                driveFiles.Add(viewModel);
-            }
-
-            foreach (var driveFile in responseFiles)
-            {
-                OnlineFileControlViewModel viewModel;
-                var currentFile = JsonObject.Parse(driveFile.Stringify());
-                var type = currentFile[mimeType].ToString();
-                if (type.Contains("." + folder, StringComparison.Ordinal))
-                {
-                    continue;
-                }
-                string currentFileName = currentFile["name"].ToString();
-
-                if (type.Contains("." + photo, StringComparison.Ordinal) || type.Contains("." + shortcut, StringComparison.Ordinal) || type.Contains(photo, StringComparison.Ordinal) || type.Contains(image, StringComparison.Ordinal))
-                {
-                    viewModel = new OnlineFileControlViewModel() { Id = currentFile["id"].ToString(), Image = themeResourceLoader.GetString(image), DisplayName = currentFileName.Substring(1, currentFileName.Length - 2), Type = image };
-                }
-                else if (type.Contains("." + video, StringComparison.Ordinal) || type.Contains(video, StringComparison.Ordinal))
-                {
-                    viewModel = new OnlineFileControlViewModel() { Id = currentFile["id"].ToString(), Image = themeResourceLoader.GetString(video), DisplayName = currentFileName.Substring(1, currentFileName.Length - 2), Type = video };
-                }
-                else if (type.Contains("." + audio, StringComparison.Ordinal) || type.Contains(audio, StringComparison.Ordinal))
-                {
-                    viewModel = new OnlineFileControlViewModel() { Id = currentFile["id"].ToString(), Image = themeResourceLoader.GetString(audio), DisplayName = currentFileName.Substring(1, currentFileName.Length - 2), Type = audio };
+                    var lastIndexOfFolder = driveFiles.FindLastIndex(f => f.Type == Constants.Folder);
+                    driveFiles.Insert(lastIndexOfFolder + 1, viewModel);
                 }
                 else
                 {
-                    viewModel = new OnlineFileControlViewModel() { Id = currentFile["id"].ToString(), Image = themeResourceLoader.GetString(file), DisplayName = currentFileName.Substring(1, currentFileName.Length - 2), Type = file };
-                }
-                driveFiles.Add(viewModel);
+                    driveFiles.Add(viewModel);
+                }                
             }
-
             StorageFiles = new Collection<OnlineFileControlViewModel>(driveFiles);
             CheckFilesForDownloading();
             IsLoadingVisible = false;
             IsFilesVisible = true;
         }
 
-        private async Task<JsonArray> GetFilesFromGoogleDriveAsync(string folderId)
+        private async Task<List<GoogleDriveFile>> GetFilesFromGoogleDriveAsync(string folderId)
         {
-            const string connectionError = "connectionError";
-            const string connectionErrorContent = "connectionErrorContent";
-            JsonArray driveFiles = new JsonArray();
-            string nextPageToken = string.Empty;
-            HttpResponseMessage driveResult;
+            List<GoogleDriveFile> driveFiles;
             string q;
-
-            using (HttpClient client = new HttpClient())
+            string errorContent;
+            string errorTitle;
+            if (DateTime.Now.Subtract(tokenResult.LastRefreshTime).Seconds >= int.Parse(tokenResult.Expires_in))
             {
-                if (DateTime.Now.Subtract(lastRefreshTime).Seconds >= int.Parse(tokenResult.ExpiresIn))
-                {
-                    await RefreshTokenAsync().ConfigureAwait(true);
-                }
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(tokenResult.TokenType, tokenResult.AccessToken);
-
-                if (string.IsNullOrEmpty(folderId))
-                {
-                    var rootFolderResult = await client.GetAsync($"https://www.googleapis.com/drive/v3/files/root").ConfigureAwait(true);
-                    var rootFolderString = await rootFolderResult.Content.ReadAsStringAsync().ConfigureAwait(true);
-                    string rootFolderId = JsonObject.Parse(rootFolderString)["id"].ToString();
-                    currentFolderId = rootFolderId;
-                    q = $"{rootFolderId}+in+parents and trashed=false&fields=files(id,+mimeType,+name)";
-                }
-                else
-                {
-                    q = $"{folderId}+in+parents and trashed=false&fields=files(*)";
-                }
-
-                do
-                {
-                    try
-                    {
-                        driveResult = await client.GetAsync($"https://www.googleapis.com/drive/v3/files?pageToken={nextPageToken}&q={q}").ConfigureAwait(true);
-                    }
-                    catch (HttpRequestException)
-                    {
-                        await new MessageDialog(stringsResourceLoader.GetString(connectionErrorContent))
-                        {
-                            Title = stringsResourceLoader.GetString(connectionError)
-                        }.ShowAsync();
-                        break;
-                    }
-
-                    var result = await driveResult.Content.ReadAsStringAsync().ConfigureAwait(true);
-                    var jsonParse = JsonObject.Parse(result);
-                    var jsonFiles = jsonParse["files"].GetArray();
-                    foreach (var resultFile in jsonFiles)
-                    {
-                        driveFiles.Add(resultFile);
-                    }
-                    if (jsonParse.TryGetValue("nextPageToken", out IJsonValue value))
-                    {
-                        nextPageToken = value.ToString();
-                        nextPageToken = nextPageToken.Substring(1, nextPageToken.Length - 2);
-                    }
-                    else
-                    {
-                        nextPageToken = string.Empty;
-                    }
-
-                } while (!string.IsNullOrEmpty(nextPageToken));
+                await RefreshTokenAsync().ConfigureAwait(true);
+            }
+            if (string.IsNullOrEmpty(folderId))
+            {
+                currentFolderId = await GetRootFolderIdAsync().ConfigureAwait(true);
+                folderId = currentFolderId;
+            }
+            q = $"\"{folderId}\"+in+parents and trashed=false&fields=files(*)";
+            driveFiles = await googleDriveService.GetFilesAsync(q, tokenResult.Token_type, tokenResult.Access_token).ConfigureAwait(true);
+            if (driveFiles == null)
+            {
+                errorContent = stringsResourceLoader.GetString(Constants.ConnectionErrorContent);
+                errorTitle = stringsResourceLoader.GetString(Constants.ConnectionError);
+                _ = ShowMessageDialogAsync(errorContent, errorTitle);
+                driveFiles = new List<GoogleDriveFile>();
             }
             return driveFiles;
         }
 
+        private async Task<string> GetRootFolderIdAsync()
+        {
+            string result = await googleDriveService.GetRootFolderIdAsync(tokenResult.Token_type, tokenResult.Access_token).ConfigureAwait(true);
+            if (result == Constants.Failed)
+            {
+                string errorContent = stringsResourceLoader.GetString(Constants.ConnectionErrorContent);
+                string errorTitle = stringsResourceLoader.GetString(Constants.ConnectionError);
+                _ = ShowMessageDialogAsync(errorContent, errorTitle);
+            }
+            return result;
+        }
+
         private void CheckFilesForDownloading()
         {
-            const string downloadingText = "downloadingText";
             foreach (var file in storageFiles)
             {
                 if (downloadingFilesId.Exists(id => id == file.Id))
                 {
                     file.IsDownloading = true;
-                    file.DownloadStatus = stringsResourceLoader.GetString(downloadingText);
+                    file.DownloadStatus = stringsResourceLoader.GetString(Constants.DownloadingText);
                 }
             }
         }
 
         private async Task RefreshTokenAsync()
         {
-            const string connectionError = "connectionError";
-            const string connectionErrorContent = "connectionErrorContent";
-            const string accessToken = "access_token";
-            const string expiresIn = "expires_in";
-            const string contentType = "application/x-www-form-urlencoded";
-            const string responseError = "responseError";
-            const string failed = "failed";
-            using (HttpClient client = new HttpClient())
+            string result;
+            string errorContent;
+            string errorTitle;
+            result = await googleDriveService.RefreshTokenAsync(ClientId, Secret, tokenResult).ConfigureAwait(true);
+            if (result == Constants.Failed)
             {
-                string request = new StringBuilder()
-                    .Append($"&client_id={clientId}")
-                    .Append($"&client_secret={secret}")
-                    .Append("&grant_type=refresh_token")
-                    .Append($"&refresh_token={tokenResult.RefreshToken}")
-                    .ToString();
-                StringContent content = new StringContent(request, Encoding.UTF8, contentType);
-
-                HttpResponseMessage response;
-                try
-                {
-                    response = await client.PostAsync(authEndpoint, content).ConfigureAwait(true);
-
-                    if (response.IsSuccessStatusCode)
-                    {
-                        string responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(true);
-                        JsonObject responseObject = JsonObject.Parse(responseContent);
-                        tokenResult.AccessToken = responseObject.GetNamedString(accessToken);
-                        tokenResult.ExpiresIn = responseObject.GetNamedValue(expiresIn).ToString();
-                        lastRefreshTime = DateTime.Now;
-                    }
-                    else
-                    {
-                        await new MessageDialog(stringsResourceLoader.GetString(responseError) + response.StatusCode)
-                        {
-                            Title = stringsResourceLoader.GetString(failed) + "!"
-                        }.ShowAsync();
-                    }
-                }
-                catch (HttpRequestException)
-                {
-                    await new MessageDialog(stringsResourceLoader.GetString(connectionErrorContent))
-                    {
-                        Title = stringsResourceLoader.GetString(connectionError)
-                    }.ShowAsync();
-                }
-                finally
-                {
-                    content.Dispose();
-                }
+                errorContent = stringsResourceLoader.GetString(Constants.ConnectionErrorContent);
+                errorTitle = stringsResourceLoader.GetString(Constants.ConnectionError);
+                _ = ShowMessageDialogAsync(errorContent, errorTitle);
             }
         }
 
@@ -714,7 +519,7 @@ namespace FileManager.ViewModels
             if (sender != null)
             {
                 var gridItems = (GridView)sender;
-                if (gridItems.SelectedItem is OnlineFileControlViewModel selectedItem && !string.IsNullOrEmpty(selectedItem.DisplayName) && selectedItem.Type == "folder")
+                if (gridItems.SelectedItem is OnlineFileControlViewModel selectedItem && !string.IsNullOrEmpty(selectedItem.DisplayName) && selectedItem.Type == Constants.Folder)
                 {
                     if (openedFoldersId.Count == 0)
                     {
@@ -743,86 +548,55 @@ namespace FileManager.ViewModels
 
         private async void DownloadFileAsync(object sender)
         {
-            const string googleDownloadUri = "https://www.googleapis.com/drive/v3/files/";
-            const string folder = "folder";
-            const string downloadingText = "downloadingText";
-            if (selectedGridItem != null && !string.IsNullOrEmpty(selectedGridItem.DisplayName) && selectedGridItem.Type != folder)
+            string result;
+            string errorContent;
+            string errorTitle;
+            string fileId = selectedGridItem.Id;
+            if (selectedGridItem != null && !string.IsNullOrEmpty(selectedGridItem.DisplayName) && selectedGridItem.Type != Constants.Folder)
             {
-                var picker = new FolderPicker
+                StorageFolder downloadFolder = await GetDestinationFolderAsync().ConfigureAwait(true);
+                if (DateTime.Now.Subtract(tokenResult.LastRefreshTime).Seconds >= int.Parse(tokenResult.Expires_in))
                 {
-                    ViewMode = PickerViewMode.Thumbnail,
-                    SuggestedStartLocation = PickerLocationId.Downloads
-                };
-                picker.FileTypeFilter.Add("*");
-                StorageFolder downloadFolder = await picker.PickSingleFolderAsync();
-
-                if (downloadFolder != null)
+                    await RefreshTokenAsync().ConfigureAwait(true);
+                }
+                SelectedGridItem.IsDownloading = true;
+                SelectedGridItem.DownloadStatus = stringsResourceLoader.GetString(Constants.DownloadingText);
+                downloadingFilesId.Add(SelectedGridItem.Id);
+                Uri source = new Uri(string.Join("", GoogleDownloadUri,
+                    selectedGridItem.Id, "?alt=media"));
+                result = await googleDriveService.DownloadFileAsync(source, downloadFolder, selectedGridItem.DisplayName,
+                    tokenResult.Token_type, tokenResult.Access_token).ConfigureAwait(true);
+                downloadingFilesId.Remove(fileId);
+                var downloadingFile = storageFiles.FirstOrDefault(f => f.Id == fileId);
+                if (downloadingFile != null)
                 {
-                    if (DateTime.Now.Subtract(lastRefreshTime).Seconds >= int.Parse(tokenResult.ExpiresIn))
+                    if (result == Constants.Success)
                     {
-                        await RefreshTokenAsync().ConfigureAwait(true);
+                        downloadingFile.DownloadStatus = stringsResourceLoader.GetString(Constants.DownloadCompleted);
                     }
-
-                    Uri source = new Uri(googleDownloadUri + selectedGridItem.Id.Substring(1, selectedGridItem.Id.Length - 2) + "?alt=media");
-
-                    StorageFile destinationFile = await downloadFolder.CreateFileAsync(
-                        selectedGridItem.DisplayName, CreationCollisionOption.GenerateUniqueName);
-
-                    SelectedGridItem.IsDownloading = true;
-                    SelectedGridItem.DownloadStatus = stringsResourceLoader.GetString(downloadingText);
-                    downloadingFilesId.Add(SelectedGridItem.Id);
-                    DownloadDriveFileAsync(source, destinationFile, SelectedGridItem.Id);
+                    else
+                    {
+                        downloadingFile.DownloadStatus = stringsResourceLoader.GetString(Constants.Failed);
+                        errorContent = stringsResourceLoader.GetString(Constants.ConnectionErrorContent);
+                        errorTitle = stringsResourceLoader.GetString(Constants.ConnectionError);
+                        _ = ShowMessageDialogAsync(errorContent, errorTitle);
+                    }
+                    _ = CloseDownloadingAsync(downloadingFile);
                 }
             }
         }
-
-        private async void DownloadDriveFileAsync(Uri source, StorageFile destinationFile, string fileId)
+        private async Task<StorageFolder> GetDestinationFolderAsync()
         {
-            const string downloadCompleted = "downloadCompleted";
-            const string connectionError = "connectionError";
-            const string connectionErrorContent = "connectionErrorContent";
-            const string failed = "failed";
-            bool isDownloadSuccess = true;
-            var downloadingFile = storageFiles.First(f => f.Id == fileId);
-            using (HttpClient client = new HttpClient())
+            var picker = new FolderPicker
             {
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(tokenResult.TokenType, tokenResult.AccessToken);
-                Stream stream;
-                try
-                {
-                    stream = await client.GetStreamAsync(source).ConfigureAwait(true);
-                    using (var fileStream = await destinationFile.OpenStreamForWriteAsync().ConfigureAwait(true))
-                    {
-                        await stream.CopyToAsync(fileStream).ConfigureAwait(true);
-                    }
-                }
-                catch (HttpRequestException)
-                {
-                    await new MessageDialog(stringsResourceLoader.GetString(connectionErrorContent))
-                    {
-                        Title = stringsResourceLoader.GetString(connectionError)
-                    }.ShowAsync();
-                    isDownloadSuccess = false;
-                    await destinationFile.DeleteAsync();
-                }
-            }
-            downloadingFilesId.Remove(fileId);
-            downloadingFile = storageFiles.FirstOrDefault(f => f.Id == fileId);
-            if (downloadingFile != null)
-            {
-                if (isDownloadSuccess)
-                {
-                    downloadingFile.DownloadStatus = stringsResourceLoader.GetString(downloadCompleted);
-                }
-                else
-                {
-                    downloadingFile.DownloadStatus = stringsResourceLoader.GetString(failed);
-                }
-                CloseDownloadingAsync(downloadingFile);
-            }
+                ViewMode = PickerViewMode.Thumbnail,
+                SuggestedStartLocation = PickerLocationId.Downloads
+            };
+            picker.FileTypeFilter.Add("*");
+            return await picker.PickSingleFolderAsync();
         }
 
-        private async void CloseDownloadingAsync(OnlineFileControlViewModel file)
+        private async Task CloseDownloadingAsync(OnlineFileControlViewModel file)
         {
             await Task.Delay(3000).ConfigureAwait(true);
             file.IsDownloading = false;
@@ -831,6 +605,14 @@ namespace FileManager.ViewModels
 
         private async void UploadFileAsync(object sender)
         {
+            string result;
+            string errorContent;
+            string errorTitle;
+            string folderId = currentFolderId;
+            var parents = new Collection<string>()
+            {
+                currentFolderId
+            };
             var picker = new FileOpenPicker
             {
                 ViewMode = PickerViewMode.Thumbnail,
@@ -838,104 +620,64 @@ namespace FileManager.ViewModels
             };
             picker.FileTypeFilter.Add("*");
             StorageFile uploadFile = await picker.PickSingleFileAsync();
-
             if (uploadFile != null)
             {
-                UploadFileOnDriveAsync(uploadFile, currentFolderId);
-            }
-        }
-
-        private async void UploadFileOnDriveAsync(StorageFile uploadFile, string folderId)
-        {
-            const string connectionErrorContent = "connectionErrorContent";
-            const string connectionError = "connectionError";
-            const string contentType = "application/octet-stream";
-            if (DateTime.Now.Subtract(lastRefreshTime).Seconds >= int.Parse(tokenResult.ExpiresIn))
-            {
-                await RefreshTokenAsync().ConfigureAwait(true);
-            }
-
-            var credentional = GoogleCredential.FromAccessToken(tokenResult.AccessToken).CreateScoped(DriveService.Scope.Drive);
-            using (var service = new DriveService(new BaseClientService.Initializer()
-            {
-                HttpClientInitializer = credentional
-            }))
-            {
-                var fileMetadata = new Google.Apis.Drive.v3.Data.File()
+                if (DateTime.Now.Subtract(tokenResult.LastRefreshTime).Seconds >= int.Parse(tokenResult.Expires_in))
                 {
-                    Name = uploadFile.Name,
-                    Parents = new List<string>() { currentFolderId.Substring(1, currentFolderId.Length - 2) }
-                };
-
-                var stream = await uploadFile.OpenStreamForReadAsync().ConfigureAwait(true);
-
-                var request = service.Files.Create(fileMetadata, stream, contentType);
-                request.Fields = "*";
-                var results = await request.UploadAsync().ConfigureAwait(true);
-
-                if (results.Status == Google.Apis.Upload.UploadStatus.Failed)
-                {
-                    await new MessageDialog(stringsResourceLoader.GetString(connectionErrorContent))
-                    {
-                        Title = stringsResourceLoader.GetString(connectionError)
-                    }.ShowAsync();
+                    await RefreshTokenAsync().ConfigureAwait(true);
                 }
-                else if (currentFolderId == folderId)
+                result = await googleDriveService.UploadFileAsync(uploadFile, parents, tokenResult.Access_token).ConfigureAwait(true);
+                if (result == Constants.Success)
                 {
-                    _ = GetItemsAsync(currentFolderId).ConfigureAwait(true);
+                    if (folderId == currentFolderId)
+                    {
+                        _ = GetItemsAsync(currentFolderId);
+                    }
+                }
+                else
+                {
+                    errorContent = stringsResourceLoader.GetString(Constants.ConnectionErrorContent);
+                    errorTitle = stringsResourceLoader.GetString(Constants.ConnectionError);
+                    _ = ShowMessageDialogAsync(errorContent, errorTitle);
                 }
             }
         }
 
         private async void DeleteFileAsync(object sender)
         {
-            const string confirmation = "confirmation";
-            const string deleteConfirmText = "deleteConfirmText";
-            const string yesButton = "yesButton";
-            const string cancelButton = "cancelButton";
-            const string connectionErrorContent = "connectionErrorContent";
-            const string connectionError = "connectionError";
             string folderId = currentFolderId;
+            string result;
+            string errorContent;
+            string errorTitle;
             if (selectedGridItem != null && !string.IsNullOrEmpty(selectedGridItem.DisplayName))
             {
                 var contentDialog = new ContentDialog()
                 {
-                    Title = stringsResourceLoader.GetString(confirmation),
-                    Content = stringsResourceLoader.GetString(deleteConfirmText) + $" \"{selectedGridItem.DisplayName}\"?",
-                    PrimaryButtonText = stringsResourceLoader.GetString(yesButton),
-                    CloseButtonText = stringsResourceLoader.GetString(cancelButton),
+                    Title = stringsResourceLoader.GetString(Constants.Confirmation),
+                    Content = stringsResourceLoader.GetString(Constants.DeleteConfirmText) + $" \"{selectedGridItem.DisplayName}\"?",
+                    PrimaryButtonText = stringsResourceLoader.GetString(Constants.YesButton),
+                    CloseButtonText = stringsResourceLoader.GetString(Constants.CancelButton),
                 };
                 var confirmationResult = await contentDialog.ShowAsync();
-
                 if (confirmationResult == ContentDialogResult.Primary)
                 {
-                    if (DateTime.Now.Subtract(lastRefreshTime).Seconds >= int.Parse(tokenResult.ExpiresIn))
+                    if (DateTime.Now.Subtract(tokenResult.LastRefreshTime).Seconds >= int.Parse(tokenResult.Expires_in))
                     {
                         await RefreshTokenAsync().ConfigureAwait(true);
                     }
-                    var credentional = GoogleCredential.FromAccessToken(tokenResult.AccessToken).CreateScoped(DriveService.Scope.Drive);
-                    using (var service = new DriveService(new BaseClientService.Initializer()
+                    result = await googleDriveService.DeleteFileAsync(selectedGridItem.Id, tokenResult.Access_token).ConfigureAwait(true);
+                    if (result == Constants.Success)
                     {
-                        HttpClientInitializer = credentional
-                    }))
+                        if (currentFolderId == folderId)
+                        {
+                            _ = GetItemsAsync(currentFolderId).ConfigureAwait(true);
+                        }
+                    }
+                    else
                     {
-                        var request = service.Files.Delete(selectedGridItem.Id.Substring(1, selectedGridItem.Id.Length - 2));
-                        try
-                        {
-                            await request.ExecuteAsync().ConfigureAwait(true);
-                            if (currentFolderId == folderId)
-                            {
-                                _ = GetItemsAsync(currentFolderId).ConfigureAwait(true);
-                            }
-                        }
-                        catch (HttpRequestException)
-                        {
-                            await new MessageDialog(stringsResourceLoader.GetString(connectionErrorContent))
-                            {
-                                Title = stringsResourceLoader.GetString(connectionError)
-                            }.ShowAsync();
-                        }
-
+                        errorContent = stringsResourceLoader.GetString(Constants.ConnectionErrorContent);
+                        errorTitle = stringsResourceLoader.GetString(Constants.ConnectionError);
+                        _ = ShowMessageDialogAsync(errorContent, errorTitle);
                     }
                 }
             }
@@ -943,159 +685,133 @@ namespace FileManager.ViewModels
 
         private async void CreateNewFolderAsync(object sender)
         {
-            const string inputError = "inputError";
-            const string invalidInput = "invalidInput";
-            const string contentType = "application/vnd.google-apps.folder";
-            const string cancelButton = "cancelButton";
-            const string createButton = "createButton";
-            const string newFolder = "newFolder";
-            const string placeHolderFileName = "placeHolderFileName";
-            const string connectionErrorContent = "connectionErrorContent";
-            const string connectionError = "connectionError";
-            var parameters = new string[] { stringsResourceLoader.GetString(newFolder), stringsResourceLoader.GetString(placeHolderFileName), string.Empty };
-
-            var contentDialog = new ContentDialogControl()
+            string dialogTitle = stringsResourceLoader.GetString(Constants.NewFolder);
+            string placeHolder = stringsResourceLoader.GetString(Constants.PlaceHolderFileName);
+            string inputText = string.Empty;
+            string primaryButton = stringsResourceLoader.GetString(Constants.CreateButton);
+            string secondaryButton = stringsResourceLoader.GetString(Constants.CancelButton);
+            string result;
+            string errorContent;
+            string errorTitle;
+            var parents = new Collection<string>()
             {
-                PrimaryButtonText = stringsResourceLoader.GetString(createButton),
-                SecondaryButtonText = stringsResourceLoader.GetString(cancelButton),
-                DataContext = Activator.CreateInstance(typeof(ContentDialogControlViewModel), parameters)
+                currentFolderId
             };
-            var result = await contentDialog.ShowAsync();
+            var contentDialog = CreateInputContentDialog(dialogTitle, placeHolder, inputText, primaryButton, secondaryButton);
+            var dialogResult = await contentDialog.ShowAsync();
             var gridItem = (ContentDialogControlViewModel)contentDialog.DataContext;
             var folderName = gridItem.InputText;
-
-            if (result == ContentDialogResult.Primary && ItemNameValidation.Validate(folderName))
+            folderName = ValidateItemName(folderName);
+            if (dialogResult == ContentDialogResult.Primary && !string.IsNullOrEmpty(folderName))
             {
-                while (folderName.EndsWith(' '))
-                {
-                    folderName = folderName.Remove(folderName.Length - 1);
-                }
-                while (folderName.StartsWith(' '))
-                {
-                    folderName = folderName.Remove(0, 1);
-                }
-
-                if (DateTime.Now.Subtract(lastRefreshTime).Seconds >= int.Parse(tokenResult.ExpiresIn))
+                if (DateTime.Now.Subtract(tokenResult.LastRefreshTime).Seconds >= int.Parse(tokenResult.Expires_in))
                 {
                     await RefreshTokenAsync().ConfigureAwait(true);
                 }
-
-                var credentional = GoogleCredential.FromAccessToken(tokenResult.AccessToken).CreateScoped(DriveService.Scope.Drive);
-                using (var service = new DriveService(new BaseClientService.Initializer()
+                result = await googleDriveService.CreateNewFolderAsync(folderName, parents, tokenResult.Access_token).ConfigureAwait(true);
+                if (result == Constants.Success)
                 {
-                    HttpClientInitializer = credentional
-                }))
+                    _ = GetItemsAsync(currentFolderId);
+                }
+                else
                 {
-                    var fileMetadata = new Google.Apis.Drive.v3.Data.File()
-                    {
-                        Name = folderName,
-                        Parents = new List<string>() { currentFolderId.Substring(1, currentFolderId.Length - 2) },
-                        MimeType = contentType
-                    };
-
-                    try
-                    {
-                        var request = service.Files.Create(fileMetadata);
-                        request.Fields = "*";
-                        await request.ExecuteAsync().ConfigureAwait(true);
-                        _ = GetItemsAsync(currentFolderId).ConfigureAwait(true);
-                    }
-                    catch (HttpRequestException)
-                    {
-                        await new MessageDialog(stringsResourceLoader.GetString(connectionErrorContent))
-                        {
-                            Title = stringsResourceLoader.GetString(connectionError)
-                        }.ShowAsync();
-                    }
+                    errorContent = stringsResourceLoader.GetString(Constants.ConnectionErrorContent);
+                    errorTitle = stringsResourceLoader.GetString(Constants.ConnectionError);
+                    _ = ShowMessageDialogAsync(errorContent, errorTitle);
                 }
             }
-            else if (result == ContentDialogResult.Primary && !ItemNameValidation.Validate(folderName))
+            else if (dialogResult == ContentDialogResult.Primary)
             {
-                var messageDialog = new MessageDialog(stringsResourceLoader.GetString(invalidInput))
-                {
-                    Title = stringsResourceLoader.GetString(inputError)
-                };
-                await messageDialog.ShowAsync();
+                errorContent = stringsResourceLoader.GetString(Constants.InvalidInput);
+                errorTitle = stringsResourceLoader.GetString(Constants.InputError);
+                _ = ShowMessageDialogAsync(errorContent, errorTitle);
             }
         }
 
         private async void RenameFileAsync(object sender)
         {
-            const string inputError = "inputError";
-            const string invalidInput = "invalidInput";
-            const string cancelButton = "cancelButton";
-            const string rename = "rename";
-            const string yesButton = "yesButton";
-            const string placeHolderFileName = "placeHolderFileName";
-            const string connectionErrorContent = "connectionErrorContent";
-            const string connectionError = "connectionError";
-
+            string dialogTitle = stringsResourceLoader.GetString(Constants.Rename);
+            string placeHolder = stringsResourceLoader.GetString(Constants.PlaceHolderFileName);
+            string inputText = selectedGridItem.DisplayName;
+            string primaryButton = stringsResourceLoader.GetString(Constants.YesButton);
+            string secondaryButton = stringsResourceLoader.GetString(Constants.CancelButton);
+            string result;
             if (selectedGridItem != null)
             {
-                var parameters = new string[] { stringsResourceLoader.GetString(rename), stringsResourceLoader.GetString(placeHolderFileName), selectedGridItem.DisplayName };
-                var contentDialog = new ContentDialogControl()
-                {
-                    PrimaryButtonText = stringsResourceLoader.GetString(yesButton),
-                    SecondaryButtonText = stringsResourceLoader.GetString(cancelButton),
-                    DataContext = Activator.CreateInstance(typeof(ContentDialogControlViewModel), parameters)
-                };
-                var result = await contentDialog.ShowAsync();
+                string errorContent;
+                string errorTitle;
+                var contentDialog = CreateInputContentDialog(dialogTitle, placeHolder, inputText, primaryButton, secondaryButton);
+                var dialogResult = await contentDialog.ShowAsync();
                 var gridItem = (ContentDialogControlViewModel)contentDialog.DataContext;
                 var fileName = gridItem.InputText;
+                fileName = ValidateItemName(fileName);
 
-                if (result == ContentDialogResult.Primary && ItemNameValidation.Validate(fileName))
+                if (dialogResult == ContentDialogResult.Primary && !string.IsNullOrEmpty(fileName))
                 {
-                    while (fileName.EndsWith(' '))
-                    {
-                        fileName = fileName.Remove(fileName.Length - 1);
-                    }
-                    while (fileName.StartsWith(' '))
-                    {
-                        fileName = fileName.Remove(0, 1);
-                    }
-
-                    if (DateTime.Now.Subtract(lastRefreshTime).Seconds >= int.Parse(tokenResult.ExpiresIn))
+                    if (DateTime.Now.Subtract(tokenResult.LastRefreshTime).Seconds >= int.Parse(tokenResult.Expires_in))
                     {
                         await RefreshTokenAsync().ConfigureAwait(true);
                     }
-
-                    var credentional = GoogleCredential.FromAccessToken(tokenResult.AccessToken).CreateScoped(DriveService.Scope.Drive);
-                    using (var service = new DriveService(new BaseClientService.Initializer()
+                    result = await googleDriveService.RenameFileAsync(selectedGridItem.Id, fileName, tokenResult.Access_token).ConfigureAwait(true);
+                    if (result == Constants.Success)
                     {
-                        HttpClientInitializer = credentional
-                    }))
+                        _ = GetItemsAsync(currentFolderId);
+                    }
+                    else
                     {
-                        var fileMetadata = new Google.Apis.Drive.v3.Data.File()
-                        {
-                            Name = fileName,
-                        };
-
-                        try
-                        {
-                            var itemId = selectedGridItem.Id;
-                            itemId = itemId.Substring(1, currentFolderId.Length - 2);
-                            var request = service.Files.Update(fileMetadata, itemId);
-                            await request.ExecuteAsync().ConfigureAwait(true);
-                            _ = GetItemsAsync(currentFolderId).ConfigureAwait(true);
-                        }
-                        catch (HttpRequestException)
-                        {
-                            await new MessageDialog(stringsResourceLoader.GetString(connectionErrorContent))
-                            {
-                                Title = stringsResourceLoader.GetString(connectionError)
-                            }.ShowAsync();
-                        }
+                        errorContent = stringsResourceLoader.GetString(Constants.ConnectionErrorContent);
+                        errorTitle = stringsResourceLoader.GetString(Constants.ConnectionError);
+                        _ = ShowMessageDialogAsync(errorContent, errorTitle);
                     }
                 }
-                else if (result == ContentDialogResult.Primary)
+                else if (dialogResult == ContentDialogResult.Primary)
                 {
-                    var messageDialog = new MessageDialog(stringsResourceLoader.GetString(invalidInput))
-                    {
-                        Title = stringsResourceLoader.GetString(inputError)
-                    };
-                    await messageDialog.ShowAsync();
+                    errorContent = stringsResourceLoader.GetString(Constants.InvalidInput);
+                    errorTitle = stringsResourceLoader.GetString(Constants.InputError);
+                    _ = ShowMessageDialogAsync(errorContent, errorTitle);
                 }
             }
+        }
+        private async Task ShowMessageDialogAsync(string content, string title)
+        {
+            var messageDialog = new MessageDialog(content)
+            {
+                Title = title
+            };
+            await messageDialog.ShowAsync();
+        }
+        private ContentDialogControl CreateInputContentDialog(string title, string placeHolder, string inputText, string primaryButton, string secondaryButton)
+        {
+            var parameters = new List<NamedParameter>()
+                {
+                    new NamedParameter("title", title),
+                    new NamedParameter("placeHolder", placeHolder),
+                    new NamedParameter("inputText", inputText)
+                };
+            var contentDialog = new ContentDialogControl()
+            {
+                PrimaryButtonText = primaryButton,
+                SecondaryButtonText = secondaryButton,
+                DataContext = App.Container.Resolve<ContentDialogControlViewModel>(parameters)
+            };
+            return contentDialog;
+        }
+        private string ValidateItemName(string itemName)
+        {
+            string result = string.Empty;
+            if (ItemNameValidation.Validate(itemName))
+            {
+                while (itemName.EndsWith(' '))
+                {
+                    itemName = itemName.Remove(itemName.Length - 1);
+                }
+                while (itemName.StartsWith(' '))
+                {
+                    itemName = itemName.Remove(0, 1);
+                }
+                result = itemName;
+            }
+            return result;
         }
     }
 }

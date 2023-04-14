@@ -1,13 +1,7 @@
-﻿using FileManager.Commands;
-using FileManager.Controlls;
-using FileManager.Validation;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.IO;
 using System.Linq;
-using System.Net;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Windows.ApplicationModel.Core;
@@ -19,12 +13,24 @@ using Windows.UI.Core;
 using Windows.UI.Popups;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml.Controls;
+using Autofac;
+using FileManager.Commands;
+using FileManager.Controlls;
+using FileManager.Factory;
+using FileManager.Helpers;
+using FileManager.Services;
+using FileManager.Validation;
+using FileManager.ViewModels.OnlineFileControls;
 
 namespace FileManager.ViewModels
 {
     public class FtpViewModel : BindableBase
     {
-        private const string protocolName = "ftp://";
+        private const string ProtocolName = "ftp://";
+        private readonly List<string> downloadingFilesPath;
+        private readonly Dictionary<string, string> knownTypes;
+        private readonly ResourceLoader stringsResourceLoader;
+        private readonly FtpService ftpService;
         private string hostLink;
         private string username;
         private string password;
@@ -35,11 +41,8 @@ namespace FileManager.ViewModels
         private bool isLoginFormVisible;
         private bool isCommandPanelVisible;
         private bool isBackButtonAvailable;
-        private readonly List<string> downloadingFilesPath;
-        private readonly Dictionary<string, string> knownTypes;
         private OnlineFileControlViewModel selectedGridItem;
         private ResourceLoader themeResourceLoader;
-        private readonly ResourceLoader stringsResourceLoader;
         private Collection<OnlineFileControlViewModel> storageFiles;
         private ICommand connectCommand;
         private ICommand doubleClickedCommand;
@@ -292,33 +295,28 @@ namespace FileManager.ViewModels
             }
         }
 
-
         public FtpViewModel()
         {
-            const string resources = "Resources";
-            const string loading = "loadingText";
-            const string image = "image";
-            const string video = "video";
-            const string audio = "audio";
             knownTypes = new Dictionary<string, string>()
             {
-                { ".jpg", image },
-                { ".jpeg", image },
-                { ".jfif", image },
-                { ".gif", image },
-                { ".png", image },
-                { ".mp4", video },
-                { ".avi", video },
-                { ".wmv", video },
-                { ".amv", video },
-                { ".mp3", audio },
-                { ".ogg", audio },
-                { ".wma", audio },
-                { ".wav", audio },
+                { ".jpg", Constants.Image },
+                { ".jpeg", Constants.Image },
+                { ".jfif", Constants.Image },
+                { ".gif", Constants.Image },
+                { ".png", Constants.Image },
+                { ".mp4", Constants.Video },
+                { ".avi", Constants.Video },
+                { ".wmv", Constants.Video },
+                { ".amv", Constants.Video },
+                { ".mp3", Constants.Audio },
+                { ".ogg", Constants.Audio },
+                { ".wma", Constants.Audio },
+                { ".wav", Constants.Audio },
             };
             downloadingFilesPath = new List<string>();
-            stringsResourceLoader = ResourceLoader.GetForCurrentView(resources);
-            LoadingText = stringsResourceLoader.GetString(loading);
+            ftpService = new FtpService();
+            stringsResourceLoader = ResourceLoader.GetForCurrentView(Constants.Resources);
+            LoadingText = stringsResourceLoader.GetString(Constants.Loading);
             if (Windows.System.Profile.AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Xbox")
             {
                 ItemClickedCommand = new RelayCommand(OpenFolder);
@@ -337,31 +335,23 @@ namespace FileManager.ViewModels
             DeleteFileCommand = new RelayCommand(DeleteFileAsync);
             CreateNewFolderCommand = new RelayCommand(CreateNewFolderAsync);
             RenameFileCommand = new RelayCommand(RenameFileAsync);
-            HostLink = protocolName;
+            HostLink = ProtocolName;
             IsLoginFormVisible = true;
             ChangeColorMode(settings, this);
         }
         protected override void ChangeColorMode(UISettings uiSettings, object sender)
         {
-            const string image = "image";
-            const string video = "video";
-            const string audio = "audio";
-            const string folder = "folder";
-            const string file = "file";
-            const string imagesDark = "ImagesDark";
-            const string imagesLight = "ImagesLight";
-
             var currentBackgroundColor = uiSettings?.GetColorValue(UIColorType.Background);
             if (backgroundColor != currentBackgroundColor || storageFiles == null)
             {
                 if (currentBackgroundColor == Colors.Black)
                 {
-                    themeResourceLoader = ResourceLoader.GetForViewIndependentUse(imagesDark);
+                    themeResourceLoader = ResourceLoader.GetForViewIndependentUse(Constants.ImagesDark);
                     backgroundColor = Colors.Black;
                 }
                 else
                 {
-                    themeResourceLoader = ResourceLoader.GetForViewIndependentUse(imagesLight);
+                    themeResourceLoader = ResourceLoader.GetForViewIndependentUse(Constants.ImagesLight);
                     backgroundColor = Colors.White;
                 }
 
@@ -373,24 +363,7 @@ namespace FileManager.ViewModels
                     {
                         foreach (var storageFile in storageFiles)
                         {
-                            switch (storageFile.Type)
-                            {
-                                case image:
-                                    storageFile.Image = themeResourceLoader.GetString(image);
-                                    break;
-                                case video:
-                                    storageFile.Image = themeResourceLoader.GetString(video);
-                                    break;
-                                case audio:
-                                    storageFile.Image = themeResourceLoader.GetString(audio);
-                                    break;
-                                case folder:
-                                    storageFile.Image = themeResourceLoader.GetString(folder);
-                                    break;
-                                default:
-                                    storageFile.Image = themeResourceLoader.GetString(file);
-                                    break;
-                            }
+                            storageFile.ChangeColorMode(themeResourceLoader);
                         }
                     }).AsTask().ConfigureAwait(true);
                 }
@@ -399,44 +372,26 @@ namespace FileManager.ViewModels
 
         private async void ConnectAsync(object sender)
         {
-            const string connectionError = "connectionError";
-            const string connectionErrorContent = "connectionErrorContent";
-            const string failed = "failed";
-            const string invalidUriFormat = "invalidUriFormat";
-
-            try
+            IsLoginFormVisible = false;
+            IsLoadingVisible = true;
+            var result = await ftpService.TryConnectAsync(hostLink, username, password).ConfigureAwait(true);
+            if (result == Constants.Success)
             {
-                
-                IsLoginFormVisible = false;
-                IsLoadingVisible = true;
-
-                FtpWebRequest request = (FtpWebRequest)WebRequest.Create(hostLink);
-                request.Method = WebRequestMethods.Ftp.ListDirectory;
-                request.Credentials = new NetworkCredential(username, password);
-                var response = (FtpWebResponse)await request.GetResponseAsync().ConfigureAwait(true);
-                response.Close();
                 currentPath = HostLink;
-
                 IsCommandPanelVisible = true;
                 _ = GetItemsAsync(currentPath).ConfigureAwait(true);
             }
-            catch (WebException)
+            else if (result == Constants.InvalidUriFormat)
             {
-                await new MessageDialog(stringsResourceLoader.GetString(connectionErrorContent))
-                {
-                    Title = stringsResourceLoader.GetString(connectionError)
-                }.ShowAsync();
-
+                await ShowMessageDialogAsync(stringsResourceLoader.GetString(Constants.InvalidUriFormat),
+                            stringsResourceLoader.GetString(Constants.Failed)).ConfigureAwait(true);
                 IsLoadingVisible = false;
                 IsLoginFormVisible = true;
             }
-            catch (UriFormatException)
+            else
             {
-                await new MessageDialog(stringsResourceLoader.GetString(invalidUriFormat))
-                {
-                    Title = stringsResourceLoader.GetString(failed)
-                }.ShowAsync();
-
+                await ShowMessageDialogAsync(stringsResourceLoader.GetString(Constants.ConnectionErrorContent),
+                    stringsResourceLoader.GetString(Constants.ConnectionError)).ConfigureAwait(true);
                 IsLoadingVisible = false;
                 IsLoginFormVisible = true;
             }
@@ -444,8 +399,7 @@ namespace FileManager.ViewModels
 
         private void OpenFolder(object sender)
         {
-            const string folder = "folder";
-            if (selectedGridItem != null && selectedGridItem.Type == folder)
+            if (selectedGridItem != null && selectedGridItem.Type == Constants.Folder)
             {
                 currentPath = selectedGridItem.Path;
                 _ = GetItemsAsync(selectedGridItem.Path);
@@ -460,75 +414,28 @@ namespace FileManager.ViewModels
 
         private async Task GetItemsAsync(string path)
         {
-            const string folder = "folder";
-            const string file = "file";
             IsFilesVisible = false;
             IsLoadingVisible = true;
             IsBackButtonAvailable = false;
 
-            var ftpFiles = await GetFilesFromFTPAsync(path).ConfigureAwait(true);
+            var ftpFiles = await ftpService.GetFilesAsync(path, username, password).ConfigureAwait(true);
             List<OnlineFileControlViewModel> items = new List<OnlineFileControlViewModel>();
-
-            foreach (var ftpFile in ftpFiles)
+            foreach (var file in ftpFiles)
             {
-                var elements = ftpFile.Split(" ").ToList();
-                int indexOfName = elements.IndexOf(elements.FirstOrDefault(e => Regex.IsMatch(e, @"[0-2][0-9][:][0-5][0-9]"))) + 1;
-                var elementName = string.Join(" ", elements.GetRange(indexOfName, elements.Count - indexOfName));
-                if (elements[0] != "drwxr-xr-x")
+                var filePath = string.Join("/", path, file.Name);
+                var viewModel = OnlineFileControlCreator.CreateFileControl(themeResourceLoader, file.Id, file.Name, file.Type, filePath);
+                if (viewModel.Type == Constants.Folder)
                 {
-                    continue;
-                }
-
-                items.Add(new OnlineFileControlViewModel()
-                {
-                    Image = themeResourceLoader.GetString(folder),
-                    DisplayName = elementName,
-                    Type = folder,
-                    Path = currentPath + "/" + elementName
-                });
-            }
-
-            foreach (var ftpFile in ftpFiles)
-            {
-                var elements = ftpFile.Split(" ").ToList();
-                int indexOfName = elements.IndexOf(elements.FirstOrDefault(e => Regex.IsMatch(e, @"[0-2][0-9][:][0-5][0-9]"))) + 1;
-                var elementName = string.Join(" ", elements.GetRange(indexOfName, elements.Count - indexOfName));
-                if (elements[0] == "drwxr-xr-x")
-                {
-                    continue;
-                }
-
-                int startIndexOfExtension = elementName.LastIndexOf('.');
-                string fileExtension = string.Empty;
-                if (startIndexOfExtension >= 0)
-                {
-                    fileExtension = elementName.Substring(startIndexOfExtension);
-                }
-                if (knownTypes.TryGetValue(fileExtension, out string value))
-                {
-                    items.Add(new OnlineFileControlViewModel()
-                    {
-                        Image = themeResourceLoader.GetString(value),
-                        DisplayName = elementName,
-                        Type = file,
-                        Path = currentPath + "/" + elementName
-                    });
+                    var lastIndexOfFolder = items.FindLastIndex(f => f.Type == Constants.Folder);
+                    items.Insert(lastIndexOfFolder + 1, viewModel);
                 }
                 else
                 {
-                    items.Add(new OnlineFileControlViewModel()
-                    {
-                        Image = themeResourceLoader.GetString(file),
-                        DisplayName = elementName,
-                        Type = file,
-                        Path = currentPath + "/" + elementName
-                    });
+                    items.Add(viewModel);
                 }
-
             }
-
             StorageFiles = new Collection<OnlineFileControlViewModel>(items);
-            CheckFilesForDownloadingAsync();
+            _ = CheckFilesForDownloadingAsync();
             IsLoadingVisible = false;
             IsFilesVisible = true;
             if (currentPath != hostLink)
@@ -537,127 +444,69 @@ namespace FileManager.ViewModels
             }
         }
 
-        private async void CheckFilesForDownloadingAsync()
+        private async Task CheckFilesForDownloadingAsync()
         {
-            const string downloadingText = "downloadingText";
-            const string folder = "folder";
             await Task.Run(() =>
             {
                 foreach (var file in storageFiles)
                 {
-                    if (file.Type == folder)
+                    if (file.Type == Constants.Folder)
                     {
                         continue;
                     }
                     if (downloadingFilesPath.Exists(p => p == file.Path))
                     {
                         file.IsDownloading = true;
-                        file.DownloadStatus = stringsResourceLoader.GetString(downloadingText);
+                        file.DownloadStatus = stringsResourceLoader.GetString(Constants.DownloadingText);
                     }
                 }
             }).ConfigureAwait(true);
         }
 
-        private async Task<List<string>> GetFilesFromFTPAsync(string path)
-        {
-            FtpWebRequest request = (FtpWebRequest)WebRequest.Create(path);
-            request.Method = WebRequestMethods.Ftp.ListDirectoryDetails;
-            request.Credentials = new NetworkCredential(username, password);
-            var response = (FtpWebResponse)await request.GetResponseAsync().ConfigureAwait(true);
-            StreamReader streamReader = new StreamReader(response.GetResponseStream());
-
-
-            List<string> files = new List<string>();
-            string line = await streamReader.ReadLineAsync().ConfigureAwait(true);
-            while (!string.IsNullOrEmpty(line))
-            {
-                files.Add(line);
-                line = await streamReader.ReadLineAsync().ConfigureAwait(true);
-            }
-
-            streamReader.Close();
-            response.Close();
-            return files;
-        }
-
         private async void DownloadFileAsync(object sender)
         {
-            const string folder = "folder";
-            const string downloadingText = "downloadingText";
-            if (selectedGridItem != null && !string.IsNullOrEmpty(selectedGridItem.DisplayName) && selectedGridItem.Type != folder)
+            string filePath = selectedGridItem.Path;
+            string result;
+            if (selectedGridItem != null && !string.IsNullOrEmpty(selectedGridItem.DisplayName) && selectedGridItem.Type != Constants.Folder)
             {
-                var picker = new FolderPicker
-                {
-                    ViewMode = PickerViewMode.Thumbnail,
-                    SuggestedStartLocation = PickerLocationId.Downloads
-                };
-                picker.FileTypeFilter.Add("*");
-                StorageFolder downloadFolder = await picker.PickSingleFolderAsync();
+                StorageFolder downloadFolder = await GetDestinationFolderAsync().ConfigureAwait(true);
 
                 if (downloadFolder != null)
                 {
-                    StorageFile destinationFile = await downloadFolder.CreateFileAsync(
-                        selectedGridItem.DisplayName, CreationCollisionOption.GenerateUniqueName);
-
                     SelectedGridItem.IsDownloading = true;
-                    SelectedGridItem.DownloadStatus = stringsResourceLoader.GetString(downloadingText);
+                    SelectedGridItem.DownloadStatus = stringsResourceLoader.GetString(Constants.DownloadingText);
                     downloadingFilesPath.Add(selectedGridItem.Path);
-
-                    DownloadFtpFileAsync(destinationFile, selectedGridItem.Path);
+                    result = await ftpService.DownloadFileAsync(downloadFolder, filePath, username, password).ConfigureAwait(true);
+                    downloadingFilesPath.Remove(filePath);
+                    var downloadingFile = storageFiles.FirstOrDefault(f => f.Path == filePath);
+                    if (downloadingFile != null)
+                    {
+                        if (result == Constants.Success)
+                        {
+                            downloadingFile.DownloadStatus = stringsResourceLoader.GetString(Constants.DownloadCompleted);
+                        }
+                        else
+                        {
+                            await ShowMessageDialogAsync(stringsResourceLoader.GetString(Constants.ConnectionErrorContent),
+                                stringsResourceLoader.GetString(Constants.ConnectionError)).ConfigureAwait(true);
+                            downloadingFile.DownloadStatus = stringsResourceLoader.GetString(Constants.Failed);
+                        }
+                        _ = CloseDownloadingAsync(downloadingFile);
+                    }
                 }
             }
         }
-
-        private async void DownloadFtpFileAsync(StorageFile destinationFile, string filePath)
+        private async Task<StorageFolder> GetDestinationFolderAsync()
         {
-            const string downloadCompleted = "downloadCompleted";
-            const string connectionError = "connectionError";
-            const string connectionErrorContent = "connectionErrorContent";
-            const string failed = "failed";
-            bool isDownloadSuccess;
-            Stream stream;
-
-            try
+            var picker = new FolderPicker
             {
-                using (WebClient client = new WebClient())
-                {
-                    client.Credentials = new NetworkCredential(username, password);
-                    stream = await client.OpenReadTaskAsync(filePath).ConfigureAwait(true);
-                }
-
-                using (var fileStream = await destinationFile.OpenStreamForWriteAsync().ConfigureAwait(true))
-                {
-                    await stream.CopyToAsync(fileStream).ConfigureAwait(true);
-                }
-                isDownloadSuccess = true;
-            }
-            catch (WebException)
-            {
-                await new MessageDialog(stringsResourceLoader.GetString(connectionErrorContent))
-                {
-                    Title = stringsResourceLoader.GetString(connectionError)
-                }.ShowAsync();
-                isDownloadSuccess = false;
-                await destinationFile.DeleteAsync();
-            }
-
-            downloadingFilesPath.Remove(filePath);
-            var downloadingFile = storageFiles.FirstOrDefault(f => f.Path == filePath);
-            if (downloadingFile != null)
-            {
-                if (isDownloadSuccess)
-                {
-                    downloadingFile.DownloadStatus = stringsResourceLoader.GetString(downloadCompleted);
-                }
-                else
-                {
-                    downloadingFile.DownloadStatus = stringsResourceLoader.GetString(failed);
-                }
-                CloseDownloadingAsync(downloadingFile);
-            }
+                ViewMode = PickerViewMode.Thumbnail,
+                SuggestedStartLocation = PickerLocationId.Downloads
+            };
+            picker.FileTypeFilter.Add("*");
+            return await picker.PickSingleFolderAsync();
         }
-
-        private async void CloseDownloadingAsync(OnlineFileControlViewModel file)
+        private async Task CloseDownloadingAsync(OnlineFileControlViewModel file)
         {
             await Task.Delay(3000).ConfigureAwait(true);
             file.IsDownloading = false;
@@ -666,118 +515,68 @@ namespace FileManager.ViewModels
 
         private async void UploadFileAsync(object sender)
         {
-            const string failed = "failed";
-            const string sameNameError = "sameNameError";
+            string result;
+            string destinationPath = currentPath;
+            StorageFile uploadFile = await GetUploadFileAsync().ConfigureAwait(true);
 
+            if (uploadFile != null)
+            {
+                if (storageFiles.FirstOrDefault(f => f.DisplayName == uploadFile.Name) == null)
+                {
+                    result = await ftpService.UploadFileAsync(uploadFile, currentPath, username, password).ConfigureAwait(true);
+                    if (result == Constants.Success && destinationPath == currentPath)
+                    {
+                        _ = GetItemsAsync(currentPath).ConfigureAwait(true);
+                    }
+                    else
+                    {
+                        await ShowMessageDialogAsync(stringsResourceLoader.GetString(Constants.ConnectionErrorContent),
+                            stringsResourceLoader.GetString(Constants.ConnectionError)).ConfigureAwait(true);
+                    }
+                }
+                else
+                {
+                    await ShowMessageDialogAsync(stringsResourceLoader.GetString(Constants.SameNameError),
+                        stringsResourceLoader.GetString(Constants.Failed)).ConfigureAwait(true);
+                }
+            }
+        }
+        private async Task<StorageFile> GetUploadFileAsync()
+        {
             var picker = new FileOpenPicker
             {
                 ViewMode = PickerViewMode.Thumbnail,
                 SuggestedStartLocation = PickerLocationId.Downloads
             };
             picker.FileTypeFilter.Add("*");
-            StorageFile uploadFile = await picker.PickSingleFileAsync();
-
-            if (uploadFile != null)
-            {
-                if (storageFiles.FirstOrDefault(f => f.DisplayName == uploadFile.Name) == null)
-                {
-                    UploadFtpFileAsync(uploadFile, currentPath);
-                }
-                else
-                {
-                    var messageDialog = new MessageDialog(stringsResourceLoader.GetString(sameNameError))
-                    {
-                        Title = stringsResourceLoader.GetString(failed)
-                    };
-                    await messageDialog.ShowAsync();
-                }
-            }
-        }
-
-        private async void UploadFtpFileAsync(StorageFile uploadFile, string destinationPath)
-        {
-            const string connectionError = "connectionError";
-            const string connectionErrorContent = "connectionErrorContent";
-            bool isUploadSuccess;
-            Stream responseStream;
-
-            try
-            {
-                using (WebClient client = new WebClient())
-                {
-                    client.Credentials = new NetworkCredential(username, password);
-                    responseStream = await client.OpenWriteTaskAsync(new Uri(destinationPath + "/" + uploadFile.Name)).ConfigureAwait(true);
-                }
-
-                using (var fileStream = await uploadFile.OpenStreamForWriteAsync().ConfigureAwait(true))
-                {
-                    await fileStream.CopyToAsync(responseStream).ConfigureAwait(true);
-                }
-                isUploadSuccess = true;
-            }
-            catch (WebException)
-            {
-                await new MessageDialog(stringsResourceLoader.GetString(connectionErrorContent))
-                {
-                    Title = stringsResourceLoader.GetString(connectionError)
-                }.ShowAsync();
-                isUploadSuccess = false;
-            }
-
-            if (isUploadSuccess && destinationPath == currentPath)
-            {
-                _ = GetItemsAsync(currentPath).ConfigureAwait(true);
-            }
+            return await picker.PickSingleFileAsync();
         }
 
         private async void DeleteFileAsync(object sender)
         {
-            const string confirmation = "confirmation";
-            const string deleteConfirmText = "deleteConfirmText";
-            const string yesButton = "yesButton";
-            const string cancelButton = "cancelButton";
-            const string connectionErrorContent = "connectionErrorContent";
-            const string connectionError = "connectionError";
-            const string folder = "folder";
-
+            string deletingResult;
             if (selectedGridItem != null && !string.IsNullOrEmpty(selectedGridItem.DisplayName))
             {
                 var contentDialog = new ContentDialog()
                 {
-                    Title = stringsResourceLoader.GetString(confirmation),
-                    Content = stringsResourceLoader.GetString(deleteConfirmText) + $" \"{selectedGridItem.DisplayName}\"?",
-                    PrimaryButtonText = stringsResourceLoader.GetString(yesButton),
-                    CloseButtonText = stringsResourceLoader.GetString(cancelButton),
+                    Title = stringsResourceLoader.GetString(Constants.Confirmation),
+                    Content = stringsResourceLoader.GetString(Constants.DeleteConfirmText) + $" \"{selectedGridItem.DisplayName}\"?",
+                    PrimaryButtonText = stringsResourceLoader.GetString(Constants.YesButton),
+                    CloseButtonText = stringsResourceLoader.GetString(Constants.CancelButton),
                 };
                 var confirmationResult = await contentDialog.ShowAsync();
 
                 if (confirmationResult == ContentDialogResult.Primary)
                 {
-                    try
+                    deletingResult = await ftpService.DeleteFileAsync(selectedGridItem.Path, selectedGridItem.Type, username, password).ConfigureAwait(true);
+                    if (deletingResult == Constants.Success)
                     {
-                        FtpWebRequest request = (FtpWebRequest)WebRequest.Create(selectedGridItem.Path);
-                        request.Credentials = new NetworkCredential(username, password);
-
-                        if (selectedGridItem.Type == folder)
-                        {
-                            request.Method = WebRequestMethods.Ftp.RemoveDirectory;
-                        }
-                        else
-                        {
-                            request.Method = WebRequestMethods.Ftp.DeleteFile;
-                        }
-
-                        FtpWebResponse response = (FtpWebResponse)await request.GetResponseAsync().ConfigureAwait(true);
-                        response.Close();
-
                         _ = GetItemsAsync(currentPath).ConfigureAwait(true);
                     }
-                    catch (WebException)
+                    else
                     {
-                        await new MessageDialog(stringsResourceLoader.GetString(connectionErrorContent))
-                        {
-                            Title = stringsResourceLoader.GetString(connectionError)
-                        }.ShowAsync();
+                        await ShowMessageDialogAsync(stringsResourceLoader.GetString(Constants.ConnectionErrorContent),
+                            stringsResourceLoader.GetString(Constants.ConnectionError)).ConfigureAwait(true);
                     }
                 }
             }
@@ -785,155 +584,130 @@ namespace FileManager.ViewModels
 
         private async void CreateNewFolderAsync(object sender)
         {
-            const string inputError = "inputError";
-            const string invalidInput = "invalidInput";
-            const string cancelButton = "cancelButton";
-            const string createButton = "createButton";
-            const string newFolder = "newFolder";
-            const string placeHolderFileName = "placeHolderFileName";
-            const string connectionErrorContent = "connectionErrorContent";
-            const string connectionError = "connectionError";
-            const string failed = "failed";
-            const string sameNameError = "sameNameError";
-            var parameters = new string[] { stringsResourceLoader.GetString(newFolder), stringsResourceLoader.GetString(placeHolderFileName), string.Empty };
-
-            var contentDialog = new ContentDialogControl()
-            {
-                PrimaryButtonText = stringsResourceLoader.GetString(createButton),
-                SecondaryButtonText = stringsResourceLoader.GetString(cancelButton),
-                DataContext = Activator.CreateInstance(typeof(ContentDialogControlViewModel), parameters)
-            };
-            var result = await contentDialog.ShowAsync();
+            string creatingResult;
+            string dialogTitle = stringsResourceLoader.GetString(Constants.NewFolder);
+            string placeHolder = stringsResourceLoader.GetString(Constants.PlaceHolderFileName);
+            string inputText = string.Empty;
+            string primaryButton = stringsResourceLoader.GetString(Constants.CreateButton);
+            string secondaryButton = stringsResourceLoader.GetString(Constants.CancelButton);
+            var contentDialog = CreateInputContentDialog(dialogTitle, placeHolder, inputText, primaryButton, secondaryButton);
+            var dialogResult = await contentDialog.ShowAsync();
             var gridItem = (ContentDialogControlViewModel)contentDialog.DataContext;
             var folderName = gridItem.InputText;
-
-            if (result == ContentDialogResult.Primary && ItemNameValidation.Validate(folderName))
+            folderName = ValidateItemName(folderName);
+            if (dialogResult == ContentDialogResult.Primary && !string.IsNullOrEmpty(folderName))
             {
-                while (folderName.EndsWith(' '))
-                {
-                    folderName = folderName.Remove(folderName.Length - 1);
-                }
-                while (folderName.StartsWith(' '))
-                {
-                    folderName = folderName.Remove(0, 1);
-                }
-
                 if (storageFiles.FirstOrDefault(f => f.DisplayName == folderName) == null)
                 {
-                    try
+                    creatingResult = await ftpService.CreateNewFolderAsync(currentPath, folderName, username, password).ConfigureAwait(true);
+                    if (creatingResult == Constants.Success)
                     {
-                        FtpWebRequest request = (FtpWebRequest)WebRequest.Create(currentPath + "/" + folderName);
-                        request.Credentials = new NetworkCredential(username, password);
-                        request.Method = WebRequestMethods.Ftp.MakeDirectory;
-                        FtpWebResponse response = (FtpWebResponse)await request.GetResponseAsync().ConfigureAwait(true);
-                        response.Close();
-
                         _ = GetItemsAsync(currentPath).ConfigureAwait(true);
                     }
-                    catch (WebException)
+                    else
                     {
-                        await new MessageDialog(stringsResourceLoader.GetString(connectionErrorContent))
-                        {
-                            Title = stringsResourceLoader.GetString(connectionError)
-                        }.ShowAsync();
+                        await ShowMessageDialogAsync(stringsResourceLoader.GetString(Constants.ConnectionErrorContent),
+                            stringsResourceLoader.GetString(Constants.ConnectionError)).ConfigureAwait(true);
                     }
                 }
                 else
                 {
-                    var messageDialog = new MessageDialog(stringsResourceLoader.GetString(sameNameError))
-                    {
-                        Title = stringsResourceLoader.GetString(failed)
-                    };
-                    await messageDialog.ShowAsync();
+                    await ShowMessageDialogAsync(stringsResourceLoader.GetString(Constants.SameNameError),
+                        stringsResourceLoader.GetString(Constants.Failed)).ConfigureAwait(true);
                 }
 
             }
-            else if (result == ContentDialogResult.Primary)
+            else if (dialogResult == ContentDialogResult.Primary)
             {
-                var messageDialog = new MessageDialog(stringsResourceLoader.GetString(invalidInput))
-                {
-                    Title = stringsResourceLoader.GetString(inputError)
-                };
-                await messageDialog.ShowAsync();
+                await ShowMessageDialogAsync(stringsResourceLoader.GetString(Constants.InvalidInput),
+                        stringsResourceLoader.GetString(Constants.InputError)).ConfigureAwait(true);
             }
         }
 
         private async void RenameFileAsync(object sender)
         {
-            const string inputError = "inputError";
-            const string invalidInput = "invalidInput";
-            const string cancelButton = "cancelButton";
-            const string rename = "rename";
-            const string yesButton = "yesButton";
-            const string placeHolderFileName = "placeHolderFileName";
-            const string connectionErrorContent = "connectionErrorContent";
-            const string connectionError = "connectionError";
-            const string failed = "failed";
-            const string sameNameError = "sameNameError";
-
+            string dialogTitle = stringsResourceLoader.GetString(Constants.Rename);
+            string placeHolder = stringsResourceLoader.GetString(Constants.PlaceHolderFileName);
+            string inputText = selectedGridItem.DisplayName;
+            string primaryButton = stringsResourceLoader.GetString(Constants.YesButton);
+            string secondaryButton = stringsResourceLoader.GetString(Constants.CancelButton);
+            string result;
             if (selectedGridItem != null)
             {
-                var parameters = new string[] { stringsResourceLoader.GetString(rename), stringsResourceLoader.GetString(placeHolderFileName), selectedGridItem.DisplayName };
-                var contentDialog = new ContentDialogControl()
-                {
-                    PrimaryButtonText = stringsResourceLoader.GetString(yesButton),
-                    SecondaryButtonText = stringsResourceLoader.GetString(cancelButton),
-                    DataContext = Activator.CreateInstance(typeof(ContentDialogControlViewModel), parameters)
-                };
-                var result = await contentDialog.ShowAsync();
+                var contentDialog = CreateInputContentDialog(dialogTitle, placeHolder, inputText, primaryButton, secondaryButton);
+                var dialogResult = await contentDialog.ShowAsync();
                 var gridItem = (ContentDialogControlViewModel)contentDialog.DataContext;
                 var newFileName = gridItem.InputText;
-
-                if (result == ContentDialogResult.Primary && ItemNameValidation.Validate(newFileName))
+                newFileName = ValidateItemName(newFileName);
+                if (dialogResult == ContentDialogResult.Primary && !string.IsNullOrEmpty(newFileName))
                 {
-                    while (newFileName.EndsWith(' '))
-                    {
-                        newFileName = newFileName.Remove(newFileName.Length - 1);
-                    }
-                    while (newFileName.StartsWith(' '))
-                    {
-                        newFileName = newFileName.Remove(0, 1);
-                    }
-
                     if (storageFiles.FirstOrDefault(f => f.DisplayName == newFileName) == null)
                     {
-                        try
+                        result = await ftpService.RenameFileAsync(currentPath, selectedGridItem.DisplayName, newFileName, username, password).ConfigureAwait(true);
+                        if (result == Constants.Success)
                         {
-                            FtpWebRequest request = (FtpWebRequest)WebRequest.Create(currentPath + "/" + selectedGridItem.DisplayName);
-                            request.Credentials = new NetworkCredential(username, password);
-                            request.Method = WebRequestMethods.Ftp.Rename;
-                            request.RenameTo = newFileName;
-                            FtpWebResponse response = (FtpWebResponse)await request.GetResponseAsync().ConfigureAwait(true);
-                            response.Close();
-
                             _ = GetItemsAsync(currentPath).ConfigureAwait(true);
                         }
-                        catch (WebException)
+                        else
                         {
-                            await new MessageDialog(stringsResourceLoader.GetString(connectionErrorContent))
-                            {
-                                Title = stringsResourceLoader.GetString(connectionError)
-                            }.ShowAsync();
+                            await ShowMessageDialogAsync(stringsResourceLoader.GetString(Constants.ConnectionErrorContent),
+                                stringsResourceLoader.GetString(Constants.ConnectionError)).ConfigureAwait(true);
                         }
                     }
                     else
                     {
-                        var messageDialog = new MessageDialog(stringsResourceLoader.GetString(sameNameError))
-                        {
-                            Title = stringsResourceLoader.GetString(failed)
-                        };
-                        await messageDialog.ShowAsync();
+                        await ShowMessageDialogAsync(stringsResourceLoader.GetString(Constants.SameNameError),
+                            stringsResourceLoader.GetString(Constants.Failed)).ConfigureAwait(true);
                     }
                 }
-                else if (result == ContentDialogResult.Primary)
+                else if (dialogResult == ContentDialogResult.Primary)
                 {
-                    var messageDialog = new MessageDialog(stringsResourceLoader.GetString(invalidInput))
-                    {
-                        Title = stringsResourceLoader.GetString(inputError)
-                    };
-                    await messageDialog.ShowAsync();
+                    await ShowMessageDialogAsync(stringsResourceLoader.GetString(Constants.InvalidInput),
+                            stringsResourceLoader.GetString(Constants.InputError)).ConfigureAwait(true);
                 }
             }
         }
+        private async Task ShowMessageDialogAsync(string content, string title)
+        {
+            var messageDialog = new MessageDialog(content)
+            {
+                Title = title
+            };
+            await messageDialog.ShowAsync();
+        }
+        private ContentDialogControl CreateInputContentDialog(string title, string placeHolder, string inputText, string primaryButton, string secondaryButton)
+        {
+            var parameters = new List<NamedParameter>()
+                {
+                    new NamedParameter("title", title),
+                    new NamedParameter("placeHolder", placeHolder),
+                    new NamedParameter("inputText", inputText)
+                };
+            var contentDialog = new ContentDialogControl()
+            {
+                PrimaryButtonText = primaryButton,
+                SecondaryButtonText = secondaryButton,
+                DataContext = App.Container.Resolve<ContentDialogControlViewModel>(parameters)
+            };
+            return contentDialog;
+        }
+        private string ValidateItemName(string itemName)
+        {
+            string result = string.Empty;
+            if (ItemNameValidation.Validate(itemName))
+            {
+                while (itemName.EndsWith(' '))
+                {
+                    itemName = itemName.Remove(itemName.Length - 1);
+                }
+                while (itemName.StartsWith(' '))
+                {
+                    itemName = itemName.Remove(0, 1);
+                }
+                result = itemName;
+            }
+            return result;
+        }
+
     }
 }

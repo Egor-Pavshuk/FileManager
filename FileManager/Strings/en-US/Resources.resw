@@ -153,6 +153,9 @@
   <data name="freeSpace" xml:space="preserve">
     <value>Free space</value>
   </data>
+  <data name="ftpServer" xml:space="preserve">
+    <value>FTP Server</value>
+  </data>
   <data name="GoogleDriveNav" xml:space="preserve">
     <value>Google drive</value>
   </data>
