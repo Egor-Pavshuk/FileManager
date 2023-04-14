@@ -2,17 +2,11 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Reflection;
 using Windows.UI.Xaml;
-using FileManager.ViewModels;
-using FileManager.ViewModels.Information;
-using FileManager.Views;
-using FileManager.ViewModels.OnlineFileControls;
-using FileManager;
-using System.ComponentModel;
 using Autofac;
 using FileManager.Controlls;
 using FileManager.ViewModels.Libraries;
+using FileManager.Views;
 
 namespace FileManager.VMLocator
 {
@@ -67,7 +61,7 @@ namespace FileManager.VMLocator
                             frameworkElement.DataContext = App.Container.Resolve(viewModelType);
                             break;
                     }
-                }                
+                }
             }
         }
 
@@ -76,7 +70,7 @@ namespace FileManager.VMLocator
             string viewName = string.Empty;
 
             if (viewType.FullName.EndsWith("Page"))
-            {                
+            {
                 viewName = viewType.FullName
                     .Replace("Page", string.Empty, StringComparison.Ordinal)
                     .Replace("Views", "ViewModels", StringComparison.Ordinal);
@@ -97,9 +91,8 @@ namespace FileManager.VMLocator
                     .Replace("Controlls", "ViewModels", StringComparison.Ordinal);
             }
 
-            var viewAssemblyName = viewType.GetTypeInfo().Assembly.FullName;
+            var viewAssemblyName = "FileManager.ViewModels";
             var viewModelName = string.Format(CultureInfo.InvariantCulture, "{0}ViewModel, {1}", viewName, viewAssemblyName);
-
             return Type.GetType(viewModelName);
         }
     }
