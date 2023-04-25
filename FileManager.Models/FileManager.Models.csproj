@@ -120,9 +120,13 @@
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Dialogs\DialogResult.cs" />
     <Compile Include="DriveResult.cs" />
+    <Compile Include="Enums\OperationResult.cs" />
     <Compile Include="FtpFile.cs" />
     <Compile Include="GoogleDriveFile.cs" />
+    <Compile Include="Interfaces\IDialog.cs" />
+    <Compile Include="Interfaces\IWebViewDialog.cs" />
     <Compile Include="OnlineFile.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TokenResult.cs" />

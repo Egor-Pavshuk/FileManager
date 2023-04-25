@@ -1,0 +1,39 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:dialogs ="using:FileManager.Controlls"
+                    xmlns:lib="using:ThirdPartyServices.UWP.Controls">
+
+    <Style TargetType="dialogs:WebViewDialog">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="dialogs:WebViewDialog">
+                    <Grid x:Name="LayoutRoot"
+                          Background="Transparent">
+                        <Grid Width="490"
+                              Height="642"
+                              Padding="5"
+                              BorderThickness="1"
+                              BorderBrush="Red"
+                              Background="Green">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="32"/>
+                                <RowDefinition/>
+                            </Grid.RowDefinitions>
+
+                            <Button x:Name="CancelButton"
+                                    Grid.Column="0"
+                                    Content="Cancel"
+                                    HorizontalAlignment="Right"/>
+
+                            <Frame Grid.Row="1">
+                                <Frame.Content>
+                                    <lib:WebViewPageControl/>
+                                </Frame.Content>
+                            </Frame>
+                        </Grid>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+</ResourceDictionary>
