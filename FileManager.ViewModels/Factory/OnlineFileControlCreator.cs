@@ -20,7 +20,7 @@ namespace FileManager.Helpers.Factory
                 { ".mp3", Constants.Audio },
                 { ".ogg", Constants.Audio },
                 { ".wma", Constants.Audio },
-                { ".wav", Constants.Audio },
+                { ".wav", Constants.Audio },                
                 { "application/vnd.google-apps.audio", Constants.Audio },
                 { "application/vnd.google-apps.video", Constants.Video },
                 { "application/vnd.google-apps.drawing", Constants.Image },
@@ -32,6 +32,13 @@ namespace FileManager.Helpers.Factory
                 { "video/mp4", Constants.Video },
                 { "image/png", Constants.Image },
                 { "drwxr-xr-x", Constants.Folder },
+                { "audio/mpeg", Constants.Audio },
+                { "audio/ogg", Constants.Audio },
+                { "image/gif", Constants.Image },
+                { "image/x-icon", Constants.Image },
+                { "video/mpeg", Constants.Video },
+                { "video/x-msvideo", Constants.Video },
+                { "folder", Constants.Folder },               
             };
 
         public static OnlineFileControlViewModel CreateFileControl(ResourceLoader themeResourceLoader, string id, string name, string type, string path = "")

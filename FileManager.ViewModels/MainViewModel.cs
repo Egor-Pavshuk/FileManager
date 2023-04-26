@@ -134,6 +134,10 @@ namespace FileManager.ViewModels
                     CurrentContent = (Page)VMDependencies.Container.Resolve(VMDependencies.Views[Constants.FtpPage]);
                     CurrentTitle = resourceLoader.GetString(Constants.FtpServer);
                     break;
+                case "6":
+                    CurrentContent = (Page)VMDependencies.Container.Resolve(VMDependencies.Views[Constants.OneDrivePage]);
+                    CurrentTitle = resourceLoader.GetString(Constants.OneDrivePage);
+                    break;
                 default:
                     CurrentContent = (Page)VMDependencies.Container.Resolve(VMDependencies.Views[Constants.MainTitlePage]);
                     CurrentTitle = resourceLoader.GetString(Constants.MainNavigation);

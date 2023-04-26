@@ -27,6 +27,7 @@
                         <BitmapIcon UriSource="{Binding FtpIconUri}"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
+                <NavigationViewItem AccessKey="6" Content="OneDrive" Icon="Favorite" x:Name="OneDrive" />
             </NavigationView.MenuItems>
             <Frame x:Name="MainContent" Content="{Binding CurrentContent}">
                 
