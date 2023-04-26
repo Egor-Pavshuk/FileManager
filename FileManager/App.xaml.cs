@@ -55,7 +55,7 @@ namespace FileManager
             containerBuilder.RegisterType<VideosLibraryViewModel>()
                 .AsSelf();
             containerBuilder.RegisterType<MusicsLibraryViewModel>()
-                .AsSelf();            
+                .AsSelf();
             containerBuilder.RegisterType<MainViewModel>()
                 .AsSelf();
             containerBuilder.RegisterType<MainTitleViewModel>()
@@ -84,7 +84,7 @@ namespace FileManager
             containerBuilder.RegisterType<OneDriveCloudService>().As<IOneDriveCloudService>();
             VMDependencies.ConfigureServices(typeof(MainPage), typeof(MainTitlePage), typeof(FtpPage), typeof(GoogleDrivePage),
                 typeof(InformationPage), typeof(MusicsLibraryPage), typeof(PicturesLibraryPage), typeof(VideosLibraryPage),
-                typeof(ContentDialogControl), typeof(OneDrivePage));
+                typeof(ContentDialogControl), typeof(OneDrivePage), typeof(FileControl), typeof(InformationControl), typeof(OnlineFileControl));
             var container = containerBuilder.Build();
             return container;
         }

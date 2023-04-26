@@ -79,5 +79,8 @@
         public const string GoogleDrivePage = "GoogleDrivePage";
         public const string FtpPage = "FtpPage";
         public const string OneDrivePage = "OneDrivePage";
+        public const string FileControl = "FileControl";
+        public const string OnlineFileControl = "OnlineFileControl";
+        public const string InformationControl = "InformationControl";
     }
 }

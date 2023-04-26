@@ -147,6 +147,7 @@
     <Compile Include="OnlineFileControls\OnlineFileControlViewModel.cs" />
     <Compile Include="OnlineFileControls\VideoFileControlViewModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="VMLocator\ViewModelLocator.cs" />
     <EmbeddedResource Include="Properties\FileManager.ViewModels.rd.xml" />
   </ItemGroup>
   <ItemGroup>

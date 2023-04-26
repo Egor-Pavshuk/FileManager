@@ -422,12 +422,12 @@ namespace FileManager.ViewModels
                 await RefreshTokenAsync().ConfigureAwait(true);
             }
             driveFiles = await oneDriveService.GetFilesAsync(folderId, tokenResult.Access_token).ConfigureAwait(true);
-            if (driveFiles == null)
+            if (driveFiles.Value == null)
             {
                 errorContent = stringsResourceLoader.GetString(Constants.ConnectionErrorContent);
                 errorTitle = stringsResourceLoader.GetString(Constants.ConnectionError);
                 _ = ShowMessageDialogAsync(errorContent, errorTitle);
-                driveFiles = new ItemsResponse();
+                driveFiles.Value = new List<ItemResponse>();
             }
             return driveFiles;
         }

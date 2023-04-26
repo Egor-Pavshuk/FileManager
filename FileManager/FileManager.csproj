@@ -160,7 +160,6 @@
     <Compile Include="Views\VideosLibraryPage.xaml.cs">
       <DependentUpon>VideosLibraryPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="VMLocator\ViewModelLocator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
