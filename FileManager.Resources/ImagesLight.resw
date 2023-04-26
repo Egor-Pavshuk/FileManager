@@ -118,24 +118,24 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="audio" xml:space="preserve">
-    <value>/Images/FileIcons/AudioLight.png</value>
+    <value>/Assets/Images/FileIcons/AudioLight.png</value>
   </data>
   <data name="diskStorage" xml:space="preserve">
-    <value>/Images/DiskStorage/diskStorage.png</value>
+    <value>/Assets/Images/DiskStorage/diskStorage.png</value>
   </data>
   <data name="file" xml:space="preserve">
-    <value>/Images/FIleIcons/FileLight.png</value>
+    <value>/Assets/Images/FIleIcons/FileLight.png</value>
   </data>
   <data name="folder" xml:space="preserve">
-    <value>/Images/FileIcons/FolderLight.jpg</value>
+    <value>/Assets/Images/FileIcons/FolderLight.jpg</value>
   </data>
   <data name="image" xml:space="preserve">
-    <value>/Images/FileIcons/ImageLight.png</value>
+    <value>/Assets/Images/FileIcons/ImageLight.png</value>
   </data>
   <data name="ramIcon" xml:space="preserve">
-    <value>/Images/ram.png</value>
+    <value>/Assets/Images/ram.png</value>
   </data>
   <data name="video" xml:space="preserve">
-    <value>/Images/FileIcons/VideoLight.png</value>
+    <value>/Assets/Images/FileIcons/VideoLight.png</value>
   </data>
 </root>

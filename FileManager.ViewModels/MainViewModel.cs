@@ -9,8 +9,8 @@ namespace FileManager.ViewModels
 {
     public class MainViewModel : BindableBase
     {
-        private const string GoogleDriveIconPath = "ms-appx:///Images/googleDrive.png";
-        private const string FtpIconPath = "ms-appx:///Images/ftpFolder.png";
+        private const string GoogleDriveIconPath = "ms-appx:///Assets/Images/googleDrive.png";
+        private const string FtpIconPath = "ms-appx:///Assets/Images/ftpFolder.png";
         private readonly ResourceLoader resourceLoader;
         private Page currentContent;
         private Page googleDrivePage;
