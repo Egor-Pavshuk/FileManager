@@ -285,8 +285,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include=".editorconfig" />
-    <PRIResource Include="Strings\ru-RU\Resources.resw" />
-    <PRIResource Include="Strings\en-US\Resources.resw" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\FileManager.Dependencies\FileManager.Dependencies.csproj">

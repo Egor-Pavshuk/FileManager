@@ -3,7 +3,7 @@
     public static class Constants
     {
         public const string Resources = "FileManager.Resources";
-        public const string StringResources = "Resources";
+        public const string StringResources = "FileManager.Resources/Resources";
         public const string Image = "image";
         public const string Video = "video";
         public const string Audio = "audio";
