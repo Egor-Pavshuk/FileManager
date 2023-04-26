@@ -124,6 +124,7 @@
     <Compile Include="Constants.cs" />
     <Compile Include="ControlExtensions.cs" />
     <Compile Include="DoubleTapAttachedProperties.cs" />
+    <Compile Include="Enums.cs" />
     <Compile Include="ItemClickAttachedProperties.cs" />
     <Compile Include="OnNavigateWebViewAttachedProperties.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
