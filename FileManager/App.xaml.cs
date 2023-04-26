@@ -79,9 +79,9 @@ namespace FileManager
             containerBuilder.RegisterType<FtpPage>().AsSelf();
             containerBuilder.RegisterType<OneDrivePage>().AsSelf();
 
-            containerBuilder.RegisterType<WebViewDialog>().As<IAuthWebViewDialog>(); //
-            containerBuilder.RegisterType<MicrosoftAuthService>().As<IMicrosoftAuthorizationService>(); //
-            containerBuilder.RegisterType<OneDriveCloudService>().As<IOneDriveCloudService>(); //
+            containerBuilder.RegisterType<WebViewDialog>().As<IAuthWebViewDialog>();
+            containerBuilder.RegisterType<MicrosoftAuthService>().As<IMicrosoftAuthorizationService>();
+            containerBuilder.RegisterType<OneDriveCloudService>().As<IOneDriveCloudService>();
             VMDependencies.ConfigureServices(typeof(MainPage), typeof(MainTitlePage), typeof(FtpPage), typeof(GoogleDrivePage),
                 typeof(InformationPage), typeof(MusicsLibraryPage), typeof(PicturesLibraryPage), typeof(VideosLibraryPage),
                 typeof(ContentDialogControl), typeof(OneDrivePage));

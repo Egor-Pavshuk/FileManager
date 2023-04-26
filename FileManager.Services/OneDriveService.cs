@@ -1,30 +1,19 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
-using Windows.Storage;
-using static Google.Apis.Drive.v3.FilesResource;
-using FileManager.Helpers;
-using FileManager.Models;
-using Google.Apis.Auth.OAuth2;
-using Google.Apis.Drive.v3;
-using Google.Apis.Services;
-using Newtonsoft.Json;
-using ThirdPartyServices.Shared.Models.Responses.Microsoft;
-using ThirdPartyServices.UWP.CloudServices;
 using ThirdPartyServices.Shared.Interfaces;
-using FileManager.Dependencies;
-using Autofac;
-using Newtonsoft.Json.Linq;
-using ThirdPartyServices.UWP.AuthorizationServices;
 using ThirdPartyServices.Shared.Models;
 using ThirdPartyServices.Shared.Models.Parameters;
-using ThirdPartyServices.Shared.Models.Requests;
-using System.Net.Http.Json;
+using ThirdPartyServices.Shared.Models.Responses.Microsoft;
+using Windows.Storage;
+using Autofac;
+using FileManager.Dependencies;
+using FileManager.Helpers;
+using FileManager.Models;
+using Newtonsoft.Json.Linq;
 
 namespace FileManager.Services
 {
@@ -80,7 +69,7 @@ namespace FileManager.Services
             {
                 items = await oneDriveCloudService.GetFilesByFolderIdAsync(accessToken, folderId);
             }
-            catch 
+            catch
             {
                 items = null;
             }
@@ -116,13 +105,13 @@ namespace FileManager.Services
                 {
                     await destinationFile.DeleteAsync();
                     result = Constants.Failed;
-                }                
+                }
             }
             return result;
         }
         public async Task<string> UploadFileAsync(StorageFile uploadFile, string parentId, string accessToken)
         {
-            string result = Constants.Failed;            
+            string result = Constants.Failed;
 
             if (!string.IsNullOrEmpty(accessToken) && uploadFile != null)
             {
@@ -130,43 +119,18 @@ namespace FileManager.Services
                 var stream = streamData.AsStreamForRead();
                 try
                 {
-                    await oneDriveCloudService.UploadItemAsync(stream, new UploadParams 
-                    { 
-                        Token = accessToken, 
-                        FileName = uploadFile.Name,    
+                    await oneDriveCloudService.UploadItemAsync(stream, new UploadParams
+                    {
+                        Token = accessToken,
+                        FileName = uploadFile.Name,
                     });
                     result = Constants.Success;
                 }
                 catch (Exception)
                 {
                     result = Constants.Failed;
-                }                
+                }
             }
-
-            //var credentional = GoogleCredential.FromAccessToken(accessToken).CreateScoped(DriveService.Scope.Drive);
-            //using (var service = new DriveService(new BaseClientService.Initializer()
-            //{
-            //    HttpClientInitializer = credentional
-            //}))
-            //{
-            //    if (uploadFile != null)
-            //    {
-            //        var fileMetadata = new Google.Apis.Drive.v3.Data.File()
-            //        {
-            //            Name = uploadFile.Name,
-            //            Parents = parents
-            //        };
-            //        var stream = await uploadFile.OpenStreamForReadAsync().ConfigureAwait(true);
-            //        var request = service.Files.Create(fileMetadata, stream, Constants.OctetContentType);
-            //        request.Fields = "*";
-            //        var results = await request.UploadAsync().ConfigureAwait(true);
-
-            //        if (results.Status != Google.Apis.Upload.UploadStatus.Failed)
-            //        {
-            //            result = Constants.Success;
-            //        }
-            //    }
-            //}
             return result;
         }
         public async Task<string> DeleteFileAsync(string fileId, string accessToken)
@@ -232,7 +196,7 @@ namespace FileManager.Services
                 HttpRequestMessage httpRequestMessage = new HttpRequestMessage(httpVerb, source)
                 {
                     Content = content,
-                };                
+                };
                 try
                 {
                     HttpResponseMessage response = await client.SendAsync(httpRequestMessage);
