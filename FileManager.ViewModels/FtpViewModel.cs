@@ -359,8 +359,8 @@ namespace FileManager.ViewModels
         {
             IsLoginFormVisible = false;
             IsLoadingVisible = true;
-            var result = await ftpService.TryConnectAsync(hostLink, username, password).ConfigureAwait(true);
-            if (result == Constants.Success)
+            string result = await ftpService.TryConnectAsync(hostLink, username, password).ConfigureAwait(true);
+            if (result == Enums.Success.ToString())
             {
                 currentPath = HostLink;
                 IsCommandPanelVisible = true;
@@ -451,7 +451,7 @@ namespace FileManager.ViewModels
         private async void DownloadFileAsync(object sender)
         {
             string filePath = selectedGridItem.Path;
-            string result;
+            Enums result;
             if (selectedGridItem != null && !string.IsNullOrEmpty(selectedGridItem.DisplayName) && selectedGridItem.Type != Constants.Folder)
             {
                 StorageFolder downloadFolder = await GetDestinationFolderAsync().ConfigureAwait(true);
@@ -466,7 +466,7 @@ namespace FileManager.ViewModels
                     var downloadingFile = storageFiles.FirstOrDefault(f => f.Path == filePath);
                     if (downloadingFile != null)
                     {
-                        if (result == Constants.Success)
+                        if (result == Enums.Success)
                         {
                             downloadingFile.DownloadStatus = stringsResourceLoader.GetString(Constants.DownloadCompleted);
                         }
@@ -500,7 +500,7 @@ namespace FileManager.ViewModels
 
         private async void UploadFileAsync(object sender)
         {
-            string result;
+            Enums result;
             string destinationPath = currentPath;
             StorageFile uploadFile = await GetUploadFileAsync().ConfigureAwait(true);
 
@@ -509,7 +509,7 @@ namespace FileManager.ViewModels
                 if (storageFiles.FirstOrDefault(f => f.DisplayName == uploadFile.Name) == null)
                 {
                     result = await ftpService.UploadFileAsync(uploadFile, currentPath, username, password).ConfigureAwait(true);
-                    if (result == Constants.Success && destinationPath == currentPath)
+                    if (result == Enums.Success && destinationPath == currentPath)
                     {
                         _ = GetItemsAsync(currentPath).ConfigureAwait(true);
                     }
@@ -539,7 +539,7 @@ namespace FileManager.ViewModels
 
         private async void DeleteFileAsync(object sender)
         {
-            string deletingResult;
+            Enums deletingResult;
             if (selectedGridItem != null && !string.IsNullOrEmpty(selectedGridItem.DisplayName))
             {
                 var contentDialog = new ContentDialog()
@@ -554,7 +554,7 @@ namespace FileManager.ViewModels
                 if (confirmationResult == ContentDialogResult.Primary)
                 {
                     deletingResult = await ftpService.DeleteFileAsync(selectedGridItem.Path, selectedGridItem.Type, username, password).ConfigureAwait(true);
-                    if (deletingResult == Constants.Success)
+                    if (deletingResult == Enums.Success)
                     {
                         _ = GetItemsAsync(currentPath).ConfigureAwait(true);
                     }
@@ -569,7 +569,7 @@ namespace FileManager.ViewModels
 
         private async void CreateNewFolderAsync(object sender)
         {
-            string creatingResult;
+            Enums creatingResult;
             string dialogTitle = stringsResourceLoader.GetString(Constants.NewFolder);
             string placeHolder = stringsResourceLoader.GetString(Constants.PlaceHolderFileName);
             string inputText = string.Empty;
@@ -585,7 +585,7 @@ namespace FileManager.ViewModels
                 if (storageFiles.FirstOrDefault(f => f.DisplayName == folderName) == null)
                 {
                     creatingResult = await ftpService.CreateNewFolderAsync(currentPath, folderName, username, password).ConfigureAwait(true);
-                    if (creatingResult == Constants.Success)
+                    if (creatingResult == Enums.Success)
                     {
                         _ = GetItemsAsync(currentPath).ConfigureAwait(true);
                     }
@@ -615,7 +615,7 @@ namespace FileManager.ViewModels
             string placeHolder = stringsResourceLoader.GetString(Constants.PlaceHolderFileName);
             string primaryButton = stringsResourceLoader.GetString(Constants.YesButton);
             string secondaryButton = stringsResourceLoader.GetString(Constants.CancelButton);
-            string result;
+            Enums result;
             if (selectedGridItem != null)
             {
                 string inputText = selectedGridItem.DisplayName;
@@ -629,7 +629,7 @@ namespace FileManager.ViewModels
                     if (storageFiles.FirstOrDefault(f => f.DisplayName == newFileName) == null)
                     {
                         result = await ftpService.RenameFileAsync(currentPath, selectedGridItem.DisplayName, newFileName, username, password).ConfigureAwait(true);
-                        if (result == Constants.Success)
+                        if (result == Enums.Success)
                         {
                             _ = GetItemsAsync(currentPath).ConfigureAwait(true);
                         }

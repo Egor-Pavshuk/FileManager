@@ -366,8 +366,8 @@ namespace FileManager.ViewModels
 
         private async Task CheckInternetConnectionAsync()
         {
-            string result = await googleDriveService.CheckInternetConnectionAsync(GoogleUri).ConfigureAwait(true);
-            if (result == Constants.Failed)
+            Enums result = await googleDriveService.CheckInternetConnectionAsync(GoogleUri).ConfigureAwait(true);
+            if (result == Enums.Failed)
             {
                 IsErrorVisible = true;
                 IsCommandPanelVisible = false;
@@ -415,8 +415,8 @@ namespace FileManager.ViewModels
         {
             string errorContent;
             string errorTitle;
-            string result = await googleDriveService.ExchangeCodeOnTokenAsync(exchangeCode, ClientId, Secret, tokenResult).ConfigureAwait(true);
-            if (result == Constants.Failed)
+            Enums result = await googleDriveService.ExchangeCodeOnTokenAsync(exchangeCode, ClientId, Secret, tokenResult).ConfigureAwait(true);
+            if (result == Enums.Failed)
             {
                 errorContent = stringsResourceLoader.GetString(Constants.ConnectionErrorContent);
                 errorTitle = stringsResourceLoader.GetString(Constants.ConnectionError);
@@ -480,7 +480,7 @@ namespace FileManager.ViewModels
         private async Task<string> GetRootFolderIdAsync()
         {
             string result = await googleDriveService.GetRootFolderIdAsync(tokenResult.Token_type, tokenResult.Access_token).ConfigureAwait(true);
-            if (result == Constants.Failed)
+            if (result == Enums.Failed.ToString())
             {
                 string errorContent = stringsResourceLoader.GetString(Constants.ConnectionErrorContent);
                 string errorTitle = stringsResourceLoader.GetString(Constants.ConnectionError);
@@ -503,11 +503,11 @@ namespace FileManager.ViewModels
 
         private async Task RefreshTokenAsync()
         {
-            string result;
+            Enums result;
             string errorContent;
             string errorTitle;
             result = await googleDriveService.RefreshTokenAsync(ClientId, Secret, tokenResult).ConfigureAwait(true);
-            if (result == Constants.Failed)
+            if (result == Enums.Failed)
             {
                 errorContent = stringsResourceLoader.GetString(Constants.ConnectionErrorContent);
                 errorTitle = stringsResourceLoader.GetString(Constants.ConnectionError);
@@ -549,7 +549,7 @@ namespace FileManager.ViewModels
 
         private async void DownloadFileAsync(object sender)
         {
-            string result;
+            Enums result;
             string errorContent;
             string errorTitle;
             string fileId = selectedGridItem.Id;
@@ -571,7 +571,7 @@ namespace FileManager.ViewModels
                 var downloadingFile = storageFiles.FirstOrDefault(f => f.Id == fileId);
                 if (downloadingFile != null)
                 {
-                    if (result == Constants.Success)
+                    if (result == Enums.Success)
                     {
                         downloadingFile.DownloadStatus = stringsResourceLoader.GetString(Constants.DownloadCompleted);
                     }
@@ -606,7 +606,7 @@ namespace FileManager.ViewModels
 
         private async void UploadFileAsync(object sender)
         {
-            string result;
+            Enums result;
             string errorContent;
             string errorTitle;
             string folderId = currentFolderId;
@@ -628,7 +628,7 @@ namespace FileManager.ViewModels
                     await RefreshTokenAsync().ConfigureAwait(true);
                 }
                 result = await googleDriveService.UploadFileAsync(uploadFile, parents, tokenResult.Access_token).ConfigureAwait(true);
-                if (result == Constants.Success)
+                if (result == Enums.Success)
                 {
                     if (folderId == currentFolderId)
                     {
@@ -647,7 +647,7 @@ namespace FileManager.ViewModels
         private async void DeleteFileAsync(object sender)
         {
             string folderId = currentFolderId;
-            string result;
+            Enums result;
             string errorContent;
             string errorTitle;
             if (selectedGridItem != null && !string.IsNullOrEmpty(selectedGridItem.DisplayName))
@@ -667,7 +667,7 @@ namespace FileManager.ViewModels
                         await RefreshTokenAsync().ConfigureAwait(true);
                     }
                     result = await googleDriveService.DeleteFileAsync(selectedGridItem.Id, tokenResult.Access_token).ConfigureAwait(true);
-                    if (result == Constants.Success)
+                    if (result == Enums.Success)
                     {
                         if (currentFolderId == folderId)
                         {
@@ -691,7 +691,7 @@ namespace FileManager.ViewModels
             string inputText = string.Empty;
             string primaryButton = stringsResourceLoader.GetString(Constants.CreateButton);
             string secondaryButton = stringsResourceLoader.GetString(Constants.CancelButton);
-            string result;
+            Enums result;
             string errorContent;
             string errorTitle;
             var parents = new Collection<string>()
@@ -710,7 +710,7 @@ namespace FileManager.ViewModels
                     await RefreshTokenAsync().ConfigureAwait(true);
                 }
                 result = await googleDriveService.CreateNewFolderAsync(folderName, parents, tokenResult.Access_token).ConfigureAwait(true);
-                if (result == Constants.Success)
+                if (result == Enums.Success)
                 {
                     _ = GetItemsAsync(currentFolderId);
                 }
@@ -735,7 +735,7 @@ namespace FileManager.ViewModels
             string placeHolder = stringsResourceLoader.GetString(Constants.PlaceHolderFileName);
             string primaryButton = stringsResourceLoader.GetString(Constants.YesButton);
             string secondaryButton = stringsResourceLoader.GetString(Constants.CancelButton);
-            string result;
+            Enums result;
             if (selectedGridItem != null)
             {
                 string inputText = selectedGridItem.DisplayName;
@@ -754,7 +754,7 @@ namespace FileManager.ViewModels
                         await RefreshTokenAsync().ConfigureAwait(true);
                     }
                     result = await googleDriveService.RenameFileAsync(selectedGridItem.Id, fileName, tokenResult.Access_token).ConfigureAwait(true);
-                    if (result == Constants.Success)
+                    if (result == Enums.Success)
                     {
                         _ = GetItemsAsync(currentFolderId);
                     }

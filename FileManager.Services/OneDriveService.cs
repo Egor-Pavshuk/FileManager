@@ -26,26 +26,26 @@ namespace FileManager.Services
             microsoftAuthService = VMDependencies.Container.Resolve<IMicrosoftAuthorizationService>();
             oneDriveCloudService = VMDependencies.Container.Resolve<IOneDriveCloudService>();
         }
-        public async Task<string> CheckInternetConnectionAsync(string source)
+        public async Task<Enums> CheckInternetConnectionAsync(string source)
         {
-            string result;
+            Enums result;
             using (var client = new HttpClient())
             {
                 try
                 {
                     var responce = await client.GetAsync(source).ConfigureAwait(true);
-                    result = Constants.Success;
+                    result = Enums.Success;
                 }
                 catch (HttpRequestException)
                 {
-                    result = Constants.Failed;
+                    result = Enums.Failed;
                 }
             }
             return result;
         }
-        public async Task<string> OneDriveAuthAsync(MicrosoftAuthParams microsoftParams, TokenResult accessToken)
+        public async Task<Enums> OneDriveAuthAsync(MicrosoftAuthParams microsoftParams, TokenResult accessToken)
         {
-            string result;
+            Enums result;
             try
             {
                 var token = await microsoftAuthService.AuthorizeAsync(microsoftParams);
@@ -54,11 +54,11 @@ namespace FileManager.Services
                 accessToken.Expires_in = token.ExpiresIn.ToString();
                 accessToken.LastRefreshTime = DateTime.Now;
                 accessToken.Token_type = "Bearer";
-                result = Constants.Success;
+                result = Enums.Success;
             }
             catch (Exception)
             {
-                result = Constants.Failed;
+                result = Enums.Failed;
             }
             return result;
         }
@@ -75,9 +75,9 @@ namespace FileManager.Services
             }
             return items;
         }
-        public async Task<string> DownloadFileAsync(StorageFolder destinationFolder, string fileName, string fileId, string accessToken)
+        public async Task<Enums> DownloadFileAsync(StorageFolder destinationFolder, string fileName, string fileId, string accessToken)
         {
-            string result = Constants.Failed;
+            Enums result = Enums.Failed;
             if (destinationFolder != null)
             {
                 StorageFile destinationFile = await destinationFolder.CreateFileAsync(
@@ -93,25 +93,25 @@ namespace FileManager.Services
                     try
                     {
                         await FileIO.WriteBytesAsync(destinationFile, (file.StreamContent as MemoryStream).ToArray());
-                        result = Constants.Success;
-                    }
+                        result = Enums.Success;
+                    }   
                     catch (Exception)
                     {
                         await destinationFile.DeleteAsync();
-                        result = Constants.Failed;
+                        result = Enums.Failed;
                     }
                 }
                 else
                 {
                     await destinationFile.DeleteAsync();
-                    result = Constants.Failed;
+                    result = Enums.Failed;
                 }
             }
             return result;
         }
-        public async Task<string> UploadFileAsync(StorageFile uploadFile, string parentId, string accessToken)
+        public async Task<Enums> UploadFileAsync(StorageFile uploadFile, string accessToken)
         {
-            string result = Constants.Failed;
+            Enums result = Enums.Failed;
 
             if (!string.IsNullOrEmpty(accessToken) && uploadFile != null)
             {
@@ -124,35 +124,35 @@ namespace FileManager.Services
                         Token = accessToken,
                         FileName = uploadFile.Name,
                     });
-                    result = Constants.Success;
+                    result = Enums.Success;
                 }
                 catch (Exception)
                 {
-                    result = Constants.Failed;
+                    result = Enums.Failed;
                 }
             }
             return result;
         }
-        public async Task<string> DeleteFileAsync(string fileId, string accessToken)
+        public async Task<Enums> DeleteFileAsync(string fileId, string accessToken)
         {
-            string result = Constants.Failed;
+            Enums result = Enums.Failed;
             if (fileId != null)
             {
                 try
                 {
                     await oneDriveCloudService.DeleteFileAsync(accessToken, fileId);
-                    result = Constants.Success;
+                    result = Enums.Success;
                 }
                 catch (HttpRequestException)
                 {
-                    result = Constants.Failed;
+                    result = Enums.Failed;
                 }
             }
             return result;
         }
-        public async Task<string> CreateNewFolderAsync(string folderName, string parent, string tokenType, string accessToken)
+        public async Task<Enums> CreateNewFolderAsync(string folderName, string parent, string tokenType, string accessToken)
         {
-            string result;
+            Enums result;
             using (HttpClient client = new HttpClient())
             {
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(tokenType, accessToken);
@@ -166,11 +166,11 @@ namespace FileManager.Services
                 try
                 {
                     HttpResponseMessage response = await client.PostAsync(source, content);
-                    result = Constants.Success;
+                    result = Enums.Success;
                 }
                 catch (HttpRequestException)
                 {
-                    result = Constants.Failed;
+                    result = Enums.Failed;
                 }
                 finally
                 {
@@ -179,9 +179,9 @@ namespace FileManager.Services
             }
             return result;
         }
-        public async Task<string> RenameFileAsync(string itemId, string fileName, string tokenType, string accessToken)
+        public async Task<Enums> RenameFileAsync(string itemId, string fileName, string tokenType, string accessToken)
         {
-            string result;
+            Enums result;
             string source = $"https://graph.microsoft.com/v1.0/me/drive/items/{itemId}";
             using (HttpClient client = new HttpClient())
             {
@@ -200,11 +200,11 @@ namespace FileManager.Services
                 try
                 {
                     HttpResponseMessage response = await client.SendAsync(httpRequestMessage);
-                    result = Constants.Success;
+                    result = Enums.Success;
                 }
                 catch (HttpRequestException)
                 {
-                    result = Constants.Failed;
+                    result = Enums.Failed;
                 }
                 finally
                 {
@@ -213,9 +213,9 @@ namespace FileManager.Services
             }
             return result;
         }
-        public async Task<string> RefreshTokenAsync(MicrosoftAuthParams microsoftParams, TokenResult accessToken)
+        public async Task<Enums> RefreshTokenAsync(MicrosoftAuthParams microsoftParams, TokenResult accessToken)
         {
-            string result = string.Empty;
+            Enums result = Enums.Failed;
             if (accessToken != null)
             {
                 try
@@ -225,11 +225,11 @@ namespace FileManager.Services
                     accessToken.Expires_in = token.Result.ExpiresIn.ToString();
                     accessToken.Refresh_token = token.Result.RefreshToken;
                     accessToken.LastRefreshTime = DateTime.Now;
-                    result = Constants.Success;
+                    result = Enums.Success;
                 }
                 catch (Exception)
                 {
-                    result = Constants.Failed;
+                    result = Enums.Failed;
                 }
             }
             return result;

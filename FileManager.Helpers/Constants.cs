@@ -31,7 +31,6 @@
         public const string ConnectionError = "connectionError";
         public const string ResponseError = "responseError";
         public const string ConnectionErrorContent = "connectionErrorContent";
-        public const string Failed = "failed";
         public const string AccessToken = "access_token";
         public const string ExpiresIn = "expires_in";
         public const string UrlencodedContentType = "application/x-www-form-urlencoded";
@@ -67,7 +66,7 @@
         public const string FreeSpaceKey = "System.FreeSpace";
         public const string RamIcon = "ramIcon";
         public const string DiskStorageIcon = "diskStorage";
-        public const string Success = "Success";
+        public const string Failed = "failed";
         public const string RefreshToken = "refresh_token";
         public const string TokenType = "token_type";
         public const string Scope = "scope";
