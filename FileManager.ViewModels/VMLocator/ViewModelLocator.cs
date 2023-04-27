@@ -4,11 +4,11 @@ using System.Globalization;
 using System.Linq;
 using Windows.UI.Xaml;
 using Autofac;
-using FileManager.Controlls;
+using FileManager.Dependencies;
+using FileManager.Helpers;
 using FileManager.ViewModels.Libraries;
-using FileManager.Views;
 
-namespace FileManager.VMLocator
+namespace FileManager.ViewModels.VMLocator
 {
     public static class ViewModelLocator
     {
@@ -40,25 +40,25 @@ namespace FileManager.VMLocator
                 var viewModelType = FindViewModel(frameworkElement.GetType());
                 var typesWithoutActivation = new List<Type>()
                 {
-                    typeof(FileControl),
-                    typeof(OnlineFileControl),
-                    typeof(InformationControl)
+                    VMDependencies.Views[Constants.FileControl],
+                    VMDependencies.Views[Constants.OnlineFileControl],
+                    VMDependencies.Views[Constants.InformationControl],
                 };
                 if (!typesWithoutActivation.Any(t => t == frameworkElement.GetType()))
                 {
                     switch (frameworkElement.GetType().Name)
                     {
-                        case nameof(PicturesLibraryPage):
-                            frameworkElement.DataContext = App.Container.Resolve<PicturesLibraryViewModel>();
+                        case Constants.PicturesLibraryPage:
+                            frameworkElement.DataContext = VMDependencies.Container.Resolve<PicturesLibraryViewModel>();
                             break;
-                        case nameof(VideosLibraryPage):
-                            frameworkElement.DataContext = App.Container.Resolve<VideosLibraryViewModel>();
+                        case Constants.VideosLibraryPage:
+                            frameworkElement.DataContext = VMDependencies.Container.Resolve<VideosLibraryViewModel>();
                             break;
-                        case nameof(MusicsLibraryPage):
-                            frameworkElement.DataContext = App.Container.Resolve<MusicsLibraryViewModel>();
+                        case Constants.MusicsLibraryPage:
+                            frameworkElement.DataContext = VMDependencies.Container.Resolve<MusicsLibraryViewModel>();
                             break;
                         default:
-                            frameworkElement.DataContext = App.Container.Resolve(viewModelType);
+                            frameworkElement.DataContext = VMDependencies.Container.Resolve(viewModelType);
                             break;
                     }
                 }

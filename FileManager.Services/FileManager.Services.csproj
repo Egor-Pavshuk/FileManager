@@ -120,7 +120,9 @@
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="ThemeService.cs" />
     <Compile Include="FtpService.cs" />
+    <Compile Include="OneDriveService.cs" />
     <Compile Include="GoogleDriveService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Properties\FileManager.Services.rd.xml" />
@@ -132,8 +134,15 @@
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform">
       <Version>6.2.14</Version>
     </PackageReference>
+    <PackageReference Include="ThirdPartyServices.DCT">
+      <Version>1.0.0.22</Version>
+    </PackageReference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\FileManager.Dependencies\FileManager.Dependencies.csproj">
+      <Project>{AEF42671-CCBA-4303-A8DA-1C062D1D7409}</Project>
+      <Name>FileManager.Dependencies</Name>
+    </ProjectReference>
     <ProjectReference Include="..\FileManager.Helpers\FileManager.Helpers.csproj">
       <Project>{73f81792-c4c2-4ec2-8805-c6d19972bc3c}</Project>
       <Name>FileManager.Helpers</Name>

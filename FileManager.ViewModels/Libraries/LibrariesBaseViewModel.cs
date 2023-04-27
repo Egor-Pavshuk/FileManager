@@ -16,6 +16,8 @@ using Windows.UI.Xaml.Controls;
 using FileManager.Helpers.Commands;
 using FileManager.Helpers;
 using FileManager.Helpers.Validation;
+using FileManager.Services;
+using FileManager.ViewModels.Factory;
 
 namespace FileManager.ViewModels.Libraries
 {
@@ -249,49 +251,37 @@ namespace FileManager.ViewModels.Libraries
 
         protected override void ChangeColorMode(UISettings uiSettings, object sender)
         {
-            var currentBackgroundColor = uiSettings?.GetColorValue(UIColorType.Background);
-            if (backgroundColor != currentBackgroundColor || storageFiles == null)
+            var colorMode = ThemeService.ChangeColorMode(uiSettings, backgroundColor);
+            backgroundColor = colorMode.BackgroundColor;
+            themeResourceLoader = colorMode.ThemeResourceLoader;
+            if (storageFiles != null)
             {
-                if (currentBackgroundColor == Colors.Black)
+                CoreApplication.MainView.CoreWindow.Dispatcher
+                .RunAsync(CoreDispatcherPriority.Normal,
+                () =>
                 {
-                    themeResourceLoader = ResourceLoader.GetForViewIndependentUse(string.Join('\\', Constants.Resources, Constants.ImagesDark));
-                    backgroundColor = Colors.Black;
-                }
-                else
-                {
-                    themeResourceLoader = ResourceLoader.GetForViewIndependentUse(string.Join('\\',Constants.Resources, Constants.ImagesLight));
-                    backgroundColor = Colors.White;
-                }
-
-                if (storageFiles != null)
-                {
-                    CoreApplication.MainView.CoreWindow.Dispatcher
-                    .RunAsync(CoreDispatcherPriority.Normal,
-                    () =>
+                    foreach (var storageFile in storageFiles)
                     {
-                        foreach (var storageFile in storageFiles)
+                        switch (storageFile.Type)
                         {
-                            switch (storageFile.Type)
-                            {
-                                case Constants.Image:
-                                    storageFile.Image = themeResourceLoader.GetString(Constants.Image);
-                                    break;
-                                case Constants.Video:
-                                    storageFile.Image = themeResourceLoader.GetString(Constants.Video);
-                                    break;
-                                case Constants.Audio:
-                                    storageFile.Image = themeResourceLoader.GetString(Constants.Audio);
-                                    break;
-                                case Constants.Folder:
-                                    storageFile.Image = themeResourceLoader.GetString(Constants.Folder);
-                                    break;
-                                default:
-                                    storageFile.Image = themeResourceLoader.GetString(Constants.File);
-                                    break;
-                            }
+                            case Constants.Image:
+                                storageFile.Image = themeResourceLoader.GetString(Constants.Image);
+                                break;
+                            case Constants.Video:
+                                storageFile.Image = themeResourceLoader.GetString(Constants.Video);
+                                break;
+                            case Constants.Audio:
+                                storageFile.Image = themeResourceLoader.GetString(Constants.Audio);
+                                break;
+                            case Constants.Folder:
+                                storageFile.Image = themeResourceLoader.GetString(Constants.Folder);
+                                break;
+                            default:
+                                storageFile.Image = themeResourceLoader.GetString(Constants.File);
+                                break;
                         }
-                    }).AsTask().ConfigureAwait(true);
-                }
+                    }
+                }).AsTask().ConfigureAwait(true);
             }
         }
 
@@ -325,32 +315,8 @@ namespace FileManager.ViewModels.Libraries
             IReadOnlyList<StorageFile> storageFiles = await currentFolder.GetFilesAsync();
             foreach (var item in storageFiles)
             {
-                FileControlViewModel viewModel = new FileControlViewModel()
-                {
-                    DisplayName = item.Name,
-                    Path = item.Path,
-                };
-                if (item.ContentType.Contains(Constants.Image, StringComparison.Ordinal))
-                {
-                    viewModel.Image = themeResourceLoader.GetString(Constants.Image);
-                    viewModel.Type = Constants.Image;
-                }
-                else if (item.ContentType.Contains(Constants.Video, StringComparison.Ordinal))
-                {
-                    viewModel.Image = themeResourceLoader.GetString(Constants.Video);
-                    viewModel.Type = Constants.Video;
-                }
-                else if (item.ContentType.Contains(Constants.Audio, StringComparison.Ordinal))
-                {
-                    viewModel.Image = themeResourceLoader.GetString(Constants.Audio);
-                    viewModel.Type = Constants.Image;
-                }
-                else
-                {
-                    viewModel.Image = themeResourceLoader.GetString(Constants.File);
-                    viewModel.Type = Constants.File;
-                }
-
+                FileControlViewModel viewModel = FileControlCreator.CreateFileControl(themeResourceLoader, item.DisplayName, 
+                    item.ContentType, item.Path);
                 fileControls.Add(viewModel);
             }
             StorageFiles = fileControls;
