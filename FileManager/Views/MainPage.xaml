@@ -19,15 +19,19 @@
                 <NavigationViewItemSeparator/>
                 <NavigationViewItem AccessKey="4" Content="Google Drive" x:Name="GoogleDrive">
                     <NavigationViewItem.Icon>
-                        <BitmapIcon UriSource="{Binding GoogleDriveIconUri}"/>
+                        <BitmapIcon UriSource="ms-appx:///Assets/Images/googleDrive.png"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
                 <NavigationViewItem AccessKey="5" Content="FTP" x:Name="FTPServer">
                     <NavigationViewItem.Icon>
-                        <BitmapIcon UriSource="{Binding FtpIconUri}"/>
+                        <BitmapIcon UriSource="ms-appx:///Assets/Images/ftpFolder.png"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem AccessKey="6" Content="OneDrive" Icon="Favorite" x:Name="OneDrive" />
+                <NavigationViewItem AccessKey="6" Content="OneDrive" x:Name="OneDrive">
+                    <NavigationViewItem.Icon>
+                        <BitmapIcon UriSource="ms-appx:///Assets/Images/onedrive.png"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
             </NavigationView.MenuItems>
             <Frame x:Name="MainContent" Content="{Binding CurrentContent}">
                 

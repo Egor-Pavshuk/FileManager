@@ -188,6 +188,7 @@
     <Content Include="Assets\Images\FileIcons\VideoLight.png" />
     <Content Include="Assets\Images\ftpFolder.png" />
     <Content Include="Assets\Images\googleDrive.png" />
+    <Content Include="Assets\Images\onedrive.png" />
     <Content Include="Assets\Images\ram.png" />
     <Content Include="Properties\Default.rd.xml" />
     <Content Include="Assets\LockScreenLogo.scale-200.png" />

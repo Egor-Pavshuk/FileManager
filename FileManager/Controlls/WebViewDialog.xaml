@@ -13,8 +13,8 @@
                               Height="642"
                               Padding="5"
                               BorderThickness="1"
-                              BorderBrush="Red"
-                              Background="Green">
+                              BorderBrush="AliceBlue"
+                              Background="LightBlue">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="32"/>
                                 <RowDefinition/>
