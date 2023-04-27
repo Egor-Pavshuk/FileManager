@@ -12,11 +12,6 @@ using FileManager.ViewModels.Libraries;
 using FileManager.Views;
 using FileManager.Dependencies;
 using FileManager.Controlls;
-using FileManager.Models.Interfaces;
-using ThirdPartyServices.UWP.AuthorizationServices;
-using ThirdPartyServices.Shared.Interfaces;
-using ThirdPartyServices.UWP.CloudServices;
-using ThirdPartyServices.UWP.DataAccess;
 
 namespace FileManager
 {
@@ -39,7 +34,6 @@ namespace FileManager
         }
         private IContainer ConfigureServices()
         {
-            ThirdPartyService.Instance.InitializeThirdPartySevices();
             var containerBuilder = new ContainerBuilder();
             containerBuilder.RegisterType<ContentDialogControlViewModel>()
                 .AsSelf().WithParameters(new List<NamedParameter>
@@ -55,7 +49,7 @@ namespace FileManager
             containerBuilder.RegisterType<VideosLibraryViewModel>()
                 .AsSelf();
             containerBuilder.RegisterType<MusicsLibraryViewModel>()
-                .AsSelf();
+                .AsSelf();            
             containerBuilder.RegisterType<MainViewModel>()
                 .AsSelf();
             containerBuilder.RegisterType<MainTitleViewModel>()
@@ -66,8 +60,6 @@ namespace FileManager
                 .AsSelf();
             containerBuilder.RegisterType<InformationViewModel>()
                 .AsSelf();
-            containerBuilder.RegisterType<OneDriveViewModel>()
-                .AsSelf();
             containerBuilder.RegisterType<MainPage>().AsSelf();
             containerBuilder.RegisterType<MainTitlePage>().AsSelf();
             containerBuilder.RegisterType<GoogleDrivePage>().AsSelf();
@@ -77,14 +69,9 @@ namespace FileManager
             containerBuilder.RegisterType<MusicsLibraryPage>().AsSelf();
             containerBuilder.RegisterType<InformationPage>().AsSelf();
             containerBuilder.RegisterType<FtpPage>().AsSelf();
-            containerBuilder.RegisterType<OneDrivePage>().AsSelf();
-
-            containerBuilder.RegisterType<WebViewDialog>().As<IAuthWebViewDialog>();
-            containerBuilder.RegisterType<MicrosoftAuthService>().As<IMicrosoftAuthorizationService>();
-            containerBuilder.RegisterType<OneDriveCloudService>().As<IOneDriveCloudService>();
             VMDependencies.ConfigureServices(typeof(MainPage), typeof(MainTitlePage), typeof(FtpPage), typeof(GoogleDrivePage),
                 typeof(InformationPage), typeof(MusicsLibraryPage), typeof(PicturesLibraryPage), typeof(VideosLibraryPage),
-                typeof(ContentDialogControl), typeof(OneDrivePage), typeof(FileControl), typeof(InformationControl), typeof(OnlineFileControl));
+                typeof(ContentDialogControl));
             var container = containerBuilder.Build();
             return container;
         }

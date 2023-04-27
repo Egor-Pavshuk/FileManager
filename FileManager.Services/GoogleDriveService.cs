@@ -19,26 +19,26 @@ namespace FileManager.Services
 {
     public class GoogleDriveService
     {
-        public async Task<Enums> CheckInternetConnectionAsync(string source)
+        public async Task<string> CheckInternetConnectionAsync(string source)
         {
-            Enums result;
+            string result;
             using (var client = new HttpClient())
             {
                 try
                 {
                     var responce = await client.GetAsync(source).ConfigureAwait(true);
-                    result = Enums.Success;
+                    result = Constants.Success;
                 }
                 catch (HttpRequestException)
                 {
-                    result = Enums.Failed;
+                    result = Constants.Failed;
                 }
             }
             return result;
         }
-        public async Task<Enums> ExchangeCodeOnTokenAsync(string exchangeCode, string clientId, string secret, TokenResult accessToken)
+        public async Task<string> ExchangeCodeOnTokenAsync(string exchangeCode, string clientId, string secret, TokenResult accessToken)
         {
-            Enums result = Enums.Failed;
+            string result = Constants.Failed;
             using (HttpClient client = new HttpClient())
             {
                 string request = string.Join('&', $"code={exchangeCode}", $"client_id={clientId}", $"client_secret={secret}",
@@ -57,12 +57,12 @@ namespace FileManager.Services
                         accessToken.Expires_in = token.Expires_in;
                         accessToken.Scope = token.Scope;
                         accessToken.LastRefreshTime = DateTime.Now;
-                        result = Enums.Success;
+                        result = Constants.Success;
                     }
                 }
                 catch (HttpRequestException)
                 {
-                    result = Enums.Failed;
+                    result = Constants.Failed;
                 }
                 finally
                 {
@@ -114,14 +114,14 @@ namespace FileManager.Services
                 }
                 catch (HttpRequestException)
                 {
-                    result = Enums.Failed.ToString();
+                    result = Constants.Failed;
                 }
             }
             return result;
         }
-        public async Task<Enums> DownloadFileAsync(Uri source, StorageFolder destinationFolder, string fileName, string tokenType, string accessToken)
+        public async Task<string> DownloadFileAsync(Uri source, StorageFolder destinationFolder, string fileName, string tokenType, string accessToken)
         {
-            Enums result = Enums.Failed;
+            string result = Constants.Failed;
             if (destinationFolder != null)
             {
                 StorageFile destinationFile = await destinationFolder.CreateFileAsync(
@@ -137,20 +137,20 @@ namespace FileManager.Services
                         {
                             await stream.CopyToAsync(fileStream).ConfigureAwait(true);
                         }
-                        result = Enums.Success;
+                        result = Constants.Success;
                     }
                     catch (HttpRequestException)
                     {
-                        result = Enums.Failed;
+                        result = Constants.Failed;
                         await destinationFile.DeleteAsync();
                     }
                 }
             }
             return result;
         }
-        public async Task<Enums> UploadFileAsync(StorageFile uploadFile, Collection<string> parents, string accessToken)
+        public async Task<string> UploadFileAsync(StorageFile uploadFile, Collection<string> parents, string accessToken)
         {
-            Enums result = Enums.Failed;
+            string result = Constants.Failed;
             var credentional = GoogleCredential.FromAccessToken(accessToken).CreateScoped(DriveService.Scope.Drive);
             using (var service = new DriveService(new BaseClientService.Initializer()
             {
@@ -171,15 +171,15 @@ namespace FileManager.Services
 
                     if (results.Status != Google.Apis.Upload.UploadStatus.Failed)
                     {
-                        result = Enums.Success;
+                        result = Constants.Success;
                     }
                 }
             }
             return result;
         }
-        public async Task<Enums> DeleteFileAsync(string fileId, string accessToken)
+        public async Task<string> DeleteFileAsync(string fileId, string accessToken)
         {
-            Enums result = Enums.Failed;
+            string result = Constants.Failed;
             DeleteRequest request;
             var credentional = GoogleCredential.FromAccessToken(accessToken).CreateScoped(DriveService.Scope.Drive);
             using (var service = new DriveService(new BaseClientService.Initializer()
@@ -193,19 +193,19 @@ namespace FileManager.Services
                     try
                     {
                         await request.ExecuteAsync().ConfigureAwait(true);
-                        result = Enums.Success;
+                        result = Constants.Success;
                     }
                     catch (HttpRequestException)
                     {
-                        result = Enums.Failed;
+                        result = Constants.Failed;
                     }
                 }
             }
             return result;
         }
-        public async Task<Enums> CreateNewFolderAsync(string folderName, Collection<string> parents, string accessToken)
+        public async Task<string> CreateNewFolderAsync(string folderName, Collection<string> parents, string accessToken)
         {
-            Enums result;
+            string result;
             var credentional = GoogleCredential.FromAccessToken(accessToken).CreateScoped(DriveService.Scope.Drive);
             using (var service = new DriveService(new BaseClientService.Initializer()
             {
@@ -224,18 +224,18 @@ namespace FileManager.Services
                     var request = service.Files.Create(fileMetadata);
                     request.Fields = "*";
                     await request.ExecuteAsync().ConfigureAwait(true);
-                    result = Enums.Success;
+                    result = Constants.Success;
                 }
                 catch (HttpRequestException)
                 {
-                    result = Enums.Failed;
+                    result = Constants.Failed;
                 }
             }
             return result;
         }
-        public async Task<Enums> RenameFileAsync(string itemId, string fileName, string accessToken)
+        public async Task<string> RenameFileAsync(string itemId, string fileName, string accessToken)
         {
-            Enums result = Enums.Failed;
+            string result = string.Empty;
             var credentional = GoogleCredential.FromAccessToken(accessToken).CreateScoped(DriveService.Scope.Drive);
             using (var service = new DriveService(new BaseClientService.Initializer()
             {
@@ -251,19 +251,19 @@ namespace FileManager.Services
                 {
                     var request = service.Files.Update(fileMetadata, itemId);
                     await request.ExecuteAsync().ConfigureAwait(true);
-                    result = Enums.Success;
+                    result = Constants.Success;
                 }
                 catch (HttpRequestException)
                 {
-                    result = Enums.Failed;
+                    result = Constants.Failed;
                 }
             }
             return result;
         }
-        public async Task<Enums> RefreshTokenAsync(string clientId, string secret, TokenResult accessToken)
+        public async Task<string> RefreshTokenAsync(string clientId, string secret, TokenResult accessToken)
         {
             HttpResponseMessage response;
-            Enums result = Enums.Failed;
+            string result = string.Empty;
             using (HttpClient client = new HttpClient())
             {
                 if (accessToken != null)
@@ -278,11 +278,11 @@ namespace FileManager.Services
                         accessToken.Access_token = token.Access_token;
                         accessToken.Expires_in = token.Expires_in;
                         accessToken.LastRefreshTime = DateTime.Now;
-                        result = Enums.Success;
+                        result = Constants.Success;
                     }
                     catch (HttpRequestException)
                     {
-                        result = Enums.Failed;
+                        result = Constants.Failed;
                     }
                     finally
                     {

@@ -23,11 +23,11 @@ namespace FileManager.Services
                 request.Credentials = new NetworkCredential(username, password);
                 var response = (FtpWebResponse)await request.GetResponseAsync().ConfigureAwait(true);
                 response.Close();
-                connectionResult = Enums.Success.ToString();
+                connectionResult = Constants.Success;
             }
             catch (WebException)
             {
-                connectionResult = Enums.Failed.ToString();
+                connectionResult = Constants.Failed;
             }
             catch (UriFormatException)
             {
@@ -86,9 +86,9 @@ namespace FileManager.Services
             };
             return ftpFile;
         }
-        public async Task<Enums> DownloadFileAsync(StorageFolder downloadFolder, string filePath, string username, string password)
+        public async Task<string> DownloadFileAsync(StorageFolder downloadFolder, string filePath, string username, string password)
         {
-            Enums downloadingResult;
+            string downloadingResult;
             Stream stream;
             string fileName = filePath?.Split('/').Last();
             StorageFile destinationFile = await downloadFolder?.CreateFileAsync(fileName, CreationCollisionOption.GenerateUniqueName);
@@ -109,19 +109,19 @@ namespace FileManager.Services
                 {
                     await stream.CopyToAsync(fileStream).ConfigureAwait(true);
                 }
-                downloadingResult = Enums.Success;
+                downloadingResult = Constants.Success;
             }
             catch (WebException)
             {
-                downloadingResult = Enums.Failed;
+                downloadingResult = Constants.Failed;
                 await destinationFile?.DeleteAsync();
             }
 
             return downloadingResult;
         }
-        public async Task<Enums> UploadFileAsync(StorageFile uploadFile, string destinationPath, string username, string password)
+        public async Task<string> UploadFileAsync(StorageFile uploadFile, string destinationPath, string username, string password)
         {
-            Enums uploadingResult;
+            string uploadingResult;
             Stream responseStream;
             try
             {
@@ -134,21 +134,21 @@ namespace FileManager.Services
                 {
                     await fileStream.CopyToAsync(responseStream).ConfigureAwait(true);
                 }
-                uploadingResult = Enums.Success;
+                uploadingResult = Constants.Success;
             }
             catch (WebException)
             {
-                uploadingResult = Enums.Failed;
+                uploadingResult = Constants.Failed;
             }
             catch(FileLoadException)
             {
-                uploadingResult = Enums.Failed;
+                uploadingResult = Constants.Failed;
             }
             return uploadingResult;
         }
-        public async Task<Enums> DeleteFileAsync(string path, string type, string username, string password)
+        public async Task<string> DeleteFileAsync(string path, string type, string username, string password)
         {
-            Enums result;
+            string result;
             try
             {
                 FtpWebRequest request = (FtpWebRequest)WebRequest.Create(path);
@@ -165,17 +165,17 @@ namespace FileManager.Services
 
                 FtpWebResponse response = (FtpWebResponse)await request.GetResponseAsync().ConfigureAwait(true);
                 response.Close();
-                result = Enums.Success;
+                result = Constants.Success;
             }
             catch (WebException)
             {
-                result = Enums.Failed;
+                result = Constants.Failed;
             }
             return result;
         }
-        public async Task<Enums> CreateNewFolderAsync(string path, string folderName, string username, string password)
+        public async Task<string> CreateNewFolderAsync(string path, string folderName, string username, string password)
         {
-            Enums creatingResult;
+            string creatingResult;
             try
             {
                 FtpWebRequest request = (FtpWebRequest)WebRequest.Create(path + "/" + folderName);
@@ -184,17 +184,17 @@ namespace FileManager.Services
                 FtpWebResponse response = (FtpWebResponse)await request.GetResponseAsync().ConfigureAwait(true);
                 response.Close();
 
-                creatingResult = Enums.Success;
+                creatingResult = Constants.Success;
             }
             catch (WebException)
             {
-                creatingResult = Enums.Failed;
+                creatingResult = Constants.Failed;
             }
             return creatingResult;
         }
-        public async Task<Enums> RenameFileAsync(string path, string oldFileName, string newFileName, string username, string password)
+        public async Task<string> RenameFileAsync(string path, string oldFileName, string newFileName, string username, string password)
         {
-            Enums renameResult;
+            string renameResult;
             try
             {
                 FtpWebRequest request = (FtpWebRequest)WebRequest.Create(path + "/" + oldFileName);
@@ -203,11 +203,11 @@ namespace FileManager.Services
                 request.RenameTo = newFileName;
                 FtpWebResponse response = (FtpWebResponse)await request.GetResponseAsync().ConfigureAwait(true);
                 response.Close();
-                renameResult = Enums.Success;
+                renameResult = Constants.Success;
             }
             catch (WebException)
             {
-                renameResult = Enums.Failed;
+                renameResult = Constants.Failed;
             }
             return renameResult;
         }

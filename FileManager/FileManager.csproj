@@ -132,12 +132,8 @@
     <Compile Include="Controlls\FileControl.xaml.cs">
       <DependentUpon>FileControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Controlls\WebViewDialog.cs" />
     <Compile Include="Views\FtpPage.xaml.cs">
       <DependentUpon>FtpPage.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Views\OneDrivePage.xaml.cs">
-      <DependentUpon>OneDrivePage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\GoogleDrivePage.xaml.cs">
       <DependentUpon>GoogleDrivePage.xaml</DependentUpon>
@@ -160,6 +156,7 @@
     <Compile Include="Views\VideosLibraryPage.xaml.cs">
       <DependentUpon>VideosLibraryPage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="VMLocator\ViewModelLocator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -168,28 +165,27 @@
     </AppxManifest>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Assets\Images\Battery\battery.png" />
-    <Content Include="Assets\Images\Battery\batteryAttention.png" />
-    <Content Include="Assets\Images\Battery\batteryCharge.png" />
-    <Content Include="Assets\Images\Battery\emptyBattery.png" />
-    <Content Include="Assets\Images\Battery\fullBattery.png" />
-    <Content Include="Assets\Images\Battery\halfBattery.png" />
-    <Content Include="Assets\Images\Battery\lowBattery.png" />
-    <Content Include="Assets\Images\DiskStorage\diskStorage.png" />
-    <Content Include="Assets\Images\FileIcons\FileDark.png" />
-    <Content Include="Assets\Images\FileIcons\FileLight.png" />
-    <Content Include="Assets\Images\FileIcons\FolderDark.png" />
-    <Content Include="Assets\Images\FileIcons\FolderLight.jpg" />
-    <Content Include="Assets\Images\FileIcons\ImageDark.png" />
-    <Content Include="Assets\Images\FileIcons\ImageLight.png" />
-    <Content Include="Assets\Images\FileIcons\AudioDark.png" />
-    <Content Include="Assets\Images\FileIcons\AudioLight.png" />
-    <Content Include="Assets\Images\FileIcons\VideoDark.png" />
-    <Content Include="Assets\Images\FileIcons\VideoLight.png" />
-    <Content Include="Assets\Images\ftpFolder.png" />
-    <Content Include="Assets\Images\googleDrive.png" />
-    <Content Include="Assets\Images\onedrive.png" />
-    <Content Include="Assets\Images\ram.png" />
+    <Content Include="Images\Battery\battery.png" />
+    <Content Include="Images\Battery\batteryAttention.png" />
+    <Content Include="Images\Battery\batteryCharge.png" />
+    <Content Include="Images\Battery\emptyBattery.png" />
+    <Content Include="Images\Battery\fullBattery.png" />
+    <Content Include="Images\Battery\halfBattery.png" />
+    <Content Include="Images\Battery\lowBattery.png" />
+    <Content Include="Images\DiskStorage\diskStorage.png" />
+    <Content Include="Images\FileIcons\FileDark.png" />
+    <Content Include="Images\FileIcons\FileLight.png" />
+    <Content Include="Images\FileIcons\FolderDark.png" />
+    <Content Include="Images\FileIcons\FolderLight.jpg" />
+    <Content Include="Images\FileIcons\ImageDark.png" />
+    <Content Include="Images\FileIcons\ImageLight.png" />
+    <Content Include="Images\FileIcons\AudioDark.png" />
+    <Content Include="Images\FileIcons\AudioLight.png" />
+    <Content Include="Images\FileIcons\VideoDark.png" />
+    <Content Include="Images\FileIcons\VideoLight.png" />
+    <Content Include="Images\ftpFolder.png" />
+    <Content Include="Images\googleDrive.png" />
+    <Content Include="Images\ram.png" />
     <Content Include="Properties\Default.rd.xml" />
     <Content Include="Assets\LockScreenLogo.scale-200.png" />
     <Content Include="Assets\SplashScreen.scale-200.png" />
@@ -220,15 +216,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Controlls\WebViewDialog.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="Views\FtpPage.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Views\OneDrivePage.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -285,6 +273,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include=".editorconfig" />
+    <PRIResource Include="Strings\ru-RU\Resources.resw" />
+    <PRIResource Include="Strings\en-US\Resources.resw" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\FileManager.Dependencies\FileManager.Dependencies.csproj">
