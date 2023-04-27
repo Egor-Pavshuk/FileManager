@@ -9,12 +9,6 @@ namespace FileManager.ViewModels.Information
 {
     public class BatteryControlViewModel : InformationControlViewModel
     {
-        private const int FullBattery = 100;
-        private const int BitDischargedBattery = 76;
-        private const int HalfBattery = 51;
-        private const int ThirdBattery = 31;
-        private const int LowBattery = 21;
-
         public BatteryControlViewModel()
         {
             Background = "#FFF4B717";
@@ -53,19 +47,19 @@ namespace FileManager.ViewModels.Information
                         Image = batteryResourceLoader.GetString(Constants.BatteryCharge);
                         break;
                     case BatteryStatus.Discharging:
-                        if (ProgressBarValue <= FullBattery && ProgressBarValue > BitDischargedBattery)
+                        if (ProgressBarValue <= (double)Enums.FullBattery && ProgressBarValue > (double)Enums.BitDischargedBattery)
                         {
                             Image = batteryResourceLoader.GetString(Constants.FullBattery);
                         }
-                        else if (ProgressBarValue <= BitDischargedBattery && ProgressBarValue > HalfBattery)
+                        else if (ProgressBarValue <= (double)Enums.BitDischargedBattery && ProgressBarValue > (double)Enums.HalfBattery)
                         {
                             Image = batteryResourceLoader.GetString(Constants.Battery);
                         }
-                        else if (ProgressBarValue <= HalfBattery && ProgressBarValue > ThirdBattery)
+                        else if (ProgressBarValue <= (double)Enums.HalfBattery && ProgressBarValue > (double)Enums.ThirdBattery)
                         {
                             Image = batteryResourceLoader.GetString(Constants.Halfbattery);
                         }
-                        else if (ProgressBarValue <= ThirdBattery && ProgressBarValue > LowBattery)
+                        else if (ProgressBarValue <= (double)Enums.ThirdBattery && ProgressBarValue > (double)Enums.LowBattery)
                         {
                             Image = batteryResourceLoader.GetString(Constants.LowBattery);
                         }

@@ -189,6 +189,9 @@
   <data name="newFolder" xml:space="preserve">
     <value>Новая папка</value>
   </data>
+  <data name="OneDrivePage" xml:space="preserve">
+    <value>OneDrive</value>
+  </data>
   <data name="placeHolderFolderName" xml:space="preserve">
     <value>Введите название</value>
   </data>

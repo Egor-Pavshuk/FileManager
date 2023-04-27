@@ -120,12 +120,14 @@
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="BaseDialogControl.cs" />
     <Compile Include="BindableBase.cs" />
     <Compile Include="ContentDialogControlViewModel.cs" />
     <Compile Include="Factory\FileControlCreator.cs" />
     <Compile Include="Factory\OnlineFileControlCreator.cs" />
     <Compile Include="FileControlViewModel.cs" />
     <Compile Include="FtpViewModel.cs" />
+    <Compile Include="OneDriveViewModel.cs" />
     <Compile Include="GoogleDriveViewModel.cs" />
     <Compile Include="Information\BatteryControlViewModel.cs" />
     <Compile Include="Information\InformationControlViewModel.cs" />
@@ -145,6 +147,7 @@
     <Compile Include="OnlineFileControls\OnlineFileControlViewModel.cs" />
     <Compile Include="OnlineFileControls\VideoFileControlViewModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="VMLocator\ViewModelLocator.cs" />
     <EmbeddedResource Include="Properties\FileManager.ViewModels.rd.xml" />
   </ItemGroup>
   <ItemGroup>
@@ -153,6 +156,9 @@
     </PackageReference>
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform">
       <Version>6.2.14</Version>
+    </PackageReference>
+    <PackageReference Include="ThirdPartyServices.DCT">
+      <Version>1.0.0.22</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>

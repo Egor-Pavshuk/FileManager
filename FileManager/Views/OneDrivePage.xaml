@@ -1,5 +1,5 @@
 ﻿<Page
-    x:Class="FileManager.Views.GoogleDrivePage"
+    x:Class="FileManager.Views.OneDrivePage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:helper="using:FileManager.Helpers"
@@ -52,8 +52,8 @@
                 <TextBlock Text="{Binding ErrorText}" Foreground="White" FontSize="40" HorizontalAlignment="Center" Opacity="1" Height="60"/>
             </Border>
         </Border>
-        <Frame Grid.Row="1">
-            <WebView x:Name="WebView" Source="{Binding WebViewCurrentSource, Mode=TwoWay}" Visibility="{Binding IsWebViewVisible, Mode=OneWay}" helper:NavigationStartingAttachedProperties.NavigationStartingCommand="{Binding NavigationStartingCommand}" Margin="0,0,0,10"/>
+        <Frame>
+            
         </Frame>
     </Grid>    
 </Page>
