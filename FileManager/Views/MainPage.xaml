@@ -4,7 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:vml="using:FileManager.ViewModels.VMLocator" 
+    xmlns:vml="using:FileManager.VMLocator"
     vml:ViewModelLocator.AutoWireViewModel="True"    
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
@@ -19,17 +19,12 @@
                 <NavigationViewItemSeparator/>
                 <NavigationViewItem AccessKey="4" Content="Google Drive" x:Name="GoogleDrive">
                     <NavigationViewItem.Icon>
-                        <BitmapIcon UriSource="ms-appx:///Assets/Images/googleDrive.png"/>
+                        <BitmapIcon UriSource="{Binding GoogleDriveIconUri}"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
                 <NavigationViewItem AccessKey="5" Content="FTP" x:Name="FTPServer">
                     <NavigationViewItem.Icon>
-                        <BitmapIcon UriSource="ms-appx:///Assets/Images/ftpFolder.png"/>
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
-                <NavigationViewItem AccessKey="6" Content="OneDrive" x:Name="OneDrive">
-                    <NavigationViewItem.Icon>
-                        <BitmapIcon UriSource="ms-appx:///Assets/Images/onedrive.png"/>
+                        <BitmapIcon UriSource="{Binding FtpIconUri}"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
             </NavigationView.MenuItems>

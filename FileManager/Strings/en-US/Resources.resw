@@ -189,9 +189,6 @@
   <data name="newFolder" xml:space="preserve">
     <value>New folder</value>
   </data>
-  <data name="OneDrivePage" xml:space="preserve">
-    <value>OneDrive</value>
-  </data>
   <data name="placeHolderFileName" xml:space="preserve">
     <value>Enter file name</value>
   </data>

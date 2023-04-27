@@ -118,24 +118,24 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="battery" xml:space="preserve">
-    <value>/Assets/Images/Battery/battery.png</value>
+    <value>/Images/Battery/battery.png</value>
   </data>
   <data name="batteryAttention" xml:space="preserve">
-    <value>/Assets/Images/Battery/batteryAttention.png</value>
+    <value>/Images/Battery/batteryAttention.png</value>
   </data>
   <data name="batteryCharge" xml:space="preserve">
-    <value>/Assets/Images/Battery/batteryCharge.png</value>
+    <value>/Images/Battery/batteryCharge.png</value>
   </data>
   <data name="emptyBattery" xml:space="preserve">
-    <value>/Assets/Images/Battery/emptyBattery.png</value>
+    <value>/Images/Battery/emptyBattery.png</value>
   </data>
   <data name="fullBattery" xml:space="preserve">
-    <value>/Assets/Images/Battery/fullBattery.png</value>
+    <value>/Images/Battery/fullBattery.png</value>
   </data>
   <data name="halfBattery" xml:space="preserve">
-    <value>/Assets/Images/Battery/halfBattery.png</value>
+    <value>/Images/Battery/halfBattery.png</value>
   </data>
   <data name="lowBattery" xml:space="preserve">
-    <value>/Assets/Images/Battery/lowBattery.png</value>
+    <value>/Images/Battery/lowBattery.png</value>
   </data>
 </root>

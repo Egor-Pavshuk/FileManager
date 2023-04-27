@@ -5,7 +5,7 @@
     xmlns:local="using:FileManager.Controlls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:vml="using:FileManager.ViewModels.VMLocator" 
+    xmlns:vml="using:FileManager.VMLocator"
     vml:ViewModelLocator.AutoWireViewModel="True"
     mc:Ignorable="d" Height="130" Width="120">
 
