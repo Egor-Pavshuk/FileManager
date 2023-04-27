@@ -120,6 +120,7 @@
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="ThemeService.cs" />
     <Compile Include="FtpService.cs" />
     <Compile Include="OneDriveService.cs" />
     <Compile Include="GoogleDriveService.cs" />

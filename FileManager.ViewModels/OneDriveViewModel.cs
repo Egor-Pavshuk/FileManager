@@ -11,7 +11,6 @@ using Windows.ApplicationModel.Core;
 using Windows.ApplicationModel.Resources;
 using Windows.Storage;
 using Windows.Storage.Pickers;
-using Windows.UI;
 using Windows.UI.Core;
 using Windows.UI.Popups;
 using Windows.UI.ViewManagement;
@@ -314,33 +313,20 @@ namespace FileManager.ViewModels
 
         protected override void ChangeColorMode(UISettings uiSettings, object sender)
         {
-            var currentBackgroundColor = uiSettings?.GetColorValue(UIColorType.Background);
-            string resourcePath;
-            if (backgroundColor != currentBackgroundColor || storageFiles == null)
+            var colorMode = ThemeService.ChangeColorMode(uiSettings, backgroundColor);
+            backgroundColor = colorMode.BackgroundColor;
+            themeResourceLoader = colorMode.ThemeResourceLoader;
+            if (storageFiles != null)
             {
-                if (currentBackgroundColor == Colors.Black)
+                CoreApplication.MainView.CoreWindow.Dispatcher
+                .RunAsync(CoreDispatcherPriority.Normal,
+                () =>
                 {
-                    resourcePath = string.Join('\\', Constants.Resources, Constants.ImagesDark);
-                    backgroundColor = Colors.Black;
-                }
-                else
-                {
-                    resourcePath = string.Join('\\', Constants.Resources, Constants.ImagesLight);
-                    backgroundColor = Colors.White;
-                }
-                themeResourceLoader = ResourceLoader.GetForViewIndependentUse(resourcePath);
-                if (storageFiles != null)
-                {
-                    CoreApplication.MainView.CoreWindow.Dispatcher
-                    .RunAsync(CoreDispatcherPriority.Normal,
-                    () =>
+                    foreach (var storageFile in storageFiles)
                     {
-                        foreach (var storageFile in storageFiles)
-                        {
-                            storageFile.ChangeColorMode(themeResourceLoader);
-                        }
-                    }).AsTask().ConfigureAwait(true);
-                }
+                        storageFile.ChangeColorMode(themeResourceLoader);
+                    }
+                }).AsTask().ConfigureAwait(true);
             }
         }
 

@@ -120,6 +120,7 @@
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="ColorMode.cs" />
     <Compile Include="Dialogs\DialogResult.cs" />
     <Compile Include="DriveResult.cs" />
     <Compile Include="Enums\OperationResult.cs" />
