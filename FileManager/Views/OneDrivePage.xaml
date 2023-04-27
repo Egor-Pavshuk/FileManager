@@ -52,5 +52,8 @@
                 <TextBlock Text="{Binding ErrorText}" Foreground="White" FontSize="40" HorizontalAlignment="Center" Opacity="1" Height="60"/>
             </Border>
         </Border>
+        <Frame>
+            
+        </Frame>
     </Grid>    
 </Page>
